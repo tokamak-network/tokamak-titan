@@ -1,4 +1,4 @@
-name: Publish Packages (canary)
+name: Tokamak Optimism Packages (canary)
 
 on:
   # enable users to manually trigger with workflow_dispatch

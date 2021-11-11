@@ -1,7 +1,6 @@
 name: Label Reviews
 on:
-  # pull_request_review:
-  workflow_dispatch:
+  pull_request_review:
 
 jobs:
   require-reviewers:
