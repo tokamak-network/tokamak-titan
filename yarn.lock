@@ -502,16 +502,6 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@eth-optimism/core-utils@0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.6.0.tgz#e20dbdce1b3122bd6db0bc3286a4942336ff173b"
-  integrity sha512-WOia8t324ZbG6WUOFszwUGJSCCMh6dWen4fElW/OjtpmSHGTmOG9PCMxtw0wLTSR9fr/g9S7DhDpwhrN6q1QDQ==
-  dependencies:
-    "@ethersproject/abstract-provider" "^5.4.1"
-    "@ethersproject/providers" "^5.4.5"
-    ethers "^5.4.5"
-    lodash "^4.17.21"
-
 "@eth-optimism/core-utils@^0.5.1":
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.5.5.tgz#0e2bb95b23965fb51adfb8ba6841c3afd26a6411"
@@ -733,6 +723,21 @@
     "@ethersproject/logger" "^5.4.0"
     "@ethersproject/properties" "^5.4.0"
     "@ethersproject/strings" "^5.4.0"
+
+"@ethersproject/abi@^5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@ethersproject/abi/-/abi-5.5.0.tgz#fb52820e22e50b854ff15ce1647cc508d6660613"
+  integrity sha512-loW7I4AohP5KycATvc0MgujU6JyCHPqHdeoo9z3Nr9xEiNioxa65ccdm1+fsoJhkuhdRtfcL8cfyGamz2AxZ5w==
+  dependencies:
+    "@ethersproject/address" "^5.5.0"
+    "@ethersproject/bignumber" "^5.5.0"
+    "@ethersproject/bytes" "^5.5.0"
+    "@ethersproject/constants" "^5.5.0"
+    "@ethersproject/hash" "^5.5.0"
+    "@ethersproject/keccak256" "^5.5.0"
+    "@ethersproject/logger" "^5.5.0"
+    "@ethersproject/properties" "^5.5.0"
+    "@ethersproject/strings" "^5.5.0"
 
 "@ethersproject/abstract-provider@5.4.1", "@ethersproject/abstract-provider@^5.0.0", "@ethersproject/abstract-provider@^5.4.0", "@ethersproject/abstract-provider@^5.4.1":
   version "5.4.1"
@@ -2681,15 +2686,18 @@
   dependencies:
     ethers "^5.0.2"
 
-"@typechain/ethers-v5@^7.0.1":
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-7.0.1.tgz#f9ae60ae5bd9e8ea8a996f66244147e8e74034ae"
-  integrity sha512-mXEJ7LG0pOYO+MRPkHtbf30Ey9X2KAsU0wkeoVvjQIn7iAY6tB3k3s+82bbmJAUMyENbQ04RDOZit36CgSG6Gg==
+"@typechain/ethers-v5@^8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-8.0.2.tgz#0f2cc0db1513cb02e3e78929139216b153c9d2c0"
+  integrity sha512-oRMA3X5UWrsUiNb/lFTusa8xBpw6CckOHAk7sZBHeDQh4tAp+ZU24wdwdURcOtPnagzdCv5Dvl1qlD038brf1A==
+  dependencies:
+    lodash "^4.17.15"
+    ts-essentials "^7.0.1"
 
-"@typechain/hardhat@^2.3.0":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-2.3.0.tgz#dc7f29281637b38b77c7c046ae82700703395d0f"
-  integrity sha512-zERrtNol86L4DX60ktnXxP7Cq8rSZHPaQvsChyiQQVuvVs2FTLm24Yi+MYnfsIdbUBIXZG7SxDWhtCF5I0tJNQ==
+"@typechain/hardhat@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-3.0.0.tgz#a94396855506d42b98d6e7c09f87ca14180d6c64"
+  integrity sha512-FpnIIXkDXm54XCHI/Z2iOet7h1MrFSvZfuljX9Uzc6FEjEfb01Tuzu8ywe2iquD3g5JXqovgdv+M54L/2Z6jkg==
   dependencies:
     fs-extra "^9.1.0"
 
@@ -6871,7 +6879,7 @@ ethereum-cryptography@^0.1.2, ethereum-cryptography@^0.1.3:
     secp256k1 "^4.0.1"
     setimmediate "^1.0.5"
 
-ethereum-waffle@^3.3.0:
+ethereum-waffle@^3.3.0, ethereum-waffle@^3.4.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/ethereum-waffle/-/ethereum-waffle-3.4.0.tgz#990b3c6c26db9c2dd943bf26750a496f60c04720"
   integrity sha512-ADBqZCkoSA5Isk486ntKJVjFEawIiC+3HxNqpJqONvh3YXBTNiRfXvJtGuAFLXPG91QaqkGqILEHANAo7j/olQ==
@@ -15165,10 +15173,10 @@ typechain@^3.0.0:
     ts-essentials "^6.0.3"
     ts-generator "^0.1.1"
 
-typechain@^5.1.0:
-  version "5.1.2"
-  resolved "https://registry.yarnpkg.com/typechain/-/typechain-5.1.2.tgz#c8784d6155a8e69397ca47f438a3b4fb2aa939da"
-  integrity sha512-FuaCxJd7BD3ZAjVJoO+D6TnqKey3pQdsqOBsC83RKYWKli5BDhdf0TPkwfyjt20TUlZvOzJifz+lDwXsRkiSKA==
+typechain@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/typechain/-/typechain-6.0.2.tgz#0a1d6328aa934dfd66c8941cd94c1d3491cc34f0"
+  integrity sha512-fphYQ2+r5z38eq02qr4KjgU9/Xdda8Cj+eV2QHSRXhDPyhEVv+ln9123iGjjDLEhGyROb3DQkbvjm3Dl0GtUeQ==
   dependencies:
     "@types/prettier" "^2.1.1"
     command-line-args "^4.0.7"

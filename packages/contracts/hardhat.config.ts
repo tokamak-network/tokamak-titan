@@ -16,6 +16,8 @@ import '@typechain/hardhat'
 import './tasks/deploy'
 import './tasks/l2-gasprice'
 import './tasks/set-owner'
+import './tasks/validate-address-dictator'
+import './tasks/validate-chugsplash-dictator'
 import './tasks/whitelist'
 import './tasks/withdraw-fees'
 import 'hardhat-gas-reporter'
@@ -24,9 +26,7 @@ import 'hardhat-gas-reporter'
 dotenv.config()
 
 const enableGasReport = !!process.env.ENABLE_GAS_REPORT
-const privateKey =
-  process.env.PRIVATE_KEY ||
-  '0x0000000000000000000000000000000000000000000000000000000000000000' // this is to avoid hardhat error
+const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32) // this is to avoid hardhat error
 
 const config: HardhatUserConfig = {
   networks: {

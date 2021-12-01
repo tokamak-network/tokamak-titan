@@ -12,11 +12,6 @@ on:
   pull_request:
     paths:
       - 'go/batch-submitter/*'
-    branches:
-      - 'master'
-      - 'develop'
-      - '*rc'
-      - 'regenesis/*'
   workflow_dispatch:
 
 defaults:

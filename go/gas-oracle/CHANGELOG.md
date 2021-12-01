@@ -1,5 +1,17 @@
 # @eth-optimism/gas-oracle
 
+## 0.1.2
+
+### Patch Changes
+
+- 5a3996ec: Fixed gas-oacle tx/not_significant metric name
+
+## 0.1.1
+
+### Patch Changes
+
+- e4067d4c: Fix the gas oracle gas price prometheus metric
+
 ## 0.1.0
 
 ### Minor Changes

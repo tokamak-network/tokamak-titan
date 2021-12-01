@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies [584cbc25]
+  - @eth-optimism/core-utils@0.7.3
+  - @eth-optimism/contracts@0.5.5
+
+## 0.4.6
+
+### Patch Changes
+
+- 39607e7c: Trigger release of the batch submitter with yatm retry fix
+
+## 0.4.5
+
+### Patch Changes
+
+- 85f68bd3: Immediately reject on nonce errors to stop falling behind
+
+## 0.4.4
+
+### Patch Changes
+
+- 8e634b49: Fix package JSON issues
+- Updated dependencies [8e634b49]
+  - @eth-optimism/core-utils@0.7.2
+  - @eth-optimism/contracts@0.5.4
+
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [b9049406]
+- Updated dependencies [a8b14a7d]
+  - @eth-optimism/contracts@0.5.3
+
+## 0.4.2
+
+### Patch Changes
+
+- 526d7e51: Throw an error when sequencer and proposer have the same address.
+- 243f33e5: Standardize package json file format
+- Updated dependencies [243f33e5]
+  - @eth-optimism/common-ts@0.2.1
+  - @eth-optimism/contracts@0.5.2
+  - @eth-optimism/core-utils@0.7.1
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [c0fc7fee]
+  - @eth-optimism/contracts@0.5.1
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,23 @@
 # @eth-optimism/core-utils
 
+## 0.7.3
+
+### Patch Changes
+
+- 584cbc25: Clean up the L1 => L2 address aliasing utilities
+
+## 0.7.2
+
+### Patch Changes
+
+- 8e634b49: Fix package JSON issues
+
+## 0.7.1
+
+### Patch Changes
+
+- 243f33e5: Standardize package json file format
+
 ## 0.7.0
 
 ### Minor Changes
