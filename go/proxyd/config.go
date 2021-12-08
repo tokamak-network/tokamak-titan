@@ -1,8 +1,10 @@
 package proxyd
 
 type ServerConfig struct {
-	Host             string `toml:"host"`
-	Port             int    `toml:"port"`
+	RPCHost          string `toml:"rpc_host"`
+	RPCPort          int    `toml:"rpc_port"`
+	WSHost           string `toml:"ws_host"`
+	WSPort           int    `toml:"ws_port"`
 	MaxBodySizeBytes int64  `toml:"max_body_size_bytes"`
 }
 
@@ -29,14 +31,16 @@ type BackendConfig struct {
 	RPCURL     string `toml:"rpc_url"`
 	WSURL      string `toml:"ws_url"`
 	MaxRPS     int    `toml:"max_rps"`
-	MaxWSConns int    `toml:"max_ws_conns"`
+	MaxWSConns     int    `toml:"max_ws_conns"`
+	CAFile         string `toml:"ca_file"`
+	ClientCertFile string `toml:"client_cert_file"`
+	ClientKeyFile  string `toml:"client_key_file"`
 }
 
 type BackendsConfig map[string]*BackendConfig
 
 type BackendGroupConfig struct {
-	Backends  []string `toml:"backends"`
-	WSEnabled bool     `toml:"ws_enabled"`
+	Backends []string `toml:"backends"`
 }
 
 type BackendGroupsConfig map[string]*BackendGroupConfig
@@ -44,6 +48,7 @@ type BackendGroupsConfig map[string]*BackendGroupConfig
 type MethodMappingsConfig map[string]string
 
 type Config struct {
+	WSBackendGroup    string              `toml:"ws_backend_group"`
 	Server            *ServerConfig       `toml:"server"`
 	Redis             *RedisConfig        `toml:"redis"`
 	Metrics           *MetricsConfig      `toml:"metrics"`

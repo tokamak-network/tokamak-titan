@@ -1,5 +1,34 @@
 # @eth-optimism/proxyd
 
+## 3.1.2
+
+### Patch Changes
+
+- 1b79aa62: Release proxyd
+
+## 3.1.1
+
+### Patch Changes
+
+- b8802054: Trigger release of proxyd
+- 34fcb277: Bump proxyd to test release build workflow
+
+## 3.1.0
+
+### Minor Changes
+
+- da6138fd: Updated metrics, support local rate limiter
+
+### Patch Changes
+
+- 6c7f483b: Add support for additional SSL certificates in Docker container
+
+## 3.0.0
+
+### Major Changes
+
+- abe231bf: Make endpoints match Geth, better logging
+
 ## 2.0.0
 
 ### Major Changes

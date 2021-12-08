@@ -12,11 +12,13 @@ import (
 	"github.com/rs/cors"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 const (
-	ContextKeyAuth = "authorization"
+	ContextKeyAuth  = "authorization"
+	ContextKeyReqID = "req_id"
 )
 
 type Server struct {
@@ -27,7 +29,8 @@ type Server struct {
 	maxBodySize        int64
 	authenticatedPaths map[string]string
 	upgrader           *websocket.Upgrader
-	server             *http.Server
+	rpcServer          *http.Server
+	wsServer           *http.Server
 }
 
 func NewServer(
@@ -51,27 +54,46 @@ func NewServer(
 	}
 }
 
-func (s *Server) ListenAndServe(host string, port int) error {
+func (s *Server) RPCListenAndServe(host string, port int) error {
 	hdlr := mux.NewRouter()
 	hdlr.HandleFunc("/healthz", s.HandleHealthz).Methods("GET")
-	hdlr.HandleFunc("/api/v1/rpc", s.HandleRPC).Methods("POST")
-	hdlr.HandleFunc("/api/v1/{authorization}/rpc", s.HandleRPC).Methods("POST")
-	hdlr.HandleFunc("/api/v1/ws", s.HandleWS)
-	hdlr.HandleFunc("/api/v1/{authorization}/ws", s.HandleWS)
+	hdlr.HandleFunc("/", s.HandleRPC).Methods("POST")
+	hdlr.HandleFunc("/{authorization}", s.HandleRPC).Methods("POST")
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 	})
 	addr := fmt.Sprintf("%s:%d", host, port)
-	s.server = &http.Server{
+	s.rpcServer = &http.Server{
 		Handler: instrumentedHdlr(c.Handler(hdlr)),
 		Addr:    addr,
 	}
 	log.Info("starting HTTP server", "addr", addr)
-	return s.server.ListenAndServe()
+	return s.rpcServer.ListenAndServe()
+}
+
+func (s *Server) WSListenAndServe(host string, port int) error {
+	hdlr := mux.NewRouter()
+	hdlr.HandleFunc("/", s.HandleWS)
+	hdlr.HandleFunc("/{authorization}", s.HandleWS)
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+	})
+	addr := fmt.Sprintf("%s:%d", host, port)
+	s.wsServer = &http.Server{
+		Handler: instrumentedHdlr(c.Handler(hdlr)),
+		Addr:    addr,
+	}
+	log.Info("starting WS server", "addr", addr)
+	return s.wsServer.ListenAndServe()
 }
 
 func (s *Server) Shutdown() {
-	s.server.Shutdown(context.Background())
+	if s.rpcServer != nil {
+		s.rpcServer.Shutdown(context.Background())
+	}
+	if s.wsServer != nil {
+		s.wsServer.Shutdown(context.Background())
+	}
 }
 
 func (s *Server) HandleHealthz(w http.ResponseWriter, r *http.Request) {
@@ -79,10 +101,17 @@ func (s *Server) HandleHealthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
-	ctx := s.authenticate(w, r)
+	ctx := s.populateContext(w, r)
 	if ctx == nil {
 		return
 	}
+
+	log.Info(
+		"received RPC request",
+		"req_id", GetReqID(ctx),
+		"auth", GetAuthCtx(ctx),
+		"user_agent", r.Header.Get("user-agent"),
+	)
 
 	req, err := ParseRPCReq(io.LimitReader(r.Body, s.maxBodySize))
 	if err != nil {
@@ -92,51 +121,66 @@ func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  group := s.rpcMethodMappings[req.Method]
-  if group == "" {
-      // use unknown below to prevent DOS vector that fills up memory
-      // with arbitrary method names.
-      log.Info("blocked request for non-whitelisted method", "source", "ws", "method", req.Method)
-      RecordRPCError(ctx, BackendProxyd, MethodUnknown, ErrMethodNotWhitelisted)
-      writeRPCError(w, req.ID, ErrMethodNotWhitelisted)
-      return
-  }
+	group := s.rpcMethodMappings[req.Method]
+	if group == "" {
+		// use unknown below to prevent DOS vector that fills up memory
+		// with arbitrary method names.
+		log.Info(
+			"blocked request for non-whitelisted method",
+			"source", "rpc",
+			"req_id", GetReqID(ctx),
+			"method", req.Method,
+		)
+		RecordRPCError(ctx, BackendProxyd, MethodUnknown, ErrMethodNotWhitelisted)
+		writeRPCError(w, req.ID, ErrMethodNotWhitelisted)
+		return
+	}
 
 	backendRes, err := s.backendGroups[group].Forward(ctx, req)
 	if err != nil {
-		log.Error("error forwarding RPC request", "method", req.Method, "err", err)
+		log.Error(
+			"error forwarding RPC request",
+			"method", req.Method,
+			"req_id", GetReqID(ctx),
+			"err", err,
+		)
 		writeRPCError(w, req.ID, err)
 		return
 	}
+
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(backendRes); err != nil {
-		log.Error("error encoding response", "err", err)
+		log.Error(
+			"error encoding response",
+			"req_id", GetReqID(ctx),
+			"err", err,
+		)
 		RecordRPCError(ctx, BackendProxyd, req.Method, err)
 		writeRPCError(w, req.ID, err)
 		return
 	}
-
-	log.Debug("forwarded RPC method", "method", req.Method)
 }
 
 func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
-	ctx := s.authenticate(w, r)
+	ctx := s.populateContext(w, r)
 	if ctx == nil {
 		return
 	}
 
+	log.Info("received WS connection", "req_id", GetReqID(ctx))
+
 	clientConn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error("error upgrading client conn", "err", err)
+		log.Error("error upgrading client conn", "auth", GetAuthCtx(ctx), "req_id", GetReqID(ctx), "err", err)
 		return
 	}
 
-	proxier, err := s.wsBackendGroup.ProxyWS(clientConn, s.wsMethodWhitelist)
+	proxier, err := s.wsBackendGroup.ProxyWS(ctx, clientConn, s.wsMethodWhitelist)
 	if err != nil {
 		if errors.Is(err, ErrNoBackends) {
 			RecordUnserviceableRequest(ctx, RPCRequestSourceWS)
 		}
-		log.Error("error dialing ws backend", "err", err)
+		log.Error("error dialing ws backend", "auth", GetAuthCtx(ctx), "req_id", GetReqID(ctx), "err", err)
 		clientConn.Close()
 		return
 	}
@@ -145,13 +189,15 @@ func (s *Server) HandleWS(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		// Below call blocks so run it in a goroutine.
 		if err := proxier.Proxy(ctx); err != nil {
-			log.Error("error proxying websocket", "err", err)
+			log.Error("error proxying websocket", "auth", GetAuthCtx(ctx), "req_id", GetReqID(ctx), "err", err)
 		}
 		activeClientWsConnsGauge.WithLabelValues(GetAuthCtx(ctx)).Dec()
 	}()
+
+	log.Info("accepted WS connection", "auth", GetAuthCtx(ctx), "req_id", GetReqID(ctx))
 }
 
-func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) context.Context {
+func (s *Server) populateContext(w http.ResponseWriter, r *http.Request) context.Context {
 	vars := mux.Vars(r)
 	authorization := vars["authorization"]
 
@@ -159,36 +205,57 @@ func (s *Server) authenticate(w http.ResponseWriter, r *http.Request) context.Co
 		// handle the edge case where auth is disabled
 		// but someone sends in an auth key anyway
 		if authorization != "" {
+			log.Info("blocked authenticated request against unauthenticated proxy")
+			httpResponseCodesTotal.WithLabelValues("404").Inc()
 			w.WriteHeader(404)
 			return nil
 		}
-		return r.Context()
+		return context.WithValue(
+			r.Context(),
+			ContextKeyReqID,
+			randStr(10),
+		)
 	}
 
 	if authorization == "" || s.authenticatedPaths[authorization] == "" {
+		log.Info("blocked unauthorized request", "authorization", authorization)
+		httpResponseCodesTotal.WithLabelValues("401").Inc()
 		w.WriteHeader(401)
 		return nil
 	}
 
-	return context.WithValue(r.Context(), ContextKeyAuth, s.authenticatedPaths[authorization])
+	ctx := context.WithValue(r.Context(), ContextKeyAuth, s.authenticatedPaths[authorization])
+	return context.WithValue(
+		ctx,
+		ContextKeyReqID,
+		randStr(10),
+	)
 }
 
 func writeRPCError(w http.ResponseWriter, id *int, err error) {
-	enc := json.NewEncoder(w)
-	w.WriteHeader(200)
-
-	var body *RPCRes
+	var res *RPCRes
 	if r, ok := err.(*RPCErr); ok {
-		body = NewRPCErrorRes(id, r)
+		res = NewRPCErrorRes(id, r)
 	} else {
-		body = NewRPCErrorRes(id, &RPCErr{
+		res = NewRPCErrorRes(id, &RPCErr{
 			Code:    JSONRPCErrorInternal,
 			Message: "internal error",
 		})
 	}
-	if err := enc.Encode(body); err != nil {
-		log.Error("error writing rpc error", "err", err)
+	writeRPCRes(w, res)
+}
+
+func writeRPCRes(w http.ResponseWriter, res *RPCRes) {
+	statusCode := 200
+	if res.IsError() && res.Error.HTTPErrorCode != 0 {
+		statusCode = res.Error.HTTPErrorCode
 	}
+	w.WriteHeader(statusCode)
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(res); err != nil {
+		log.Error("error writing rpc response", "err", err)
+	}
+	httpResponseCodesTotal.WithLabelValues(strconv.Itoa(statusCode)).Inc()
 }
 
 func instrumentedHdlr(h http.Handler) http.HandlerFunc {
@@ -207,4 +274,12 @@ func GetAuthCtx(ctx context.Context) string {
 	}
 
 	return authUser
+}
+
+func GetReqID(ctx context.Context) string {
+	reqId, ok := ctx.Value(ContextKeyReqID).(string)
+	if !ok {
+		return ""
+	}
+	return reqId
 }

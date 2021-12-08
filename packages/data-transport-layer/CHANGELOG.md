@@ -1,5 +1,59 @@
 # data transport layer
 
+## 0.5.7
+
+### Patch Changes
+
+- 57d5b8f9: Build docker images with node.js version 16
+
+## 0.5.6
+
+### Patch Changes
+
+- 0ab37fc9: Update to node.js version 16
+
+## 0.5.5
+
+### Patch Changes
+
+- 128e0f84: Handle unprotected transactions
+- Updated dependencies [584cbc25]
+  - @eth-optimism/core-utils@0.7.3
+  - @eth-optimism/contracts@0.5.5
+
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [8e634b49]
+  - @eth-optimism/core-utils@0.7.2
+  - @eth-optimism/contracts@0.5.4
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [b9049406]
+- Updated dependencies [a8b14a7d]
+  - @eth-optimism/contracts@0.5.3
+
+## 0.5.2
+
+### Patch Changes
+
+- 243f33e5: Standardize package json file format
+- Updated dependencies [243f33e5]
+  - @eth-optimism/common-ts@0.2.1
+  - @eth-optimism/contracts@0.5.2
+  - @eth-optimism/core-utils@0.7.1
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [c0fc7fee]
+  - @eth-optimism/contracts@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes

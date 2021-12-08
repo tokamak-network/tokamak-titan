@@ -1,5 +1,23 @@
 # @eth-optimism/integration-tests
 
+## 0.3.3
+
+### Patch Changes
+
+- 0ab37fc9: Update to node.js version 16
+
+## 0.3.2
+
+### Patch Changes
+
+- d141095c: Allow for unprotected transactions
+
+## 0.3.1
+
+### Patch Changes
+
+- 243f33e5: Standardize package json file format
+
 ## 0.3.0
 
 ### Minor Changes

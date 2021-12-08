@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies [584cbc25]
+  - @eth-optimism/core-utils@0.7.3
+
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [8e634b49]
+  - @eth-optimism/core-utils@0.7.2
+
+## 0.5.3
+
+### Patch Changes
+
+- b9049406: Use a gas price of zero for static calls in the deploy process
+- a8b14a7d: Adds additional deploy step to transfer messenger ownership
+
+## 0.5.2
+
+### Patch Changes
+
+- 243f33e5: Standardize package json file format
+- Updated dependencies [243f33e5]
+  - @eth-optimism/core-utils@0.7.1
+
+## 0.5.1
+
+### Patch Changes
+
+- c0fc7fee: Add AddressDictator validation script
+
 ## 0.5.0
 
 ### Minor Changes

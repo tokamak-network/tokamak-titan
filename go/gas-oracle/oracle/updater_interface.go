@@ -18,8 +18,8 @@ import (
 
 var (
 	txSendCounter           = metrics.NewRegisteredCounter("tx/send", ometrics.DefaultRegistry)
-	txNotSignificantCounter = metrics.NewRegisteredCounter("tx/not-significant", ometrics.DefaultRegistry)
-	gasPriceGauge           = metrics.NewRegisteredGauge("gas-price", ometrics.DefaultRegistry)
+	txNotSignificantCounter = metrics.NewRegisteredCounter("tx/not_significant", ometrics.DefaultRegistry)
+	gasPriceGauge           = metrics.NewRegisteredGauge("gas_price", ometrics.DefaultRegistry)
 	txConfTimer             = metrics.NewRegisteredTimer("tx/confirmed", ometrics.DefaultRegistry)
 	txSendTimer             = metrics.NewRegisteredTimer("tx/send", ometrics.DefaultRegistry)
 )
@@ -35,6 +35,19 @@ func wrapGetLatestBlockNumberFn(backend bind.ContractBackend) func() (uint64, er
 			return 0, err
 		}
 		return tip.Number.Uint64(), nil
+	}
+}
+
+// wrapGetGasUsedByBlock is used by the GasPriceUpdater to get
+// the amount of gas used by a particular block. This is used to
+// track gas usage over time
+func wrapGetGasUsedByBlock(backend bind.ContractBackend) func(*big.Int) (uint64, error) {
+	return func(number *big.Int) (uint64, error) {
+		block, err := backend.HeaderByNumber(context.Background(), number)
+		if err != nil {
+			return 0, err
+		}
+		return block.GasUsed, nil
 	}
 }
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.3
+
+### Patch Changes
+
+- 5febe10f: fixes empty block detection and removes empty worker tasks
+- 272d20d6: renames l2geth package name to github.com/ethereum-optimism/optimism/l2geth
+
+## 0.5.2
+
+### Patch Changes
+
+- d141095c: Allow for unprotected transactions
+
+## 0.5.1
+
+### Patch Changes
+
+- 7f2898ba: Fixes deadlock
+
 ## 0.5.0
 
 ### Minor Changes

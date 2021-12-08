@@ -2,7 +2,7 @@ ARG LOCAL_REGISTRY=docker.io
 ARG BUILDER_TAG=latest
 FROM ${LOCAL_REGISTRY}/ethereumoptimism/builder:${BUILDER_TAG} AS builder
 
-FROM node:14-alpine
+FROM node:16-alpine
 
 RUN apk add --no-cache git curl python3 bash jq
 
@@ -19,6 +19,7 @@ COPY --from=builder /optimism/packages/core-utils/dist ./packages/core-utils/dis
 WORKDIR /opt/optimism/packages/contracts
 COPY --from=builder /optimism/packages/contracts/dist ./dist
 COPY --from=builder /optimism/packages/contracts/*.json ./
+COPY --from=builder /optimism/packages/contracts/deployments ./deployments
 COPY --from=builder /optimism/packages/contracts/node_modules ./node_modules
 COPY --from=builder /optimism/packages/contracts/artifacts ./artifacts
 COPY --from=builder /optimism/packages/contracts/src ./src

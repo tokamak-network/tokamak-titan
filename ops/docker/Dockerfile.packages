@@ -4,7 +4,7 @@
 # ### BASE: Install deps
 # We do not use Alpine because there's a regression causing it to be very slow
 # when used with typescript/hardhat: https://github.com/nomiclabs/hardhat/issues/1219
-FROM node:14.18.1-buster-slim as base
+FROM node:16.13-buster-slim as base
 
 RUN apt-get update -y && apt-get install -y git curl jq python3
 
@@ -57,6 +57,6 @@ CMD ["yarn", "test:integration"]
 
 
 FROM base as relayer
-WORKDIR /opt/optimism/packages/message-relayer
+WORKDIR /optimism/packages/message-relayer
 COPY ./ops/scripts/relayer.sh .
-ENTRYPOINT ["npm", "run", "start"]
+CMD ["npm", "run", "start"]
