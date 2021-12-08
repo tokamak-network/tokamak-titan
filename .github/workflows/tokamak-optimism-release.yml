@@ -3,7 +3,7 @@ name: Tokamak Optimism Release
 on:
   push:
     branches:
-      - "master"
+      - "main"
 
 jobs:
   l2geth:
@@ -210,7 +210,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.monorepo
           push: true
-          tags: onthertech/optimism.builder
+          tags: onthertech/optimism.builder:latest
 
   message-relayer:
     name: Publish Message Relayer
