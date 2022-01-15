@@ -11,7 +11,7 @@
     "withdraw": "./src/exec/withdraw.ts"
   },
   "scripts": {
-    "start": "ts-node ./src/exec/run.ts",
+    "start": "node ./exec/run-message-relayer.js",
     "build": "tsc -p ./tsconfig.build.json",
     "clean": "rimraf  dist/ ./tsconfig.build.tsbuildinfo",
     "lint": "yarn lint:fix && yarn lint:check",
