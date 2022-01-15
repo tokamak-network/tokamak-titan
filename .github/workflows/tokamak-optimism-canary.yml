@@ -348,7 +348,7 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: canary-publish
+    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -386,7 +386,7 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: canary-publish
+    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -423,7 +423,7 @@ jobs:
             GITVERSION=${{ steps.build_args.outputs.GITVERSION }}
 
   rpc-proxy:
-    name: Publish rpc-proxy Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    name: Publish rpc-proxy Version ${{ needs.builder.outputs.canary-docker-tag }}
     needs: builder
     runs-on: ubuntu-latest
 
