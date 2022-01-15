@@ -154,7 +154,6 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter
-    needs: release
     runs-on: ubuntu-latest
 
     steps:
@@ -192,7 +191,6 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter
-    needs: release
     runs-on: ubuntu-latest
 
     steps:
