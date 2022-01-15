@@ -36,26 +36,6 @@ jobs:
             onthertech/optimism.l2geth:${{ steps.extractver.outputs.version }}
             onthertech/optimism.l2geth:latest
 
-      - name: Publish op_exporter
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.op_exporter
-          push: true
-          tags: |
-            onthertech/optimism.op_exporter:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.op_exporter:latest
-
-      - name: Publish rpc-proxy
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.rpc-proxy
-          push: true
-          tags: |
-            onthertech/optimism.rpc-proxy:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.rpc-proxy:latest
-
   gas-oracle:
     name: Publish Gas Oracle
     runs-on: ubuntu-latest
