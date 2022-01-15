@@ -24,7 +24,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '16.x'
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -76,7 +76,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '16.x'
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -131,6 +131,13 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           flags: message-relayer
+      - uses: codecov/codecov-action@v1
+        with:
+          files: ./packages/sdk/coverage.json
+          fail_ci_if_error: false
+          verbose: true
+          flags: sdk
+
   lint:
     name: Linting
     runs-on: ubuntu-latest
@@ -140,7 +147,7 @@ jobs:
         run: git fetch
       - uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: '16.x'
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
