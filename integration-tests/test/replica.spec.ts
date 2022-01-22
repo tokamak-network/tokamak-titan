@@ -1,3 +1,4 @@
+import { expect } from './shared/setup'
 import { OptimismEnv } from './shared/env'
 import {
   defaultTransactionFactory,
@@ -5,7 +6,6 @@ import {
   sleep,
   isLiveNetwork,
 } from './shared/utils'
-import { expect } from 'chai'
 import { TransactionReceipt } from '@ethersproject/abstract-provider'
 
 describe('Replica Tests', () => {
@@ -53,6 +53,33 @@ describe('Replica Tests', () => {
       }
       const signed = await env.l2Wallet.signTransaction(tx)
       const result = await env.l2Provider.sendTransaction(signed)
+
+      let receipt: TransactionReceipt
+      while (!receipt) {
+        receipt = await env.replicaProvider.getTransactionReceipt(result.hash)
+        await sleep(200)
+      }
+
+      const sequencerBlock = (await env.l2Provider.getBlock(
+        result.blockNumber
+      )) as any
+
+      const replicaBlock = (await env.replicaProvider.getBlock(
+        result.blockNumber
+      )) as any
+
+      expect(sequencerBlock.stateRoot).to.deep.eq(replicaBlock.stateRoot)
+      expect(sequencerBlock.hash).to.deep.eq(replicaBlock.hash)
+    })
+
+    it('should forward tx to sequencer', async () => {
+      const tx = {
+        ...defaultTransactionFactory(),
+        nonce: await env.l2Wallet.getTransactionCount(),
+        gasPrice: await gasPriceForL2(env),
+      }
+      const signed = await env.l2Wallet.signTransaction(tx)
+      const result = await env.replicaProvider.sendTransaction(signed)
 
       let receipt: TransactionReceipt
       while (!receipt) {
