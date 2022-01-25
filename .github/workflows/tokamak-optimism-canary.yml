@@ -143,7 +143,9 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.monorepo
           push: true
-          tags: onthertech/optimism.builder
+          tags: |
+            onthertech/optimism.builder:${{ needs.canary-publish.outputs.canary-docker-tag }}
+            onthertech/optimism.builder:dev-latest
 
   message-relayer:
     name: Publish Message Relayer Version ${{ needs.builder.outputs.canary-docker-tag }}
