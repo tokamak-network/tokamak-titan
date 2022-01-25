@@ -315,6 +315,7 @@ jobs:
           tags: |
             onthertech/optimism.message-relayer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.message-relayer:latest
+          build-args: BUILDER_TAG=latest
 
   batch-submitter:
     name: Publish Batch Submitter
@@ -347,6 +348,7 @@ jobs:
           tags: |
             onthertech/optimism.batch-submitter:${{ steps.extractver.outputs.version }}
             onthertech/optimism.batch-submitter:latest
+          build-args: BUILDER_TAG=latest
 
   data-transport-layer:
     name: Publish Data Transport Layer
@@ -379,6 +381,7 @@ jobs:
           tags: |
             onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.data-transport-layer:latest
+          build-args: BUILDER_TAG=latest
 
   contracts:
     name: Publish Deployer
@@ -411,6 +414,7 @@ jobs:
           tags: |
             onthertech/optimism.deployer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.deployer:latest
+          build-args: BUILDER_TAG=latest
 
   integration_tests:
     name: Publish Integration tests
@@ -443,6 +447,7 @@ jobs:
           tags: |
             onthertech/optimism.integration-tests:${{ steps.extractver.outputs.version }}
             onthertech/optimism.integration-tests:latest
+          build-args: BUILDER_TAG=latest
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
@@ -474,3 +479,4 @@ jobs:
           tags: |
             onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.version }}
             onthertech/optimism.replica-healthcheck:latest
+          build-args: BUILDER_TAG=latest

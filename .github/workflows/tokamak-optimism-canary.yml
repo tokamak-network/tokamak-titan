@@ -171,6 +171,7 @@ jobs:
           tags: |
             onthertech/optimism.message-relayer:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.message-relayer:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   batch-submitter:
     name: Publish Batch Submitter Version ${{ needs.builder.outputs.canary-docker-tag }}
@@ -198,6 +199,7 @@ jobs:
           tags: |
             onthertech/optimism.batch-submitter:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.batch-submitter:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   data-transport-layer:
     name: Publish Data Transport Layer Version ${{ needs.builder.outputs.canary-docker-tag }}
@@ -225,6 +227,7 @@ jobs:
           tags: |
             onthertech/optimism.data-transport-layer:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.data-transport-layer:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   contracts:
     name: Publish Deployer Version ${{ needs.builder.outputs.canary-docker-tag }}
@@ -252,6 +255,7 @@ jobs:
           tags: |
             onthertech/optimism.deployer:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.deployer:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   integration_tests:
     name: Publish Integration tests ${{ needs.builder.outputs.integration-tests }}
@@ -279,6 +283,7 @@ jobs:
           tags: |
             onthertech/optimism.integration-tests:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.integration-tests:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   replica-healthcheck:
     name: Publish Data Transport Layer Version ${{ needs.builder.outputs.canary-docker-tag }}
@@ -307,6 +312,7 @@ jobs:
           tags: |
             onthertech/optimism.replica-healthcheck:${{ needs.builder.outputs.canary-docker-tag }}
             onthertech/optimism.replica-healthcheck:dev-latest
+          build-args: BUILDER_TAG=dev-latest
 
   proxyd:
     name: Publish proxyd Version ${{ needs.builder.outputs.canary-docker-tag }}
