@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.9
+
+### Patch Changes
+
+- e631c39c: Implement berlin hardfork
+
+## 0.5.8
+
+### Patch Changes
+
+- 949916f8: Add a better error message for when the sequencer url is not configured when proxying user requests to the sequencer for `eth_sendRawTransaction` when running as a verifier/replica
+- 300f79bf: Fix nonce issue
+- ae96d784: Add reinitialize-by-url command, add dump chain state command
+- c7569a16: Fix blocknumber monotonicity logging bug
+
 ## 0.5.7
 
 ### Patch Changes

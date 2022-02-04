@@ -1,5 +1,18 @@
 # @eth-optimism/core-utils
 
+## 0.7.5
+
+### Patch Changes
+
+- ad94b9d1: test/docs: Improve docstrings and tests for utils inside of hex-strings.ts
+
+## 0.7.4
+
+### Patch Changes
+
+- ba96a455: Improved docstrings for BCFG typings
+- c3e85fef: Cleans up the internal file and folder structure for the typings exported by core-utils
+
 ## 0.7.3
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @eth-optimism/proxyd
 
+## 3.7.0
+
+### Minor Changes
+
+- 3c2926b1: Add debug cache status header to proxyd responses
+
+## 3.6.0
+
+### Minor Changes
+
+- 096c5f20: proxyd: Allow cached RPCs to be evicted by redis
+- 71d64834: Add caching for block-dependent RPCs
+- fd2e1523: proxyd: Cache block-dependent RPCs
+- 1760613c: Add integration tests and batching
+
 ## 3.5.0
 
 ### Minor Changes

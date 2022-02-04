@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.5.11
+
+### Patch Changes
+
+- e631c39c: Add berlin hardfork config to genesis creation
+
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [ad94b9d1]
+  - @eth-optimism/core-utils@0.7.5
+
+## 0.5.9
+
+### Patch Changes
+
+- Updated dependencies [ba96a455]
+- Updated dependencies [c3e85fef]
+  - @eth-optimism/core-utils@0.7.4
+
 ## 0.5.8
 
 ### Patch Changes

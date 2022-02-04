@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.4.16
+
+### Patch Changes
+
+- Updated dependencies [e631c39c]
+  - @eth-optimism/contracts@0.5.11
+
+## 0.4.15
+
+### Patch Changes
+
+- ae4a90d9: Adds a fix for the BSS to account for new timestamp logic in L2Geth
+- ca547c4e: Import performance to not couple batch submitter to version of nodejs that has performance as a builtin
+- Updated dependencies [ad94b9d1]
+  - @eth-optimism/core-utils@0.7.5
+  - @eth-optimism/contracts@0.5.10
+
+## 0.4.14
+
+### Patch Changes
+
+- Updated dependencies [ba96a455]
+- Updated dependencies [c3e85fef]
+  - @eth-optimism/core-utils@0.7.4
+  - @eth-optimism/contracts@0.5.9
+
 ## 0.4.13
 
 ### Patch Changes

@@ -14,69 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestNextGasPrice asserts that NextGasPrice properly bumps the passed current
-// gas price, and clamps it to the max gas price. It also tests that
-// NextGasPrice doesn't mutate the passed curGasPrice argument.
-func TestNextGasPrice(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name              string
-		curGasPrice       *big.Int
-		gasRetryIncrement *big.Int
-		maxGasPrice       *big.Int
-		expGasPrice       *big.Int
-	}{
-		{
-			name:              "increment below max",
-			curGasPrice:       new(big.Int).SetUint64(5),
-			gasRetryIncrement: new(big.Int).SetUint64(10),
-			maxGasPrice:       new(big.Int).SetUint64(20),
-			expGasPrice:       new(big.Int).SetUint64(15),
-		},
-		{
-			name:              "increment equal max",
-			curGasPrice:       new(big.Int).SetUint64(5),
-			gasRetryIncrement: new(big.Int).SetUint64(10),
-			maxGasPrice:       new(big.Int).SetUint64(15),
-			expGasPrice:       new(big.Int).SetUint64(15),
-		},
-		{
-			name:              "increment above max",
-			curGasPrice:       new(big.Int).SetUint64(5),
-			gasRetryIncrement: new(big.Int).SetUint64(10),
-			maxGasPrice:       new(big.Int).SetUint64(12),
-			expGasPrice:       new(big.Int).SetUint64(12),
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			// Copy curGasPrice, as we will later test for mutation.
-			curGasPrice := new(big.Int).Set(test.curGasPrice)
-
-			nextGasPrice := txmgr.NextGasPrice(
-				curGasPrice, test.gasRetryIncrement,
-				test.maxGasPrice,
-			)
-
-			require.Equal(t, nextGasPrice, test.expGasPrice)
-
-			// Ensure curGasPrice hasn't been mutated. This check
-			// enforces that NextGasPrice creates a copy internally.
-			// Failure to do so could result in gas price bumps
-			// being read concurrently from other goroutines, and
-			// introduce race conditions.
-			require.Equal(t, curGasPrice, test.curGasPrice)
-		})
-	}
-}
-
 // testHarness houses the necessary resources to test the SimpleTxManager.
 type testHarness struct {
-	cfg     txmgr.Config
-	mgr     txmgr.TxManager
-	backend *mockBackend
+	cfg       txmgr.Config
+	mgr       txmgr.TxManager
+	backend   *mockBackend
+	gasPricer *gasPricer
 }
 
 // newTestHarnessWithConfig initializes a testHarness with a specific
@@ -86,22 +29,70 @@ func newTestHarnessWithConfig(cfg txmgr.Config) *testHarness {
 	mgr := txmgr.NewSimpleTxManager("TEST", cfg, backend)
 
 	return &testHarness{
-		cfg:     cfg,
-		mgr:     mgr,
-		backend: backend,
+		cfg:       cfg,
+		mgr:       mgr,
+		backend:   backend,
+		gasPricer: newGasPricer(3),
 	}
 }
 
 // newTestHarness initializes a testHarness with a defualt configuration that is
 // suitable for most tests.
 func newTestHarness() *testHarness {
-	return newTestHarnessWithConfig(txmgr.Config{
-		MinGasPrice:          new(big.Int).SetUint64(5),
-		MaxGasPrice:          new(big.Int).SetUint64(50),
-		GasRetryIncrement:    new(big.Int).SetUint64(5),
+	return newTestHarnessWithConfig(configWithNumConfs(1))
+}
+
+func configWithNumConfs(numConfirmations uint64) txmgr.Config {
+	return txmgr.Config{
 		ResubmissionTimeout:  time.Second,
 		ReceiptQueryInterval: 50 * time.Millisecond,
-	})
+		NumConfirmations:     numConfirmations,
+	}
+}
+
+type gasPricer struct {
+	epoch         int64
+	mineAtEpoch   int64
+	baseGasTipFee *big.Int
+	baseBaseFee   *big.Int
+	mu            sync.Mutex
+}
+
+func newGasPricer(mineAtEpoch int64) *gasPricer {
+	return &gasPricer{
+		mineAtEpoch:   mineAtEpoch,
+		baseGasTipFee: big.NewInt(5),
+		baseBaseFee:   big.NewInt(7),
+	}
+}
+
+func (g *gasPricer) expGasFeeCap() *big.Int {
+	_, gasFeeCap := g.feesForEpoch(g.mineAtEpoch)
+	return gasFeeCap
+}
+
+func (g *gasPricer) feesForEpoch(epoch int64) (*big.Int, *big.Int) {
+	epochBaseFee := new(big.Int).Mul(g.baseBaseFee, big.NewInt(epoch))
+	epochGasTipCap := new(big.Int).Mul(g.baseGasTipFee, big.NewInt(epoch))
+	epochGasFeeCap := txmgr.CalcGasFeeCap(epochBaseFee, epochGasTipCap)
+
+	return epochGasTipCap, epochGasFeeCap
+}
+
+func (g *gasPricer) sample() (*big.Int, *big.Int, bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	g.epoch++
+	epochGasTipCap, epochGasFeeCap := g.feesForEpoch(g.epoch)
+	shouldMine := g.epoch == g.mineAtEpoch
+
+	return epochGasTipCap, epochGasFeeCap, shouldMine
+}
+
+type minedTxInfo struct {
+	gasFeeCap   *big.Int
+	blockNumber uint64
 }
 
 // mockBackend implements txmgr.ReceiptSource that tracks mined transactions
@@ -109,30 +100,47 @@ func newTestHarness() *testHarness {
 type mockBackend struct {
 	mu sync.RWMutex
 
-	// txHashMinedWithGasPrice tracks the has of a mined transaction to its
-	// gas price.
-	txHashMinedWithGasPrice map[common.Hash]*big.Int
+	// blockHeight tracks the current height of the chain.
+	blockHeight uint64
+
+	// minedTxs maps the hash of a mined transaction to its details.
+	minedTxs map[common.Hash]minedTxInfo
 }
 
 // newMockBackend initializes a new mockBackend.
 func newMockBackend() *mockBackend {
 	return &mockBackend{
-		txHashMinedWithGasPrice: make(map[common.Hash]*big.Int),
+		minedTxs: make(map[common.Hash]minedTxInfo),
 	}
 }
 
-// mine records a (txHash, gasPrice) as confirmed. Subsequent calls to
+// mine records a (txHash, gasFeeCap) as confirmed. Subsequent calls to
 // TransactionReceipt with a matching txHash will result in a non-nil receipt.
-func (b *mockBackend) mine(txHash common.Hash, gasPrice *big.Int) {
+// If a nil txHash is supplied this has the effect of mining an empty block.
+func (b *mockBackend) mine(txHash *common.Hash, gasFeeCap *big.Int) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	b.txHashMinedWithGasPrice[txHash] = gasPrice
+	b.blockHeight++
+	if txHash != nil {
+		b.minedTxs[*txHash] = minedTxInfo{
+			gasFeeCap:   gasFeeCap,
+			blockNumber: b.blockHeight,
+		}
+	}
+}
+
+// BlockNumber returns the most recent block number.
+func (b *mockBackend) BlockNumber(ctx context.Context) (uint64, error) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	return b.blockHeight, nil
 }
 
 // TransactionReceipt queries the mockBackend for a mined txHash. If none is
 // found, nil is returned for both return values. Otherwise, it retruns a
-// receipt containing the txHash and the gasPrice used in the GasUsed to make
+// receipt containing the txHash and the gasFeeCap used in the GasUsed to make
 // the value accessible from our test framework.
 func (b *mockBackend) TransactionReceipt(
 	ctx context.Context,
@@ -142,16 +150,17 @@ func (b *mockBackend) TransactionReceipt(
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
-	gasPrice, ok := b.txHashMinedWithGasPrice[txHash]
+	txInfo, ok := b.minedTxs[txHash]
 	if !ok {
 		return nil, nil
 	}
 
-	// Return the gas price for the transaction in the GasUsed field so that
+	// Return the gas fee cap for the transaction in the GasUsed field so that
 	// we can assert the proper tx confirmed in our tests.
 	return &types.Receipt{
-		TxHash:  txHash,
-		GasUsed: gasPrice.Uint64(),
+		TxHash:      txHash,
+		GasUsed:     txInfo.gasFeeCap.Uint64(),
+		BlockNumber: big.NewInt(int64(txInfo.blockNumber)),
 	}, nil
 }
 
@@ -161,14 +170,16 @@ func TestTxMgrConfirmAtMinGasPrice(t *testing.T) {
 	t.Parallel()
 
 	h := newTestHarness()
+
+	gasFeeCap := big.NewInt(5)
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
-		tx := types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
+		tx := types.NewTx(&types.DynamicFeeTx{
+			GasFeeCap: gasFeeCap,
 		})
-		h.backend.mine(tx.Hash(), gasPrice)
+		txHash := tx.Hash()
+		h.backend.mine(&txHash, gasFeeCap)
 		return tx, nil
 	}
 
@@ -176,7 +187,7 @@ func TestTxMgrConfirmAtMinGasPrice(t *testing.T) {
 	receipt, err := h.mgr.Send(ctx, sendTxFunc)
 	require.Nil(t, err)
 	require.NotNil(t, receipt)
-	require.Equal(t, receipt.GasUsed, h.cfg.MinGasPrice.Uint64())
+	require.Equal(t, gasFeeCap.Uint64(), receipt.GasUsed)
 }
 
 // TestTxMgrNeverConfirmCancel asserts that a Send can be canceled even if no
@@ -189,11 +200,10 @@ func TestTxMgrNeverConfirmCancel(t *testing.T) {
 
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
 		// Don't publish tx to backend, simulating never being mined.
-		return types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
+		return types.NewTx(&types.DynamicFeeTx{
+			GasFeeCap: big.NewInt(5),
 		}), nil
 	}
 
@@ -207,20 +217,22 @@ func TestTxMgrNeverConfirmCancel(t *testing.T) {
 
 // TestTxMgrConfirmsAtMaxGasPrice asserts that Send properly returns the max gas
 // price receipt if none of the lower gas price txs were mined.
-func TestTxMgrConfirmsAtMaxGasPrice(t *testing.T) {
+func TestTxMgrConfirmsAtHigherGasPrice(t *testing.T) {
 	t.Parallel()
 
 	h := newTestHarness()
 
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
-		tx := types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
+		gasTipCap, gasFeeCap, shouldMine := h.gasPricer.sample()
+		tx := types.NewTx(&types.DynamicFeeTx{
+			GasTipCap: gasTipCap,
+			GasFeeCap: gasFeeCap,
 		})
-		if gasPrice.Cmp(h.cfg.MaxGasPrice) == 0 {
-			h.backend.mine(tx.Hash(), gasPrice)
+		if shouldMine {
+			txHash := tx.Hash()
+			h.backend.mine(&txHash, gasFeeCap)
 		}
 		return tx, nil
 	}
@@ -229,39 +241,7 @@ func TestTxMgrConfirmsAtMaxGasPrice(t *testing.T) {
 	receipt, err := h.mgr.Send(ctx, sendTxFunc)
 	require.Nil(t, err)
 	require.NotNil(t, receipt)
-	require.Equal(t, receipt.GasUsed, h.cfg.MaxGasPrice.Uint64())
-}
-
-// TestTxMgrConfirmsAtMaxGasPriceDelayed asserts that after the maximum gas
-// price tx has been published, and a resubmission timeout has elapsed, that an
-// error is returned signaling that even our max gas price is taking too long.
-func TestTxMgrConfirmsAtMaxGasPriceDelayed(t *testing.T) {
-	t.Parallel()
-
-	h := newTestHarness()
-
-	sendTxFunc := func(
-		ctx context.Context,
-		gasPrice *big.Int,
-	) (*types.Transaction, error) {
-		tx := types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
-		})
-		// Delay mining of the max gas price tx by more than the
-		// resubmission timeout. Default config uses 1 second. Send
-		// should still return an error beforehand.
-		if gasPrice.Cmp(h.cfg.MaxGasPrice) == 0 {
-			time.AfterFunc(2*time.Second, func() {
-				h.backend.mine(tx.Hash(), gasPrice)
-			})
-		}
-		return tx, nil
-	}
-
-	ctx := context.Background()
-	receipt, err := h.mgr.Send(ctx, sendTxFunc)
-	require.Equal(t, err, txmgr.ErrPublishTimeout)
-	require.Nil(t, receipt)
+	require.Equal(t, h.gasPricer.expGasFeeCap().Uint64(), receipt.GasUsed)
 }
 
 // errRpcFailure is a sentinel error used in testing to fail publications.
@@ -277,14 +257,15 @@ func TestTxMgrBlocksOnFailingRpcCalls(t *testing.T) {
 
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
 		return nil, errRpcFailure
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	receipt, err := h.mgr.Send(ctx, sendTxFunc)
-	require.Equal(t, err, txmgr.ErrPublishTimeout)
+	require.Equal(t, err, context.DeadlineExceeded)
 	require.Nil(t, receipt)
 }
 
@@ -298,17 +279,20 @@ func TestTxMgrOnlyOnePublicationSucceeds(t *testing.T) {
 
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
+		gasTipCap, gasFeeCap, shouldMine := h.gasPricer.sample()
+
 		// Fail all but the final attempt.
-		if gasPrice.Cmp(h.cfg.MaxGasPrice) != 0 {
+		if !shouldMine {
 			return nil, errRpcFailure
 		}
 
-		tx := types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
+		tx := types.NewTx(&types.DynamicFeeTx{
+			GasTipCap: gasTipCap,
+			GasFeeCap: gasFeeCap,
 		})
-		h.backend.mine(tx.Hash(), gasPrice)
+		txHash := tx.Hash()
+		h.backend.mine(&txHash, gasFeeCap)
 		return tx, nil
 	}
 
@@ -317,7 +301,7 @@ func TestTxMgrOnlyOnePublicationSucceeds(t *testing.T) {
 	require.Nil(t, err)
 
 	require.NotNil(t, receipt)
-	require.Equal(t, receipt.GasUsed, h.cfg.MaxGasPrice.Uint64())
+	require.Equal(t, h.gasPricer.expGasFeeCap().Uint64(), receipt.GasUsed)
 }
 
 // TestTxMgrConfirmsMinGasPriceAfterBumping delays the mining of the initial tx
@@ -330,15 +314,17 @@ func TestTxMgrConfirmsMinGasPriceAfterBumping(t *testing.T) {
 
 	sendTxFunc := func(
 		ctx context.Context,
-		gasPrice *big.Int,
 	) (*types.Transaction, error) {
-		tx := types.NewTx(&types.LegacyTx{
-			GasPrice: gasPrice,
+		gasTipCap, gasFeeCap, shouldMine := h.gasPricer.sample()
+		tx := types.NewTx(&types.DynamicFeeTx{
+			GasTipCap: gasTipCap,
+			GasFeeCap: gasFeeCap,
 		})
 		// Delay mining the tx with the min gas price.
-		if gasPrice.Cmp(h.cfg.MinGasPrice) == 0 {
+		if shouldMine {
 			time.AfterFunc(5*time.Second, func() {
-				h.backend.mine(tx.Hash(), gasPrice)
+				txHash := tx.Hash()
+				h.backend.mine(&txHash, gasFeeCap)
 			})
 		}
 		return tx, nil
@@ -348,7 +334,7 @@ func TestTxMgrConfirmsMinGasPriceAfterBumping(t *testing.T) {
 	receipt, err := h.mgr.Send(ctx, sendTxFunc)
 	require.Nil(t, err)
 	require.NotNil(t, receipt)
-	require.Equal(t, receipt.GasUsed, h.cfg.MinGasPrice.Uint64())
+	require.Equal(t, h.gasPricer.expGasFeeCap().Uint64(), receipt.GasUsed)
 }
 
 // TestWaitMinedReturnsReceiptOnFirstSuccess insta-mines a transaction and
@@ -361,10 +347,10 @@ func TestWaitMinedReturnsReceiptOnFirstSuccess(t *testing.T) {
 	// Create a tx and mine it immediately using the default backend.
 	tx := types.NewTx(&types.LegacyTx{})
 	txHash := tx.Hash()
-	h.backend.mine(txHash, new(big.Int))
+	h.backend.mine(&txHash, new(big.Int))
 
 	ctx := context.Background()
-	receipt, err := txmgr.WaitMined(ctx, h.backend, tx, 50*time.Millisecond)
+	receipt, err := txmgr.WaitMined(ctx, h.backend, tx, 50*time.Millisecond, 1)
 	require.Nil(t, err)
 	require.NotNil(t, receipt)
 	require.Equal(t, receipt.TxHash, txHash)
@@ -383,16 +369,73 @@ func TestWaitMinedCanBeCanceled(t *testing.T) {
 	// Create an unimined tx.
 	tx := types.NewTx(&types.LegacyTx{})
 
-	receipt, err := txmgr.WaitMined(ctx, h.backend, tx, 50*time.Millisecond)
+	receipt, err := txmgr.WaitMined(ctx, h.backend, tx, 50*time.Millisecond, 1)
 	require.Equal(t, err, context.DeadlineExceeded)
 	require.Nil(t, receipt)
+}
+
+// TestWaitMinedMultipleConfs asserts that WaitMiend will properly wait for more
+// than one confirmation.
+func TestWaitMinedMultipleConfs(t *testing.T) {
+	t.Parallel()
+
+	const numConfs = 2
+
+	h := newTestHarnessWithConfig(configWithNumConfs(numConfs))
+	ctxt, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// Create an unimined tx.
+	tx := types.NewTx(&types.LegacyTx{})
+	txHash := tx.Hash()
+	h.backend.mine(&txHash, new(big.Int))
+
+	receipt, err := txmgr.WaitMined(ctxt, h.backend, tx, 50*time.Millisecond, numConfs)
+	require.Equal(t, err, context.DeadlineExceeded)
+	require.Nil(t, receipt)
+
+	ctxt, cancel = context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// Mine an empty block, tx should now be confirmed.
+	h.backend.mine(nil, nil)
+	receipt, err = txmgr.WaitMined(ctxt, h.backend, tx, 50*time.Millisecond, numConfs)
+	require.Nil(t, err)
+	require.NotNil(t, receipt)
+	require.Equal(t, txHash, receipt.TxHash)
+}
+
+// TestManagerPanicOnZeroConfs ensures that the NewSimpleTxManager will panic
+// when attempting to configure with NumConfirmations set to zero.
+func TestManagerPanicOnZeroConfs(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("NewSimpleTxManager should panic when using zero conf")
+		}
+	}()
+
+	_ = newTestHarnessWithConfig(configWithNumConfs(0))
 }
 
 // failingBackend implements txmgr.ReceiptSource, returning a failure on the
 // first call but a success on the second call. This allows us to test that the
 // inner loop of WaitMined properly handles this case.
 type failingBackend struct {
-	returnSuccess bool
+	returnSuccessBlockNumber bool
+	returnSuccessReceipt     bool
+}
+
+// BlockNumber for the failingBackend returns errRpcFailure on the first
+// invocation and a fixed block height on subsequent calls.
+func (b *failingBackend) BlockNumber(ctx context.Context) (uint64, error) {
+	if !b.returnSuccessBlockNumber {
+		b.returnSuccessBlockNumber = true
+		return 0, errRpcFailure
+	}
+
+	return 1, nil
 }
 
 // TransactionReceipt for the failingBackend returns errRpcFailure on the first
@@ -400,13 +443,14 @@ type failingBackend struct {
 func (b *failingBackend) TransactionReceipt(
 	ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 
-	if !b.returnSuccess {
-		b.returnSuccess = true
+	if !b.returnSuccessReceipt {
+		b.returnSuccessReceipt = true
 		return nil, errRpcFailure
 	}
 
 	return &types.Receipt{
-		TxHash: txHash,
+		TxHash:      txHash,
+		BlockNumber: big.NewInt(1),
 	}, nil
 }
 
@@ -424,7 +468,7 @@ func TestWaitMinedReturnsReceiptAfterFailure(t *testing.T) {
 	txHash := tx.Hash()
 
 	ctx := context.Background()
-	receipt, err := txmgr.WaitMined(ctx, &borkedBackend, tx, 50*time.Millisecond)
+	receipt, err := txmgr.WaitMined(ctx, &borkedBackend, tx, 50*time.Millisecond, 1)
 	require.Nil(t, err)
 	require.NotNil(t, receipt)
 	require.Equal(t, receipt.TxHash, txHash)
