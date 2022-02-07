@@ -23,7 +23,6 @@ COPY --from=builder /optimism/packages/contracts/deployments ./deployments
 COPY --from=builder /optimism/packages/contracts/node_modules ./node_modules
 COPY --from=builder /optimism/packages/contracts/artifacts ./artifacts
 COPY --from=builder /optimism/packages/contracts/src ./src
-COPY --from=builder /root/.cache /root/.cache
 
 # get non-build artifacts from the host
 COPY packages/contracts/bin ./bin
@@ -33,7 +32,6 @@ COPY packages/contracts/deploy ./deploy
 COPY packages/contracts/tasks ./tasks
 COPY packages/contracts/test/helpers/constants.ts ./test/helpers/constants.ts
 COPY packages/contracts/scripts ./scripts
-
 
 COPY ./ops/scripts/deployer.sh .
 CMD ./ops/scripts/deployer.sh
