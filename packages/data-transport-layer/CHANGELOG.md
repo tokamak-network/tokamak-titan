@@ -1,5 +1,23 @@
 # data transport layer
 
+## 0.5.16
+
+### Patch Changes
+
+- 8f72064d: Handle case where the remote block isn't found for `GET /eth/context/latest` and `GET /eth/context/blocknumber/:number`
+- Updated dependencies [438bc78a]
+  - @eth-optimism/contracts@0.5.13
+
+## 0.5.15
+
+### Patch Changes
+
+- 1741d884: Updates DTL to correctly parse L1 to L2 tx timestamps after the first bss hardfork
+- ba14c59d: Updates various ethers dependencies to their latest versions
+- Updated dependencies [ba14c59d]
+  - @eth-optimism/contracts@0.5.12
+  - @eth-optimism/core-utils@0.7.6
+
 ## 0.5.14
 
 ### Patch Changes

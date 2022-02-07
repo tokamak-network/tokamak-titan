@@ -1,5 +1,32 @@
 # @eth-optimism/sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [438bc78a]
+  - @eth-optimism/contracts@0.5.13
+
+## 0.2.0
+
+### Minor Changes
+
+- dd9683bb: Correctly export SDK contents
+
+## 0.1.0
+
+### Minor Changes
+
+- cb65f3d8: Beta release of the Optimism SDK
+
+### Patch Changes
+
+- ba14c59d: Updates various ethers dependencies to their latest versions
+- 64e746b6: Have SDK include ethers as a peer dependency
+- Updated dependencies [ba14c59d]
+  - @eth-optimism/contracts@0.5.12
+  - @eth-optimism/core-utils@0.7.6
+
 ## 0.0.7
 
 ### Patch Changes
