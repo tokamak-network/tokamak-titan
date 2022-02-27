@@ -23,4 +23,4 @@ curl \
     $L2_NODE_WEB3_URL
 
 # go
-exec node dist/exec/run.js
+exec yarn start
