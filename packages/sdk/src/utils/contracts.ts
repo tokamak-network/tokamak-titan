@@ -89,6 +89,18 @@ export const CONTRACT_ADDRESSES: {
     },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
+  // Rinkeby
+  4: {
+    l1: {
+      AddressManager: '0xc21078f1ef3b307FcE21A2C1716d6D7E159e3F0C',
+      L1CrossDomainMessenger: '0xD376aF6BA00277fa591324726BCD338866FBf500',
+      L1StandardBridge: '0x744Dd3c9B70f8097a4A155f51f62A015E5660368',
+      StateCommitmentChain: '0x2FBCBcC3b3c4f5257418faCD7bC7fC4Ee679e7D1',
+      CanonicalTransactionChain: '0x13689df386AEbc1ff004B8f46f939a0B51A82478',
+      BondManager: '0x912327eb547Be990bf5E9e922020e7e9ABc727FD',
+    },
+    l2: DEFAULT_L2_CONTRACT_ADDRESSES,
+  },
   // Hardhat local
   31337: {
     l1: {
@@ -169,6 +181,18 @@ export const BRIDGE_ADAPTER_DATA: {
     ETH: {
       Adapter: ETHBridgeAdapter,
       l1Bridge: CONTRACT_ADDRESSES[5].l1.L1StandardBridge,
+      l2Bridge: predeploys.L2StandardBridge,
+    },
+  },
+  4: {
+    Standard: {
+      Adapter: StandardBridgeAdapter,
+      l1Bridge: CONTRACT_ADDRESSES[4].l1.L1StandardBridge,
+      l2Bridge: predeploys.L2StandardBridge,
+    },
+    ETH: {
+      Adapter: ETHBridgeAdapter,
+      l1Bridge: CONTRACT_ADDRESSES[4].l1.L1StandardBridge,
       l2Bridge: predeploys.L2StandardBridge,
     },
   },
