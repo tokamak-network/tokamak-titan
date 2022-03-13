@@ -36,26 +36,6 @@ jobs:
             onthertech/optimism.l2geth:${{ steps.extractver.outputs.version }}
             onthertech/optimism.l2geth:latest
 
-      - name: Publish op_exporter
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.op_exporter
-          push: true
-          tags: |
-            onthertech/optimism.op_exporter:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.op_exporter:latest
-
-      - name: Publish rpc-proxy
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.rpc-proxy
-          push: true
-          tags: |
-            onthertech/optimism.rpc-proxy:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.rpc-proxy:latest
-
   gas-oracle:
     name: Publish Gas Oracle
     runs-on: ubuntu-latest
@@ -110,7 +90,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./ops/docker/hardhat
-          file: ./ops/docker/hardhat/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: |
             onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.version }}
@@ -154,7 +134,6 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter
-    needs: release
     runs-on: ubuntu-latest
 
     steps:
@@ -192,7 +171,6 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter
-    needs: release
     runs-on: ubuntu-latest
 
     steps:
@@ -228,65 +206,8 @@ jobs:
             GITCOMMIT=${{ steps.build_args.outputs.GITCOMMIT }}
             GITVERSION=${{ steps.build_args.outputs.GITVERSION }}
 
-  rpc-proxy:
-    name: Publish rpc-proxy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get version from package.json
-        id: extractver
-        run: echo "::set-output name=version::$(node -p "require('./ops/docker/rpc-proxy/package.json').version")"
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.rpc-proxy
-          push: true
-          tags: |
-            onthertech/optimism.rpc-proxy:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.rpc-proxy:latest
-
-  # pushes the base builder image to dockerhub
-  builder:
-    name: Prepare the base builder image for the services
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.monorepo
-          push: true
-          tags: onthertech/optimism.builder:latest
-
   message-relayer:
     name: Publish Message Relayer
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -310,49 +231,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.message-relayer
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
           push: true
           tags: |
             onthertech/optimism.message-relayer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.message-relayer:latest
-          build-args: BUILDER_TAG=latest
-
-  batch-submitter:
-    name: Publish Batch Submitter
-    needs: builder
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get version from package.json
-        id: extractver
-        run: echo "::set-output name=version::$(node -p "require('./packages/batch-submitter/package.json').version")"
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.batch-submitter
-          push: true
-          tags: |
-            onthertech/optimism.batch-submitter:${{ steps.extractver.outputs.version }}
-            onthertech/optimism.batch-submitter:latest
-          build-args: BUILDER_TAG=latest
 
   data-transport-layer:
     name: Publish Data Transport Layer
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -376,16 +263,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.data-transport-layer
+          file: ./ops/docker/Dockerfile.packages
+          target: data-transport-layer
           push: true
           tags: |
             onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.data-transport-layer:latest
-          build-args: BUILDER_TAG=latest
 
   contracts:
     name: Publish Deployer
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -409,16 +295,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.deployer
+          file: ./ops/docker/Dockerfile.packages
+          target: deployer
           push: true
           tags: |
             onthertech/optimism.deployer:${{ steps.extractver.outputs.version }}
             onthertech/optimism.deployer:latest
-          build-args: BUILDER_TAG=latest
 
   integration_tests:
     name: Publish Integration tests
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -442,16 +327,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.integration-tests
+          file: ./ops/docker/Dockerfile.packages
+          target: integration-tests
           push: true
           tags: |
             onthertech/optimism.integration-tests:${{ steps.extractver.outputs.version }}
             onthertech/optimism.integration-tests:latest
-          build-args: BUILDER_TAG=latest
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -474,16 +358,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.replica-healthcheck
+          file: ./ops/docker/Dockerfile.packages
+          target: replica-healthcheck
           push: true
           tags: |
             onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.version }}
             onthertech/optimism.replica-healthcheck:latest
-          build-args: BUILDER_TAG=latest
 
   batch-submitter-service:
     name: Publish batch-submitter-service
-    needs: builder
     runs-on: ubuntu-latest
 
     steps:
@@ -495,7 +378,7 @@ jobs:
 
       - name: Get version from package.json
         id: extractver
-        run: echo "::set-output name=version::$(node -p "require('./packages/batch-submitter/package.json').version")"
+        run: echo "::set-output name=version::$(node -p "require('./go/batch-submitter/package.json').version")"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
