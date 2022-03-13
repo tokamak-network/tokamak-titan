@@ -18,7 +18,6 @@ COPY packages/core-utils/package.json ./packages/core-utils/package.json
 COPY packages/common-ts/package.json ./packages/common-ts/package.json
 COPY packages/contracts/package.json ./packages/contracts/package.json
 COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/package.json
-COPY packages/batch-submitter/package.json ./packages/batch-submitter/package.json
 COPY packages/message-relayer/package.json ./packages/message-relayer/package.json
 COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/package.json
 COPY integration-tests/package.json ./integration-tests/package.json
@@ -38,12 +37,6 @@ COPY ./ops/scripts/deployer.sh .
 CMD ["yarn", "run", "deploy"]
 
 
-FROM base as batch-submitter
-WORKDIR /opt/optimism/packages/batch-submitter
-COPY ./ops/scripts/batches.sh .
-CMD ["npm", "run", "start"]
-
-
 FROM base as data-transport-layer
 WORKDIR /opt/optimism/packages/data-transport-layer
 COPY ./ops/scripts/dtl.sh .
@@ -56,7 +49,12 @@ COPY ./ops/scripts/integration-tests.sh ./
 CMD ["yarn", "test:integration"]
 
 
-FROM base as relayer
+FROM base as message-relayer
 WORKDIR /opt/optimism/packages/message-relayer
 COPY ./ops/scripts/relayer.sh .
 CMD ["npm", "run", "start"]
+
+
+FROM base as replica-healthcheck
+WORKDIR /opts/optimism/packages/replica-healthcheck
+ENTRYPOINT ["node", "dist/exec/run-healthcheck-server.js"]

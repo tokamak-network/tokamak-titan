@@ -33,6 +33,11 @@ var (
 	ErrSameSequencerAndProposerPrivKey = errors.New("sequencer-priv-key and " +
 		"proposer-priv-key must be distinct")
 
+	// ErrInvalidBatchType  signals that an unsupported batch type is being
+	// configured. The default is "legacy" and the options are "legacy" or
+	// "zlib"
+	ErrInvalidBatchType = errors.New("invalid batch type")
+
 	// ErrSentryDSNNotSet signals that not Data Source Name was provided
 	// with which to configure Sentry logging.
 	ErrSentryDSNNotSet = errors.New("sentry-dsn must be set if use-sentry " +
@@ -164,6 +169,9 @@ type Config struct {
 	// the proposer transactions.
 	ProposerHDPath string
 
+	// SequencerBatchType represents the type of batch the sequencer submits.
+	SequencerBatchType string
+
 	// MetricsServerEnable if true, will create a metrics client and log to
 	// Prometheus.
 	MetricsServerEnable bool
@@ -189,6 +197,7 @@ func NewConfig(ctx *cli.Context) (Config, error) {
 		L2EthRpc:                  ctx.GlobalString(flags.L2EthRpcFlag.Name),
 		CTCAddress:                ctx.GlobalString(flags.CTCAddressFlag.Name),
 		SCCAddress:                ctx.GlobalString(flags.SCCAddressFlag.Name),
+		MinL1TxSize:               ctx.GlobalUint64(flags.MinL1TxSizeFlag.Name),
 		MaxL1TxSize:               ctx.GlobalUint64(flags.MaxL1TxSizeFlag.Name),
 		MaxBatchSubmissionTime:    ctx.GlobalDuration(flags.MaxBatchSubmissionTimeFlag.Name),
 		PollInterval:              ctx.GlobalDuration(flags.PollIntervalFlag.Name),
@@ -212,6 +221,7 @@ func NewConfig(ctx *cli.Context) (Config, error) {
 		Mnemonic:            ctx.GlobalString(flags.MnemonicFlag.Name),
 		SequencerHDPath:     ctx.GlobalString(flags.SequencerHDPathFlag.Name),
 		ProposerHDPath:      ctx.GlobalString(flags.ProposerHDPathFlag.Name),
+		SequencerBatchType:  ctx.GlobalString(flags.SequencerBatchType.Name),
 		MetricsServerEnable: ctx.GlobalBool(flags.MetricsServerEnableFlag.Name),
 		MetricsHostname:     ctx.GlobalString(flags.MetricsHostnameFlag.Name),
 		MetricsPort:         ctx.GlobalUint64(flags.MetricsPortFlag.Name),
@@ -263,6 +273,12 @@ func ValidateConfig(cfg *Config) error {
 		cfg.SequencerPrivateKey == cfg.ProposerPrivateKey {
 
 		return ErrSameSequencerAndProposerPrivKey
+	}
+
+	usingTypedBatches := cfg.SequencerBatchType != ""
+	validBatchType := cfg.SequencerBatchType == "legacy" || cfg.SequencerBatchType == "zlib"
+	if usingTypedBatches && !validBatchType {
+		return ErrInvalidBatchType
 	}
 
 	// Ensure the Sentry Data Source Name is set when using Sentry.

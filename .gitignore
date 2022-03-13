@@ -20,8 +20,9 @@ packages/contracts/hardhat*
 packages/data-transport-layer/db
 
 # vim
-*.swp
+*.sw*
 
 .env
 .env*
+!.env.example
 *.log

@@ -1,7 +1,6 @@
 name: Tokamak Optimism Canary
 
 on:
-  # enable users to manually trigger with workflow_dispatch
   workflow_dispatch:
     inputs:
       customImageName:
@@ -13,7 +12,6 @@ jobs:
   canary-publish:
     name: Publish Packages (canary)
     runs-on: ubuntu-latest
-    # map the step outputs to job outputs
     outputs:
       canary-docker-tag: ${{ steps.docker-image-name.outputs.canary-docker-tag }}
 
@@ -30,10 +28,6 @@ jobs:
         env:
           CUSTOM_IMAGE_NAME: ${{ github.event.inputs.customImageName }}
 
-  # The below code is duplicated, would be ideal if we could use a matrix with a
-  # key/value being dynamically generated from the `publishedPackages` output
-  # while also allowing for parallelization (i.e. `l2geth` not depending on `builder`)
-  # and all jobs executing in parallel once `builder` is built
   l2geth:
     name: Publish L2Geth Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
     needs: canary-publish
@@ -116,14 +110,10 @@ jobs:
             onthertech/optimism.hardhat-node:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.hardhat-node:dev-latest
 
-  # pushes the base builder image to dockerhub
-  builder:
-    name: Prepare the base builder image for the services
+  message-relayer:
+    name: Publish Message Relayer Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
     needs: canary-publish
     runs-on: ubuntu-latest
-    # we re-output the variables so that the child jobs can access them
-    outputs:
-      canary-docker-tag: ${{ needs.canary-publish.outputs.canary-docker-tag }}
 
     steps:
       - name: Checkout
@@ -141,71 +131,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.monorepo
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
           push: true
           tags: |
-            onthertech/optimism.builder:${{ needs.canary-publish.outputs.canary-docker-tag }}
-            onthertech/optimism.builder:dev-latest
-
-  message-relayer:
-    name: Publish Message Relayer Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.message-relayer
-          push: true
-          tags: |
-            onthertech/optimism.message-relayer:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.message-relayer:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.message-relayer:dev-latest
-          build-args: BUILDER_TAG=dev-latest
-
-  batch-submitter:
-    name: Publish Batch Submitter Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.batch-submitter
-          push: true
-          tags: |
-            onthertech/optimism.batch-submitter:${{ needs.builder.outputs.canary-docker-tag }}
-            onthertech/optimism.batch-submitter:dev-latest
-          build-args: BUILDER_TAG=dev-latest
 
   data-transport-layer:
-    name: Publish Data Transport Layer Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish Data Transport Layer Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -224,16 +159,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.data-transport-layer
+          file: ./ops/docker/Dockerfile.packages
+          target: data-transport-layer
           push: true
           tags: |
-            onthertech/optimism.data-transport-layer:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.data-transport-layer:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.data-transport-layer:dev-latest
-          build-args: BUILDER_TAG=dev-latest
 
   contracts:
-    name: Publish Deployer Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish Deployer Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -252,16 +187,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.deployer
+          file: ./ops/docker/Dockerfile.packages
+          target: deployer
           push: true
           tags: |
-            onthertech/optimism.deployer:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.deployer:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.deployer:dev-latest
-          build-args: BUILDER_TAG=dev-latest
 
   integration_tests:
-    name: Publish Integration tests ${{ needs.builder.outputs.integration-tests }}
-    needs: builder
+    name: Publish Integration tests ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -280,16 +215,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.integration-tests
+          file: ./ops/docker/Dockerfile.packages
+          target: integration-tests
           push: true
           tags: |
-            onthertech/optimism.integration-tests:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.integration-tests:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.integration-tests:dev-latest
-          build-args: BUILDER_TAG=dev-latest
 
   replica-healthcheck:
-    name: Publish Data Transport Layer Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish Data Transport Layer Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -309,16 +244,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./ops/docker/Dockerfile.replica-healthcheck
+          file: ./ops/docker/Dockerfile.packages
+          target: replica-healthcheck
           push: true
           tags: |
-            onthertech/optimism.replica-healthcheck:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.replica-healthcheck:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.replica-healthcheck:dev-latest
-          build-args: BUILDER_TAG=dev-latest
 
   proxyd:
-    name: Publish proxyd Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish proxyd Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -347,7 +282,7 @@ jobs:
           file: ./go/proxyd/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.proxyd:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.proxyd:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.proxyd:dev-latest
           build-args: |
             GITDATE=${{ steps.build_args.outputs.GITDATE }}
@@ -355,8 +290,8 @@ jobs:
             GITVERSION=${{ steps.build_args.outputs.GITVERSION }}
 
   op-exporter:
-    name: Publish op-exporter Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish op-exporter Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -385,7 +320,7 @@ jobs:
           file: ./ops/docker/Dockerfile.op-exporter
           push: true
           tags: |
-            onthertech/optimism.op-exporter:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.op-exporter:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.op-exporter:dev-latest
           build-args: |
             GITDATE=${{ steps.build_args.outputs.GITDATE }}
@@ -393,8 +328,8 @@ jobs:
             GITVERSION=${{ steps.build_args.outputs.GITVERSION }}
 
   l2geth-exporter:
-    name: Publish l2geth-exporter Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish l2geth-exporter Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -423,44 +358,16 @@ jobs:
           file: ./ops/docker/Dockerfile.l2geth-exporter
           push: true
           tags: |
-            onthertech/optimism.l2geth-exporter:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.l2geth-exporter:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.l2geth-exporter:dev-latest
           build-args: |
             GITDATE=${{ steps.build_args.outputs.GITDATE }}
             GITCOMMIT=${{ steps.build_args.outputs.GITCOMMIT }}
             GITVERSION=${{ steps.build_args.outputs.GITVERSION }}
 
-  rpc-proxy:
-    name: Publish rpc-proxy Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.rpc-proxy
-          push: true
-          tags: |
-            onthertech/optimism.rpc-proxy:${{ needs.builder.outputs.canary-docker-tag }}
-            onthertech/optimism.rpc-proxy:dev-latest
-
   batch-submitter-service:
-    name: Publish batch-submitter-service Version ${{ needs.builder.outputs.canary-docker-tag }}
-    needs: builder
+    name: Publish batch-submitter-service Version ${{ needs.canary-publish.outputs.canary-docker-tag }}
+    needs: canary-publish
     runs-on: ubuntu-latest
 
     steps:
@@ -482,5 +389,5 @@ jobs:
           file: ./ops/docker/Dockerfile.batch-submitter-service
           push: true
           tags: |
-            onthertech/optimism.batch-submitter-service:${{ needs.builder.outputs.canary-docker-tag }}
+            onthertech/optimism.batch-submitter-service:${{ needs.canary-publish.outputs.canary-docker-tag }}
             onthertech/optimism.batch-submitter-service:dev-latest
