@@ -1,5 +1,44 @@
 # @eth-optimism/replica-healthcheck
 
+## 1.0.0
+
+### Major Changes
+
+- e264f03f: Rewrite replica-healthcheck with BaseServiceV2
+
+### Patch Changes
+
+- Updated dependencies [b3f9bdef]
+- Updated dependencies [e53b5783]
+  - @eth-optimism/common-ts@0.2.2
+
+## 0.3.11
+
+### Patch Changes
+
+- Updated dependencies [42227d69]
+- Updated dependencies [84f63c49]
+  - @eth-optimism/sdk@1.0.0
+
+## 0.3.10
+
+### Patch Changes
+
+- dad644b4: Fix bug in replica healthcheck dockerfile
+- Updated dependencies [b66e3131]
+- Updated dependencies [5a6f539c]
+- Updated dependencies [27d8942e]
+  - @eth-optimism/sdk@0.2.5
+  - @eth-optimism/core-utils@0.8.1
+
+## 0.3.9
+
+### Patch Changes
+
+- d4b0e193: Fix bug in replica healthcheck dockerfile
+- Updated dependencies [44420939]
+  - @eth-optimism/sdk@0.2.4
+
 ## 0.3.8
 
 ### Patch Changes

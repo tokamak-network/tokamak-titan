@@ -18,7 +18,7 @@ Note that we have a [Code of Conduct](https://github.com/ethereum-optimism/.gith
 
 In general, the smaller the diff the easier it will be for us to review quickly.
 
-In order to contribute, fork the appropriate branch, for non-breaking changes to production that is `develop` and for the next regenesis release that is normally `regenesis...` branch, see [details about our branching model](https://github.com/ethereum-optimism/optimism/blob/develop/README.md#branching-model-and-releases).
+In order to contribute, fork the appropriate branch, for non-breaking changes to production that is `develop` and for the next release that is normally `release/X.X.X` branch, see [details about our branching model](https://github.com/ethereum-optimism/optimism/blob/develop/README.md#branching-model-and-releases).
 
 Additionally, if you are writing a new feature, please ensure you add appropriate test cases.
 
@@ -109,14 +109,13 @@ docker-compose build
 
 This will build the following containers:
 
-* [`builder`](https://hub.docker.com/r/ethereumoptimism/builder): used to build the TypeScript packages
 * [`l1_chain`](https://hub.docker.com/r/ethereumoptimism/hardhat): simulated L1 chain using hardhat-evm as a backend
 * [`deployer`](https://hub.docker.com/r/ethereumoptimism/deployer): process that deploys L1 smart contracts to the L1 chain
 * [`dtl`](https://hub.docker.com/r/ethereumoptimism/data-transport-layer): service that indexes transaction data from the L1 chain
 * [`l2geth`](https://hub.docker.com/r/ethereumoptimism/l2geth): L2 geth node running in Sequencer mode
 * [`verifier`](https://hub.docker.com/r/ethereumoptimism/go-ethereum): L2 geth node running in Verifier mode
 * [`relayer`](https://hub.docker.com/r/ethereumoptimism/message-relayer): helper process that relays messages between L1 and L2
-* [`batch_submitter`](https://hub.docker.com/r/ethereumoptimism/batch-submitter): service that submits batches of Sequencer transactions to the L1 chain
+* [`batch_submitter`](https://hub.docker.com/r/ethereumoptimism/batch-submitter-service): service that submits batches of Sequencer transactions to the L1 chain
 * [`integration_tests`](https://hub.docker.com/r/ethereumoptimism/integration-tests): integration tests in a box
 
 If you want to make a change to a container, you'll need to take it down and rebuild it.
@@ -127,16 +126,6 @@ cd ops
 docker-compose stop -- l2geth
 docker-compose build -- l2geth
 docker-compose start l2geth
-```
-
-For the typescript services, you'll need to rebuild the `builder` so that the compiled
-files are re-generated, and then your service, e.g. for the batch submitter
-
-```bash
-cd ops
-docker-compose stop -- batch_submitter
-docker-compose build -- builder batch_submitter
-docker-compose start batch_submitter
 ```
 
 Source code changes can have an impact on more than one container.

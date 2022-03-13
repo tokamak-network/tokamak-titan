@@ -27,6 +27,10 @@ func Main(gitVersion string) func(ctx *cli.Context) error {
 			return err
 		}
 
+		log.Info("Config parsed",
+			"min_tx_size", cfg.MinL1TxSize,
+			"max_tx_size", cfg.MaxL1TxSize)
+
 		// The call to defer is done here so that any errors logged from
 		// this point on are posted to Sentry before exiting.
 		if cfg.SentryEnable {
@@ -93,7 +97,7 @@ func Main(gitVersion string) func(ctx *cli.Context) error {
 			return err
 		}
 
-		l2Client, err := dial.L2EthClientWithTimeout(ctx, cfg.L2EthRpc, cfg.DisableHTTP2)
+		l2Client, err := DialL2EthClientWithTimeout(ctx, cfg.L2EthRpc, cfg.DisableHTTP2)
 		if err != nil {
 			return err
 		}
@@ -121,10 +125,12 @@ func Main(gitVersion string) func(ctx *cli.Context) error {
 				L1Client:    l1Client,
 				L2Client:    l2Client,
 				BlockOffset: cfg.BlockOffset,
+				MinTxSize:   cfg.MinL1TxSize,
 				MaxTxSize:   cfg.MaxL1TxSize,
 				CTCAddr:     ctcAddress,
 				ChainID:     chainID,
 				PrivKey:     sequencerPrivKey,
+				BatchType:   sequencer.BatchTypeFromString(cfg.SequencerBatchType),
 			})
 			if err != nil {
 				return err
