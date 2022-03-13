@@ -12,7 +12,7 @@ curl \
     --output /dev/null \
     --retry-connrefused \
     --retry $RETRIES \
-    --retry-delay 1 \
+    --retry-delay 5 \
     $MESSAGE_RELAYER__L2RPCPROVIDER
 
 # go
