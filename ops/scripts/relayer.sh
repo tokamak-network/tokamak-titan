@@ -12,8 +12,8 @@ curl \
     --output /dev/null \
     --retry-connrefused \
     --retry $RETRIES \
-    --retry-delay 5 \
-    $MESSAGE_RELAYER__L2RPCPROVIDER
+    --retry-delay 1 \
+    $MESSAGE_RELAYER__L2_RPC_PROVIDER
 
 # go
 exec yarn start
