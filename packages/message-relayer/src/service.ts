@@ -1,5 +1,6 @@
 /* Imports: External */
 import { Signer } from 'ethers'
+import { getContractFactory } from '@eth-optimism/contracts'
 import { sleep } from '@eth-optimism/core-utils'
 import {
   BaseServiceV2,
@@ -15,6 +16,7 @@ type MessageRelayerOptions = {
   l2RpcProvider: Provider
   l1Wallet: Signer
   fromL2TransactionIndex?: number
+  addressManagerAddress?: string
 }
 
 type MessageRelayerMetrics = {
@@ -57,6 +59,10 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
         },
+        addressManagerAddress: {
+          validator: validators.str,
+          desc: 'Contract address of Address Manager.',
+        },
       },
       metricsSpec: {
         highestCheckedL2Tx: {
@@ -82,10 +88,43 @@ export class MessageRelayerService extends BaseServiceV2<
 
     const l1Network = await this.state.wallet.provider.getNetwork()
     const l1ChainId = l1Network.chainId
+    let contracts = {}
+
+    if (this.options.addressManagerAddress) {
+      const addressManager = getContractFactory('Lib_AddressManager')
+        .connect(this.state.wallet)
+        .attach(this.options.addressManagerAddress)
+      const L1CrossDomainMessenger = await addressManager.getAddress(
+        'Proxy__OVM_L1CrossDomainMessenger'
+      )
+      const L1StandardBridge = await addressManager.getAddress(
+        'Proxy__OVM_L1StandardBridge'
+      )
+      const StateCommitmentChain = await addressManager.getAddress(
+        'StateCommitmentChain'
+      )
+      const CanonicalTransactionChain = await addressManager.getAddress(
+        'CanonicalTransactionChain'
+      )
+      const BondManager = await addressManager.getAddress('BondManager')
+
+      contracts = {
+        l1: {
+          AddressManager: this.options.addressManagerAddress,
+          L1CrossDomainMessenger,
+          L1StandardBridge,
+          StateCommitmentChain,
+          CanonicalTransactionChain,
+          BondManager,
+        },
+      }
+    }
+
     this.state.messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.state.wallet,
       l2SignerOrProvider: this.options.l2RpcProvider,
       l1ChainId,
+      contracts,
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
