@@ -1,6 +1,7 @@
 import path from 'path'
-import glob from 'glob'
 import fs from 'fs'
+
+import glob from 'glob'
 
 /**
  * Script for automatically generating a file which has a series of `require` statements for
@@ -30,7 +31,11 @@ const main = async () => {
       .map((artifactPath) => {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const artifact = require(artifactPath)
-        const relPath = path.relative(__dirname, artifactPath)
+        // handles the case - '\u' (\utils folder) is considered as an unicode encoded char
+        const pattern = /\\/g
+        const relPath = path
+          .relative(__dirname, artifactPath)
+          .replace(pattern, '/')
         return `
         let ${artifact.contractName}
         try {

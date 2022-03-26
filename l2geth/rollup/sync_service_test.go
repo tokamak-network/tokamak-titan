@@ -1,8 +1,10 @@
 package rollup
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -22,74 +24,157 @@ import (
 	"github.com/ethereum-optimism/optimism/l2geth/ethdb"
 	"github.com/ethereum-optimism/optimism/l2geth/event"
 	"github.com/ethereum-optimism/optimism/l2geth/params"
+	"github.com/ethereum-optimism/optimism/l2geth/rollup/pub"
 	"github.com/ethereum-optimism/optimism/l2geth/rollup/rcfg"
 )
 
-func setupLatestEthContextTest() (*SyncService, *EthContext) {
-	service, _, _, _ := newTestSyncService(false, nil)
-	resp := &EthContext{
-		BlockNumber: uint64(10),
-		BlockHash:   common.Hash{},
-		Timestamp:   uint64(service.timestampRefreshThreshold.Seconds()) + 1,
+// Test that the timestamps are updated correctly.
+// This impacts execution, for `block.timestamp`
+func TestSyncServiceTimestampUpdate(t *testing.T) {
+	service, txCh, _, err := newTestSyncService(false, nil, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
-	setupMockClient(service, map[string]interface{}{
-		"GetLatestEthContext": resp,
-	})
 
-	return service, resp
+	// Get the timestamp from the sync service
+	// It should be initialized to 0
+	ts := service.GetLatestL1Timestamp()
+	if ts != 0 {
+		t.Fatalf("Unexpected timestamp: %d", ts)
+	}
+
+	// Create a mock transaction and assert that its timestamp
+	// a value. This tests the case that the timestamp does
+	// not get malleated when it is set to a non zero value
+	timestamp := uint64(1)
+	tx1 := setMockTxL1Timestamp(mockTx(), timestamp)
+	if tx1.GetMeta().L1Timestamp != timestamp {
+		t.Fatalf("Expecting mock timestamp to be %d", timestamp)
+	}
+	if tx1.GetMeta().QueueOrigin != types.QueueOriginSequencer {
+		t.Fatalf("Expecting mock queue origin to be queue origin sequencer")
+	}
+
+	go func() {
+		err = service.applyTransactionToTip(tx1)
+	}()
+	event1 := <-txCh
+
+	// Ensure that the timestamp isn't malleated
+	if event1.Txs[0].GetMeta().L1Timestamp != timestamp {
+		t.Fatalf("Timestamp was malleated: %d", event1.Txs[0].GetMeta().L1Timestamp)
+	}
+	// Ensure that the timestamp in the sync service was updated
+	if service.GetLatestL1Timestamp() != timestamp {
+		t.Fatal("timestamp updated in sync service")
+	}
+
+	// Now test the case for when a transaction is malleated.
+	// If the timestamp is 0, then it should be malleated and set
+	// equal to whatever the latestL1Timestamp is
+	tx2 := mockTx()
+	if tx2.GetMeta().L1Timestamp != 0 {
+		t.Fatal("Expecting mock timestamp to be 0")
+	}
+	go func() {
+		err = service.applyTransactionToTip(tx2)
+	}()
+	event2 := <-txCh
+
+	// Ensure that the sync service timestamp is updated
+	if service.GetLatestL1Timestamp() == 0 {
+		t.Fatal("timestamp not updated")
+	}
+	// Ensure that the timestamp is malleated to be equal to what the sync
+	// service has as the latest timestamp
+	if event2.Txs[0].GetMeta().L1Timestamp != service.GetLatestL1Timestamp() {
+		t.Fatal("unexpected timestamp update")
+	}
+
+	// L1ToL2 transactions should have their timestamp malleated
+	// Be sure to set the timestamp to a non zero value so that
+	// its specifically testing the fact its a deposit tx
+	tx3 := setMockQueueOrigin(setMockTxL1Timestamp(mockTx(), 100), types.QueueOriginL1ToL2)
+	// Get a reference to the timestamp before transaction execution
+	ts3 := service.GetLatestL1Timestamp()
+
+	go func() {
+		err = service.applyTransactionToTip(tx3)
+	}()
+	event3 := <-txCh
+
+	if event3.Txs[0].GetMeta().L1Timestamp != ts3 {
+		t.Fatal("bad malleation")
+	}
+	// Ensure that the timestamp didn't change
+	if ts3 != service.GetLatestL1Timestamp() {
+		t.Fatal("timestamp updated when it shouldn't have")
+	}
 }
 
-// Test that if applying a transaction fails
-func TestSyncServiceContextUpdated(t *testing.T) {
-	service, resp := setupLatestEthContextTest()
-
-	// should get the expected context
-	expectedCtx := &OVMContext{
-		blockNumber: 0,
-		timestamp:   0,
-	}
-
-	if service.OVMContext != *expectedCtx {
-		t.Fatal("context was not instantiated to the expected value")
-	}
-
-	// run the update context call once
-	err := service.updateContext()
+// Test that the L1 blocknumber is updated correctly
+func TestSyncServiceL1BlockNumberUpdate(t *testing.T) {
+	service, txCh, _, err := newTestSyncService(false, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// should get the expected context
-	expectedCtx = &OVMContext{
-		blockNumber: resp.BlockNumber,
-		timestamp:   resp.Timestamp,
+	// Get the L1 blocknumber from the sync service
+	// It should be initialized to 0
+	bn := service.GetLatestL1BlockNumber()
+	if bn != 0 {
+		t.Fatalf("Unexpected timestamp: %d", bn)
 	}
 
-	if service.OVMContext != *expectedCtx {
-		t.Fatal("context was not updated to the expected response even though enough time passed")
+	tx1 := setMockTxL1BlockNumber(mockTx(), new(big.Int).SetUint64(1))
+	go func() {
+		err = service.applyTransactionToTip(tx1)
+	}()
+	event1 := <-txCh
+
+	// Ensure that the L1 blocknumber was not
+	// malleated
+	if event1.Txs[0].L1BlockNumber().Uint64() != 1 {
+		t.Fatal("wrong l1 blocknumber")
 	}
 
-	// updating the context should be a no-op if time advanced by less than
-	// the refresh period
-	resp.BlockNumber += 1
-	resp.Timestamp += uint64(service.timestampRefreshThreshold.Seconds())
-	setupMockClient(service, map[string]interface{}{
-		"GetLatestEthContext": resp,
-	})
-
-	// call it again
-	err = service.updateContext()
-	if err != nil {
-		t.Fatal(err)
+	// Ensure that the latest L1 blocknumber was
+	// updated
+	if service.GetLatestL1BlockNumber() != 1 {
+		t.Fatal("sync service latest l1 blocknumber not updated")
 	}
 
-	// should not get the context from the response because it was too soon
-	unexpectedCtx := &OVMContext{
-		blockNumber: resp.BlockNumber,
-		timestamp:   resp.Timestamp,
+	// Ensure that a tx without a L1 blocknumber gets one
+	// assigned
+	tx2 := setMockTxL1BlockNumber(mockTx(), nil)
+	if tx2.L1BlockNumber() != nil {
+		t.Fatal("non nil l1 blocknumber")
 	}
-	if service.OVMContext == *unexpectedCtx {
-		t.Fatal("context should not be updated because not enough time passed")
+	go func() {
+		err = service.applyTransactionToTip(tx2)
+	}()
+	event2 := <-txCh
+
+	if event2.Txs[0].L1BlockNumber() == nil {
+		t.Fatal("tx not assigned an l1 blocknumber")
+	}
+	if event2.Txs[0].L1BlockNumber().Uint64() != service.GetLatestL1BlockNumber() {
+		t.Fatal("tx assigned incorrect l1 blocknumber")
+	}
+
+	// Ensure that the latest L1 blocknumber doesn't go backwards
+	latest := service.GetLatestL1BlockNumber()
+	tx3 := setMockTxL1BlockNumber(mockTx(), new(big.Int).SetUint64(latest-1))
+	go func() {
+		err = service.applyTransactionToTip(tx3)
+	}()
+	event3 := <-txCh
+	if service.GetLatestL1BlockNumber() != latest {
+		t.Fatal("block number went backwards")
+	}
+
+	if event3.Txs[0].L1BlockNumber().Uint64() != latest-1 {
+		t.Fatal("l1 block number was malleated")
 	}
 }
 
@@ -97,7 +182,7 @@ func TestSyncServiceContextUpdated(t *testing.T) {
 // after the transaction enqueued event is emitted. Set `false` as
 // the argument to start as a sequencer
 func TestSyncServiceTransactionEnqueued(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(false, nil)
+	service, txCh, _, err := newTestSyncService(false, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +244,7 @@ func TestSyncServiceTransactionEnqueued(t *testing.T) {
 }
 
 func TestTransactionToTipNoIndex(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(false, nil)
+	service, txCh, _, err := newTestSyncService(false, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +295,7 @@ func TestTransactionToTipNoIndex(t *testing.T) {
 }
 
 func TestTransactionToTipTimestamps(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(false, nil)
+	service, txCh, _, err := newTestSyncService(false, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,24 +342,36 @@ func TestTransactionToTipTimestamps(t *testing.T) {
 		}
 	}
 
-	// Send a transaction with no timestamp and then let it be updated
-	// by the sync service. This will prevent monotonicity errors as well
-	// as give timestamps to queue origin sequencer transactions
+	// Ensure that the timestamp was updated correctly
 	ts := service.GetLatestL1Timestamp()
+	if ts != tx2.L1Timestamp() {
+		t.Fatal("timestamp not updated correctly")
+	}
+
+	// Send a transaction with no timestamp and then let it be updated
+	// by the sync service. This will prevent monotonicity errors as well.
+	// as give timestamps to queue origin sequencer transactions
+	// Ensure that the timestamp is set to `time.Now`
+	// when it is not set.
 	tx3 := setMockTxL1Timestamp(mockTx(), 0)
+	now := time.Now()
 	go func() {
 		err = service.applyTransactionToTip(tx3)
 	}()
 	result := <-txCh
 	service.chainHeadCh <- core.ChainHeadEvent{}
 
-	if result.Txs[0].L1Timestamp() != ts {
+	if result.Txs[0].L1Timestamp() != uint64(now.Unix()) {
 		t.Fatal("Timestamp not updated correctly")
+	}
+
+	if service.GetLatestL1Timestamp() != uint64(now.Unix()) {
+		t.Fatal("latest timestamp not updated correctly")
 	}
 }
 
 func TestApplyIndexedTransaction(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(true, nil)
+	service, txCh, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +414,7 @@ func TestApplyIndexedTransaction(t *testing.T) {
 }
 
 func TestApplyBatchedTransaction(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(true, nil)
+	service, txCh, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,7 +451,7 @@ func TestApplyBatchedTransaction(t *testing.T) {
 }
 
 func TestIsAtTip(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -427,7 +524,7 @@ func TestIsAtTip(t *testing.T) {
 }
 
 func TestSyncQueue(t *testing.T) {
-	service, txCh, _, err := newTestSyncService(true, nil)
+	service, txCh, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -484,7 +581,7 @@ func TestSyncQueue(t *testing.T) {
 }
 
 func TestSyncServiceL1GasPrice(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	setupMockClient(service, map[string]interface{}{})
 
 	if err != nil {
@@ -522,7 +619,7 @@ func TestSyncServiceL1GasPrice(t *testing.T) {
 }
 
 func TestSyncServiceL2GasPrice(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -557,7 +654,7 @@ func TestSyncServiceL2GasPrice(t *testing.T) {
 }
 
 func TestSyncServiceGasPriceOracleOwnerAddress(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -591,7 +688,7 @@ func TestSyncServiceGasPriceOracleOwnerAddress(t *testing.T) {
 // Only the gas price oracle owner can send 0 gas price txs
 // when fees are enforced
 func TestFeeGasPriceOracleOwnerTransactions(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -647,7 +744,7 @@ func TestFeeGasPriceOracleOwnerTransactions(t *testing.T) {
 
 // Pass true to set as a verifier
 func TestSyncServiceSync(t *testing.T) {
-	service, txCh, sub, err := newTestSyncService(true, nil)
+	service, txCh, sub, err := newTestSyncService(true, nil, nil)
 	defer sub.Unsubscribe()
 	if err != nil {
 		t.Fatal(err)
@@ -699,7 +796,7 @@ func TestSyncServiceSync(t *testing.T) {
 }
 
 func TestInitializeL1ContextPostGenesis(t *testing.T) {
-	service, _, _, err := newTestSyncService(true, nil)
+	service, _, _, err := newTestSyncService(true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -802,9 +899,158 @@ func TestBadFeeThresholds(t *testing.T) {
 			cfg.FeeThresholdDown = tt.thresholdDown
 			cfg.FeeThresholdUp = tt.thresholdUp
 
-			_, err := NewSyncService(context.Background(), cfg, txPool, chain, db)
+			_, err := NewSyncService(context.Background(), cfg, txPool, chain, db, &pub.NoopPublisher{}, &noopQueueSubscriber{})
 			if !errors.Is(err, tt.err) {
 				t.Fatalf("%s: %s", name, err)
+			}
+		})
+	}
+}
+
+// Ensure that Transaction Logging precedes transaction apply
+func TestSyncServiceTransactionLog(t *testing.T) {
+	txLogger := newMockPublisher()
+	service, txCh, _, err := newTestSyncService(false, nil, txLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx := mockTx()
+
+	go func() {
+		err = service.applyTransactionToTip(tx)
+	}()
+
+	txLogger.waitForPublish()
+
+	select {
+	case <-txCh:
+		t.Fatal("transaction applied before being logged")
+	default:
+	}
+	txLogger.unblockPublish()
+	<-txCh
+
+	loggedTxMeta := new(QueuedTransactionMeta)
+	buf := <-txLogger.msgs
+	if err := json.Unmarshal(buf, loggedTxMeta); err != nil {
+		t.Fatalf("unable to decode logged transaction meta: %v", err)
+	}
+
+	txMetaJSON, _ := tx.GetMeta().MarshalJSON()
+	loggedTxJSON, _ := json.Marshal(loggedTxMeta)
+	if !bytes.Equal(txMetaJSON, loggedTxJSON) {
+		t.Fatal("mismatched logged transactions")
+	}
+}
+
+func TestSyncServiceTransactionLogFailed(t *testing.T) {
+	txLogger := &failingMockPublisher{}
+	service, txCh, _, err := newTestSyncService(false, nil, txLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx := mockTx()
+
+	errCh := make(chan error)
+	go func() {
+		err = service.applyTransactionToTip(tx)
+		errCh <- err
+		close(errCh)
+	}()
+
+	if err := <-errCh; err == nil {
+		t.Fatal("transaction applied with log failure")
+	}
+	select {
+	case <-txCh:
+		t.Fatal("transaction applied after log failed")
+	default:
+	}
+}
+
+func TestSyncServiceBackendQueue(t *testing.T) {
+	txLogger := newMockPublisher()
+	txLogger.unblockPublish()
+	activeService, _, _, err := newTestSyncService(false, nil, txLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	queueSub := newMockQueueSubscriber()
+	followerService, followerTxCh, _, err := newTestSyncServiceWithQueueSubscriber(true, nil, &pub.NoopPublisher{}, queueSub)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx := mockTx()
+	go func() {
+		activeService.applyTransactionToTip(tx)
+	}()
+
+	go func() {
+		followerService.syncTransactionsFromQueue()
+	}()
+
+	// forward the logged transaction from the "active sequencer"
+	msg := <-txLogger.msgs
+	queueSub.ProduceMessage(msg)
+
+	event := <-followerTxCh
+	if len(event.Txs) != 1 {
+		t.Fatal("Unexpected number of transactions")
+	}
+
+	expected, _ := tx.MarshalJSON()
+	eventTx, _ := event.Txs[0].MarshalJSON()
+	if !bytes.Equal(expected, eventTx) {
+		t.Fatalf("invalid tx applied")
+	}
+	expectedMeta, _ := tx.GetMeta().MarshalJSON()
+	eventTxMeta, _ := event.Txs[0].GetMeta().MarshalJSON()
+	if !bytes.Equal(expectedMeta, eventTxMeta) {
+		t.Fatalf("invalid tx meta applied")
+	}
+
+	followerService.chainHeadCh <- core.ChainHeadEvent{}
+	subEvent := <-queueSub.events
+
+	if subEvent != mockAckEvent {
+		t.Fatalf("subscriber failed to acknowledge transaction")
+	}
+}
+
+func TestSyncServiceBackendQueueNack(t *testing.T) {
+	tx := mockTx()
+	tx.GetMeta().RawTransaction = nil
+	tests := map[string][]byte{
+		//"good txmeta":                      []byte("{\"l1BlockNumber\":0,\"l1Timestamp\":1647549225,\"l1MessageSender\":\"0x1487ef4dd5b0ca7610b85964371c1d8ab7c468eb\",\"queueOrigin\":\"sequencer\",\"index\":0,\"queueIndex\":0,\"rawTransaction\":\"34CAgJQrz3UmBr9M0373farCJhgNfaGiVICCAACAgIA=\"}"),
+		"invalid json":           nil,
+		"invalid RawTransaction": []byte("{\"l1BlockNumber\":0,\"l1Timestamp\":1647549225,\"l1MessageSender\":\"0x1487ef4dd5b0ca7610b85964371c1d8ab7c468eb\",\"queueOrigin\":\"sequencer\",\"index\":0,\"queueIndex\":0,\"rawTransaction\":\"\"}"),
+		"missing L1BlockNumber":  []byte("{\"l1Timestamp\":1647549225,\"l1MessageSender\":\"0x1487ef4dd5b0ca7610b85964371c1d8ab7c468eb\",\"queueOrigin\":\"sequencer\",\"index\":0,\"queueIndex\":0,\"rawTransaction\":\"34CAgJQrz3UmBr9M0373farCJhgNfaGiVICCAACAgIA=\"}"),
+		"missing L1Timestamp":    []byte("{\"l1BlockNumber\":0,\"l1MessageSender\":\"0x1487ef4dd5b0ca7610b85964371c1d8ab7c468eb\",\"queueOrigin\":\"sequencer\",\"index\":0,\"queueIndex\":0,\"rawTransaction\":\"34CAgJQrz3UmBr9M0373farCJhgNfaGiVICCAACAgIA=\"}"),
+	}
+
+	for name, msg := range tests {
+		t.Run(name, func(t *testing.T) {
+			queueSub := newMockQueueSubscriber()
+			service, _, _, err := newTestSyncServiceWithQueueSubscriber(true, nil, &pub.NoopPublisher{}, queueSub)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			go func() {
+				service.syncTransactionsFromQueue()
+			}()
+
+			queueSub.ProduceMessage(msg)
+
+			service.chainHeadCh <- core.ChainHeadEvent{}
+			event := <-queueSub.events
+
+			if event != mockNackEvent {
+				t.Fatalf("subscriber failed to acknowledge transaction")
 			}
 		})
 	}
@@ -843,12 +1089,15 @@ func newTestSyncServiceDeps(isVerifier bool, alloc *common.Address) (Config, *co
 	return cfg, txPool, chain, db, nil
 }
 
-func newTestSyncService(isVerifier bool, alloc *common.Address) (*SyncService, chan core.NewTxsEvent, event.Subscription, error) {
+func newTestSyncServiceWithQueueSubscriber(isVerifier bool, alloc *common.Address, txLogger pub.Publisher, queueSub QueueSubscriber) (*SyncService, chan core.NewTxsEvent, event.Subscription, error) {
 	cfg, txPool, chain, db, err := newTestSyncServiceDeps(isVerifier, alloc)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Cannot initialize syncservice: %w", err)
 	}
-	service, err := NewSyncService(context.Background(), cfg, txPool, chain, db)
+	if txLogger == nil {
+		txLogger = &pub.NoopPublisher{}
+	}
+	service, err := NewSyncService(context.Background(), cfg, txPool, chain, db, txLogger, queueSub)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Cannot initialize syncservice: %w", err)
 	}
@@ -858,6 +1107,91 @@ func newTestSyncService(isVerifier bool, alloc *common.Address) (*SyncService, c
 	sub := service.SubscribeNewTxsEvent(txCh)
 
 	return service, txCh, sub, nil
+}
+
+func newTestSyncService(isVerifier bool, alloc *common.Address, txLogger pub.Publisher) (*SyncService, chan core.NewTxsEvent, event.Subscription, error) {
+	return newTestSyncServiceWithQueueSubscriber(isVerifier, alloc, txLogger, &noopQueueSubscriber{})
+}
+
+type mockPublisher struct {
+	wg1  sync.WaitGroup
+	wg2  sync.WaitGroup
+	msgs chan ([]byte)
+}
+
+func newMockPublisher() *mockPublisher {
+	p := mockPublisher{
+		msgs: make(chan []byte, 1024),
+	}
+	p.wg1.Add(1)
+	p.wg2.Add(1)
+	return &p
+}
+
+// unblockPublish allows a call to Publish to proceed
+func (p *mockPublisher) unblockPublish() {
+	p.wg1.Done()
+}
+
+// waitForPublish blocks until a call is made to Publish
+func (p *mockPublisher) waitForPublish() {
+	p.wg2.Wait()
+}
+
+func (p *mockPublisher) Publish(ctx context.Context, msg []byte) error {
+	p.wg2.Done()
+	p.wg1.Wait()
+	p.msgs <- msg
+	return nil
+}
+
+type failingMockPublisher struct{}
+
+func (p *failingMockPublisher) Publish(ctx context.Context, msg []byte) error {
+	return fmt.Errorf("publish failed")
+}
+
+type mockQueueEvent int
+
+const mockAckEvent mockQueueEvent = 0
+const mockNackEvent mockQueueEvent = 1
+
+type mockQueueSubscriber struct {
+	msgs   chan []byte
+	events chan mockQueueEvent
+}
+
+func newMockQueueSubscriber() *mockQueueSubscriber {
+	return &mockQueueSubscriber{make(chan []byte, 1024), make(chan mockQueueEvent, 1024)}
+}
+
+func (p *mockQueueSubscriber) ProduceMessage(msg []byte) {
+	p.msgs <- msg
+}
+
+func (p *mockQueueSubscriber) ReceiveMessage(ctx context.Context, cb func(ctx context.Context, msg QueueSubscriberMessage)) error {
+	msg := <-p.msgs
+	cb(ctx, &mockQueueSubscriberMessage{msg, p.events})
+	return nil
+}
+
+func (p *mockQueueSubscriber) Close() error { return nil }
+
+type mockQueueSubscriberMessage struct {
+	data   []byte
+	events chan<- mockQueueEvent
+}
+
+func (m *mockQueueSubscriberMessage) Data() []byte {
+	return m.data
+}
+
+func (m *mockQueueSubscriberMessage) Ack() {
+	m.events <- mockAckEvent
+}
+
+func (m *mockQueueSubscriberMessage) Nack() {
+	m.events <- mockNackEvent
 }
 
 type mockClient struct {
@@ -1014,6 +1348,7 @@ func mockTx() *types.Transaction {
 	gasLimit := uint64(0)
 	data := []byte{0x00, 0x00}
 	l1BlockNumber := big.NewInt(0)
+	queueIndex := uint64(0)
 
 	tx := types.NewTransaction(0, target, big.NewInt(0), gasLimit, big.NewInt(0), data)
 	meta := types.NewTransactionMeta(
@@ -1022,7 +1357,7 @@ func mockTx() *types.Transaction {
 		&l1TxOrigin,
 		types.QueueOriginSequencer,
 		nil,
-		nil,
+		&queueIndex,
 		nil,
 	)
 	tx.SetTransactionMeta(meta)
@@ -1032,6 +1367,13 @@ func mockTx() *types.Transaction {
 func setMockTxL1Timestamp(tx *types.Transaction, ts uint64) *types.Transaction {
 	meta := tx.GetMeta()
 	meta.L1Timestamp = ts
+	tx.SetTransactionMeta(meta)
+	return tx
+}
+
+func setMockTxL1BlockNumber(tx *types.Transaction, bn *big.Int) *types.Transaction {
+	meta := tx.GetMeta()
+	meta.L1BlockNumber = bn
 	tx.SetTransactionMeta(meta)
 	return tx
 }
@@ -1046,6 +1388,13 @@ func setMockTxIndex(tx *types.Transaction, index uint64) *types.Transaction {
 func setMockQueueIndex(tx *types.Transaction, index uint64) *types.Transaction {
 	meta := tx.GetMeta()
 	meta.QueueIndex = &index
+	tx.SetTransactionMeta(meta)
+	return tx
+}
+
+func setMockQueueOrigin(tx *types.Transaction, qo types.QueueOrigin) *types.Transaction {
+	meta := tx.GetMeta()
+	meta.QueueOrigin = qo
 	tx.SetTransactionMeta(meta)
 	return tx
 }

@@ -1,11 +1,10 @@
-import { expect } from '../../../setup'
-
 /* External Imports */
 import { ethers } from 'hardhat'
 import { Signer, ContractFactory, Contract, constants } from 'ethers'
-import { smockit, MockContract } from '@eth-optimism/smock'
+import { smock, FakeContract } from '@defi-wonderland/smock'
 
 /* Internal Imports */
+import { expect } from '../../../setup'
 import {
   makeAddressManager,
   setProxyTarget,
@@ -26,26 +25,26 @@ describe('StateCommitmentChain', () => {
     AddressManager = await makeAddressManager()
   })
 
-  let Mock__CanonicalTransactionChain: MockContract
-  let Mock__BondManager: MockContract
+  let Fake__CanonicalTransactionChain: FakeContract
+  let Fake__BondManager: FakeContract
   before(async () => {
-    Mock__CanonicalTransactionChain = await smockit(
+    Fake__CanonicalTransactionChain = await smock.fake<Contract>(
       await ethers.getContractFactory('CanonicalTransactionChain')
     )
 
     await setProxyTarget(
       AddressManager,
       'CanonicalTransactionChain',
-      Mock__CanonicalTransactionChain
+      Fake__CanonicalTransactionChain
     )
 
-    Mock__BondManager = await smockit(
+    Fake__BondManager = await smock.fake<Contract>(
       await ethers.getContractFactory('BondManager')
     )
 
-    await setProxyTarget(AddressManager, 'BondManager', Mock__BondManager)
+    await setProxyTarget(AddressManager, 'BondManager', Fake__BondManager)
 
-    Mock__BondManager.smocked.isCollateralized.will.return.with(true)
+    Fake__BondManager.isCollateralized.returns(true)
 
     await AddressManager.setAddress(
       'OVM_Proposer',
@@ -115,7 +114,7 @@ describe('StateCommitmentChain', () => {
 
       describe('when submitting more elements than present in the CanonicalTransactionChain', () => {
         before(() => {
-          Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
+          Fake__CanonicalTransactionChain.getTotalElements.returns(
             batch.length - 1
           )
         })
@@ -131,9 +130,7 @@ describe('StateCommitmentChain', () => {
 
       describe('when not submitting more elements than present in the CanonicalTransactionChain', () => {
         before(() => {
-          Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
-            batch.length
-          )
+          Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
         })
 
         it('should append the state batch', async () => {
@@ -144,7 +141,7 @@ describe('StateCommitmentChain', () => {
 
       describe('when a sequencer submits ', () => {
         beforeEach(async () => {
-          Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
+          Fake__CanonicalTransactionChain.getTotalElements.returns(
             batch.length * 2
           )
 
@@ -181,6 +178,19 @@ describe('StateCommitmentChain', () => {
           })
         })
       })
+      describe('when the proposer has not previously staked at the BondManager', () => {
+        before(() => {
+          Fake__BondManager.isCollateralized.returns(false)
+        })
+
+        it('should revert', async () => {
+          await expect(
+            StateCommitmentChain.appendStateBatch(batch, 0)
+          ).to.be.revertedWith(
+            'Proposer does not have enough collateral posted'
+          )
+        })
+      })
     })
   })
 
@@ -194,10 +204,12 @@ describe('StateCommitmentChain', () => {
       extraData: ethers.constants.HashZero,
     }
 
+    before(() => {
+      Fake__BondManager.isCollateralized.returns(true)
+    })
+
     beforeEach(async () => {
-      Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
-        batch.length
-      )
+      Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
       await StateCommitmentChain.appendStateBatch(batch, 0)
       batchHeader.extraData = ethers.utils.defaultAbiCoder.encode(
         ['uint256', 'address'],
@@ -253,6 +265,25 @@ describe('StateCommitmentChain', () => {
           })
         })
 
+        describe('when outside fraud proof window', () => {
+          beforeEach(async () => {
+            const FRAUD_PROOF_WINDOW =
+              await StateCommitmentChain.FRAUD_PROOF_WINDOW()
+            await increaseEthTime(
+              ethers.provider,
+              FRAUD_PROOF_WINDOW.toNumber() + 1
+            )
+          })
+
+          it('should revert', async () => {
+            await expect(
+              StateCommitmentChain.deleteStateBatch(batchHeader)
+            ).to.be.revertedWith(
+              'State batches can only be deleted within the fraud proof window.'
+            )
+          })
+        })
+
         describe('when the provided batch header is valid', () => {
           it('should remove the batch and all following batches', async () => {
             await expect(StateCommitmentChain.deleteStateBatch(batchHeader)).to
@@ -260,6 +291,27 @@ describe('StateCommitmentChain', () => {
           })
         })
       })
+    })
+  })
+
+  describe('insideFraudProofWindow', () => {
+    const batchHeader = {
+      batchIndex: 0,
+      batchRoot: NON_NULL_BYTES32,
+      batchSize: 1,
+      prevTotalElements: 0,
+      extraData: ethers.constants.HashZero,
+    }
+    it('should revert when timestamp is zero', async () => {
+      await expect(
+        StateCommitmentChain.insideFraudProofWindow({
+          ...batchHeader,
+          extraData: ethers.utils.defaultAbiCoder.encode(
+            ['uint256', 'address'],
+            [0, await sequencer.getAddress()]
+          ),
+        })
+      ).to.be.revertedWith('Batch header timestamp cannot be zero')
     })
   })
 
@@ -273,9 +325,7 @@ describe('StateCommitmentChain', () => {
     describe('when one batch element has been inserted', () => {
       beforeEach(async () => {
         const batch = [NON_NULL_BYTES32]
-        Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
-          batch.length
-        )
+        Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
         await StateCommitmentChain.appendStateBatch(batch, 0)
       })
 
@@ -287,9 +337,7 @@ describe('StateCommitmentChain', () => {
     describe('when 64 batch elements have been inserted in one batch', () => {
       beforeEach(async () => {
         const batch = Array(64).fill(NON_NULL_BYTES32)
-        Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
-          batch.length
-        )
+        Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
         await StateCommitmentChain.appendStateBatch(batch, 0)
       })
 
@@ -301,7 +349,7 @@ describe('StateCommitmentChain', () => {
     describe('when 32 batch elements have been inserted in each of two batches', () => {
       beforeEach(async () => {
         const batch = Array(32).fill(NON_NULL_BYTES32)
-        Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
+        Fake__CanonicalTransactionChain.getTotalElements.returns(
           batch.length * 2
         )
         await StateCommitmentChain.appendStateBatch(batch, 0)
@@ -324,9 +372,7 @@ describe('StateCommitmentChain', () => {
     describe('when one batch has been inserted', () => {
       beforeEach(async () => {
         const batch = [NON_NULL_BYTES32]
-        Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
-          batch.length
-        )
+        Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
         await StateCommitmentChain.appendStateBatch(batch, 0)
       })
 
@@ -338,7 +384,7 @@ describe('StateCommitmentChain', () => {
     describe('when 8 batches have been inserted', () => {
       beforeEach(async () => {
         const batch = [NON_NULL_BYTES32]
-        Mock__CanonicalTransactionChain.smocked.getTotalElements.will.return.with(
+        Fake__CanonicalTransactionChain.getTotalElements.returns(
           batch.length * 8
         )
 
@@ -353,17 +399,93 @@ describe('StateCommitmentChain', () => {
     })
   })
 
-  describe('verifyElement()', () => {
+  describe('getLastSequencerTimestamp', () => {
+    describe('when no batches have been inserted', () => {
+      it('should return zero', async () => {
+        expect(await StateCommitmentChain.getLastSequencerTimestamp()).to.equal(
+          0
+        )
+      })
+    })
+
+    describe('when one batch element has been inserted', () => {
+      let timestamp
+      beforeEach(async () => {
+        const batch = [NON_NULL_BYTES32]
+        Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
+        await StateCommitmentChain.appendStateBatch(batch, 0)
+        timestamp = await getEthTime(ethers.provider)
+      })
+
+      it('should return the number of inserted batch elements', async () => {
+        expect(await StateCommitmentChain.getLastSequencerTimestamp()).to.equal(
+          timestamp
+        )
+      })
+    })
+  })
+
+  describe('verifyStateCommitment()', () => {
+    const batch = [NON_NULL_BYTES32]
+    const batchHeader = {
+      batchIndex: 0,
+      batchRoot: NON_NULL_BYTES32,
+      batchSize: 1,
+      prevTotalElements: 0,
+      extraData: ethers.constants.HashZero,
+    }
+
+    const inclusionProof = {
+      index: 0,
+      siblings: [],
+    }
+
+    const element = NON_NULL_BYTES32
+
+    before(async () => {
+      Fake__BondManager.isCollateralized.returns(true)
+    })
+
+    beforeEach(async () => {
+      Fake__CanonicalTransactionChain.getTotalElements.returns(batch.length)
+      await StateCommitmentChain.appendStateBatch(batch, 0)
+      batchHeader.extraData = ethers.utils.defaultAbiCoder.encode(
+        ['uint256', 'address'],
+        [await getEthTime(ethers.provider), await sequencer.getAddress()]
+      )
+    })
+
     it('should revert when given an invalid batch header', async () => {
-      // TODO
+      await expect(
+        StateCommitmentChain.verifyStateCommitment(
+          element,
+          {
+            ...batchHeader,
+            extraData: '0x' + '22'.repeat(32),
+          },
+          inclusionProof
+        )
+      ).to.be.revertedWith('Invalid batch header.')
     })
 
     it('should revert when given an invalid inclusion proof', async () => {
-      // TODO
+      await expect(
+        StateCommitmentChain.verifyStateCommitment(
+          ethers.constants.HashZero,
+          batchHeader,
+          inclusionProof
+        )
+      ).to.be.revertedWith('Invalid inclusion proof.')
     })
 
     it('should return true when given a valid proof', async () => {
-      // TODO
+      expect(
+        await StateCommitmentChain.verifyStateCommitment(
+          element,
+          batchHeader,
+          inclusionProof
+        )
+      ).to.equal(true)
     })
   })
 })

@@ -1,10 +1,9 @@
-import { expect } from '../../../setup'
-
 /* External Imports */
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 
 /* Internal Imports */
+import { expect } from '../../../setup'
 import { TrieTestGenerator } from '../../../helpers'
 
 const NODE_COUNTS = [1, 2, 128]
@@ -115,5 +114,23 @@ describe('Lib_SecureMerkleTrie', () => {
         }
       })
     }
+  })
+
+  describe('getSingleNodeRootHash', () => {
+    let generator: TrieTestGenerator
+    before(async () => {
+      generator = await TrieTestGenerator.fromRandom({
+        seed: `seed.get.${1}`,
+        nodeCount: 1,
+        secure: true,
+      })
+    })
+
+    it(`should get the root hash of a trie with a single node`, async () => {
+      const test = await generator.makeInclusionProofTest(0)
+      expect(
+        await Lib_SecureMerkleTrie.getSingleNodeRootHash(test.key, test.val)
+      ).to.equal(test.root)
+    })
   })
 })

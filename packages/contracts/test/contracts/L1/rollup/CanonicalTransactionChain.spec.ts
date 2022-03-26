@@ -1,9 +1,7 @@
-import { expect } from '../../../setup'
-
 /* External Imports */
 import { ethers } from 'hardhat'
 import { Signer, ContractFactory, Contract } from 'ethers'
-import { smockit, MockContract } from '@eth-optimism/smock'
+import { smock, FakeContract } from '@defi-wonderland/smock'
 import {
   AppendSequencerBatchParams,
   encodeAppendSequencerBatch,
@@ -13,6 +11,7 @@ import { keccak256 } from 'ethers/lib/utils'
 import _ from 'lodash'
 
 /* Internal Imports */
+import { expect } from '../../../setup'
 import {
   makeAddressManager,
   setProxyTarget,
@@ -70,7 +69,7 @@ describe('CanonicalTransactionChain', () => {
   })
 
   let AddressManager: Contract
-  let Mock__StateCommitmentChain: MockContract
+  let Fake__StateCommitmentChain: FakeContract
   before(async () => {
     AddressManager = await makeAddressManager()
     await AddressManager.setAddress(
@@ -78,14 +77,14 @@ describe('CanonicalTransactionChain', () => {
       await sequencer.getAddress()
     )
 
-    Mock__StateCommitmentChain = await smockit(
+    Fake__StateCommitmentChain = await smock.fake<Contract>(
       await ethers.getContractFactory('StateCommitmentChain')
     )
 
     await setProxyTarget(
       AddressManager,
       'StateCommitmentChain',
-      Mock__StateCommitmentChain
+      Fake__StateCommitmentChain
     )
   })
 
@@ -217,6 +216,18 @@ describe('CanonicalTransactionChain', () => {
           gasLimit: l1GasLimit,
         })
       ).to.be.revertedWith('Insufficient gas for L2 rate limiting burn.')
+    })
+
+    it('should burn L1 gas when L2 gas limit is high', async () => {
+      const _enqueueL2GasPrepaid =
+        await CanonicalTransactionChain.enqueueL2GasPrepaid()
+      const data = '0x' + '12'.repeat(1234)
+
+      // Create a tx with high L2 gas limit
+      const l2GasLimit = 4 * _enqueueL2GasPrepaid
+
+      await expect(CanonicalTransactionChain.enqueue(target, l2GasLimit, data))
+        .to.not.be.reverted
     })
 
     describe('with valid input parameters', () => {
@@ -679,6 +690,16 @@ describe('CanonicalTransactionChain', () => {
             }
           )
           await res.wait()
+
+          expect(await CanonicalTransactionChain.getLastTimestamp()).to.equal(
+            timestamp
+          )
+          expect(await CanonicalTransactionChain.getLastBlockNumber()).to.equal(
+            blockNumber
+          )
+          expect(
+            await CanonicalTransactionChain.getNumPendingQueueElements()
+          ).to.equal(0)
         })
 
         it(`should return ${size}`, async () => {
@@ -686,7 +707,17 @@ describe('CanonicalTransactionChain', () => {
             size
           )
         })
+
+        it('should return zero after queue is emptied', async () => {
+          expect(await CanonicalTransactionChain.getNextQueueIndex()).to.equal(
+            0
+          )
+        })
       })
     }
+
+    it('should return zero', async () => {
+      expect(await CanonicalTransactionChain.getTotalBatches()).to.equal(0)
+    })
   })
 })

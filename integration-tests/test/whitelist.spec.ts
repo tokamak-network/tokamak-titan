@@ -1,15 +1,11 @@
 /* Imports: External */
 import { ContractFactory } from 'ethers'
 import { ethers } from 'hardhat'
-import chai, { expect } from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { predeploys } from '@eth-optimism/contracts'
 
 /* Imports: Internal */
+import { expect } from './shared/setup'
 import { OptimismEnv } from './shared/env'
-import { l2Provider } from './shared/utils'
-
-chai.use(solidity)
 
 describe('Whitelist', async () => {
   const initialAmount = 1000
@@ -27,7 +23,7 @@ describe('Whitelist', async () => {
   describe('when the whitelist is disabled', () => {
     it('should be able to deploy a contract', async () => {
       await expect(
-        l2Provider.send('eth_call', [
+        env.l2Provider.send('eth_call', [
           Factory__ERC20.getDeployTransaction(
             initialAmount,
             tokenName,
@@ -53,7 +49,7 @@ describe('Whitelist', async () => {
 
     it('should fail if the user is not whitelisted', async () => {
       await expect(
-        l2Provider.send('eth_call', [
+        env.l2Provider.send('eth_call', [
           {
             ...Factory__ERC20.getDeployTransaction(
               initialAmount,
@@ -80,7 +76,7 @@ describe('Whitelist', async () => {
 
     it('should succeed if the user is whitelisted', async () => {
       await expect(
-        l2Provider.send('eth_call', [
+        env.l2Provider.send('eth_call', [
           {
             ...Factory__ERC20.getDeployTransaction(
               initialAmount,

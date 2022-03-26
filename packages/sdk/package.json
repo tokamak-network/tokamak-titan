@@ -1,11 +1,11 @@
 {
   "name": "@eth-optimism/sdk",
-  "version": "0.0.3",
-  "description": "[Optimism] Tools for working with Optimistic Ethereum",
+  "version": "1.0.2",
+  "description": "[Optimism] Tools for working with Optimism",
   "main": "dist/index",
   "types": "dist/index",
   "files": [
-    "dist/index"
+    "dist/*"
   ],
   "scripts": {
     "all": "yarn clean && yarn build && yarn test && yarn lint:fix && yarn lint",
@@ -16,21 +16,25 @@
     "lint:fix": "yarn lint:check --fix",
     "pre-commit": "lint-staged",
     "test": "hardhat test",
-    "test:coverage": "nyc hardhat test && nyc merge .nyc_output coverage.json"
+    "test:coverage": "nyc hardhat test && nyc merge .nyc_output coverage.json",
+    "autogen:docs": "typedoc --out docs src/index.ts"
   },
   "keywords": [
     "optimism",
     "ethereum",
     "sdk"
   ],
-  "homepage": "https://github.com/ethereum-optimism/optimism-monorepo/tree/master/packages/sdk#readme",
+  "homepage": "https://github.com/ethereum-optimism/optimism/tree/develop/packages/sdk#readme",
   "license": "MIT",
   "author": "Optimism PBC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ethereum-optimism/optimism-monorepo.git"
+    "url": "https://github.com/ethereum-optimism/optimism.git"
   },
   "devDependencies": {
+    "@ethersproject/abstract-provider": "^5.5.1",
+    "@ethersproject/abstract-signer": "^5.5.0",
+    "@ethersproject/transactions": "^5.5.0",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@types/chai": "^4.2.18",
@@ -43,7 +47,6 @@
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-ban": "^1.5.2",
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-jsdoc": "^35.1.2",
     "eslint-plugin-prefer-arrow": "^1.2.3",
@@ -51,19 +54,24 @@
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-unicorn": "^32.0.1",
     "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.4",
     "hardhat": "^2.3.0",
     "lint-staged": "11.0.0",
     "mocha": "^8.4.0",
     "nyc": "^15.1.0",
     "prettier": "^2.3.1",
     "ts-mocha": "^8.0.0",
+    "typedoc": "^0.22.13",
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@eth-optimism/contracts": "0.5.7",
-    "@eth-optimism/core-utils": "0.7.3",
-    "@ethersproject/abstract-provider": "^5.5.1",
-    "@ethersproject/abstract-signer": "^5.5.0",
-    "ethers": "^5.5.2"
+    "@eth-optimism/contracts": "0.5.18",
+    "@eth-optimism/core-utils": "0.8.1",
+    "lodash": "^4.17.21",
+    "merkletreejs": "^0.2.27",
+    "rlp": "^2.2.7"
+  },
+  "peerDependencies": {
+    "ethers": "^5"
   }
 }

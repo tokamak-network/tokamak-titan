@@ -163,6 +163,16 @@ var (
 		utils.RollupEnforceFeesFlag,
 		utils.RollupFeeThresholdDownFlag,
 		utils.RollupFeeThresholdUpFlag,
+		utils.SequencerClientHttpFlag,
+		utils.TxPublisherEnableFlag,
+		utils.TxPublisherProjectIDFlag,
+		utils.TxPublisherTopicIDFlag,
+		utils.TxPublisherTimeoutFlag,
+		utils.TxQueueEnableFlag,
+		utils.TxQueueProjectIDFlag,
+		utils.TxQueueSubscriptionIDFlag,
+		utils.TxQueueMaxOutstandingBytesFlag,
+		utils.TxQueueMaxOutstandingMessagesFlag,
 	}
 
 	rpcFlags = []cli.Flag{
@@ -215,6 +225,7 @@ func init() {
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		initCommand,
+		dumpChainCfgCommand,
 		importCommand,
 		exportCommand,
 		importPreimagesCommand,

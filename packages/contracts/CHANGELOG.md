@@ -1,5 +1,88 @@
 # Changelog
 
+## 0.5.18
+
+### Patch Changes
+
+- 88601cb7: Refactored Dockerfiles
+
+## 0.5.17
+
+### Patch Changes
+
+- 175ae0bf: Minor README update
+
+## 0.5.16
+
+### Patch Changes
+
+- 962f36e4: Add support for system addresses
+- f2179e37: Add a fetch batches hardhat task
+- b6a4fa4b: Removes outdated functions and constants from the contracts package
+- b7c0a5ca: Remove yargs as a contracts dependency (unused)
+- Updated dependencies [5a6f539c]
+- Updated dependencies [27d8942e]
+  - @eth-optimism/core-utils@0.8.1
+
+## 0.5.15
+
+### Patch Changes
+
+- 78298782: Contracts are additionally verified on sourcify during deploy. This should reduce manual labor during future regeneses.
+- Updated dependencies [0b4453f7]
+  - @eth-optimism/core-utils@0.8.0
+
+## 0.5.14
+
+### Patch Changes
+
+- Updated dependencies [b4165299]
+- Updated dependencies [3c2acd91]
+  - @eth-optimism/core-utils@0.7.7
+
+## 0.5.13
+
+### Patch Changes
+
+- 438bc78a: Remove unused gas testing utils
+
+## 0.5.12
+
+### Patch Changes
+
+- ba14c59d: Updates various ethers dependencies to their latest versions
+- Updated dependencies [ba14c59d]
+  - @eth-optimism/core-utils@0.7.6
+
+## 0.5.11
+
+### Patch Changes
+
+- e631c39c: Add berlin hardfork config to genesis creation
+
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [ad94b9d1]
+  - @eth-optimism/core-utils@0.7.5
+
+## 0.5.9
+
+### Patch Changes
+
+- Updated dependencies [ba96a455]
+- Updated dependencies [c3e85fef]
+  - @eth-optimism/core-utils@0.7.4
+
+## 0.5.8
+
+### Patch Changes
+
+- b3efb8b7: String update to change the system name from OE to Optimism
+- 279603e5: Update hardhat task for managing the gas oracle
+- b6040bb3: Remove legacy bin/deploy.ts script
+
 ## 0.5.7
 
 ### Patch Changes

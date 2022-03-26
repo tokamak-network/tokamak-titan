@@ -1,9 +1,11 @@
 import * as path from 'path'
+
+import { Command } from 'commander'
+
 import { defaultRuntime } from './convenience'
 import { RunOpts } from './actor'
-import { Command } from 'commander'
+import { serveMetrics } from './metrics'
 import pkg from '../../package.json'
-import { metricsRegistry } from './metrics'
 
 const program = new Command()
 program.version(pkg.version)
@@ -18,6 +20,11 @@ program
   )
   .option('-c, --concurrency <n>', 'number of concurrent workers to spawn', '1')
   .option('--think-time <n>', 'how long to wait between each run', '0')
+  .option(
+    '-s, --serve [port]',
+    'Serve metrics with optional port number',
+    '8545'
+  )
 
 program.parse(process.argv)
 
@@ -27,6 +34,8 @@ const runsNum = Number(options.runs)
 const timeNum = Number(options.time)
 const concNum = Number(options.concurrency)
 const thinkNum = Number(options.thinkTime)
+const shouldServeMetrics = options.serve !== undefined
+const metricsPort = options.serve || 8545
 
 if (isNaN(runsNum) && isNaN(timeNum)) {
   console.error('Must define either a number of runs or how long to run.')
@@ -58,15 +67,19 @@ const opts: Partial<RunOpts> = {
   runs: runsNum,
 }
 
+if (shouldServeMetrics) {
+  process.stderr.write(`Serving metrics on http://0.0.0.0:${metricsPort}.\n`)
+  serveMetrics(metricsPort)
+}
+
 defaultRuntime
   .run(opts)
-  .then(() => metricsRegistry.metrics())
-  .then((metrics) => {
-    process.stderr.write('Run complete. Metrics:\n')
-    console.log(metrics)
+  .then(() => {
+    process.stderr.write('Run complete.\n')
+    process.exit(0)
   })
   .catch((err) => {
-    console.error('Error running:')
+    console.error('Error:')
     console.error(err)
     process.exit(1)
   })

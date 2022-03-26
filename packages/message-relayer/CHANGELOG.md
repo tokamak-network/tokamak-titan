@@ -1,5 +1,134 @@
 # @eth-optimism/message-relayer
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [f981b8da]
+  - @eth-optimism/common-ts@0.2.4
+
+## 0.4.1
+
+### Patch Changes
+
+- 88601cb7: Refactored Dockerfiles
+- 5cd1e996: Have BaseServiceV2 add spaces to environment variable names
+- Updated dependencies [f7761058]
+- Updated dependencies [5ae15042]
+- Updated dependencies [5cd1e996]
+- Updated dependencies [d49feca1]
+  - @eth-optimism/common-ts@0.2.3
+  - @eth-optimism/sdk@1.0.2
+
+## 0.4.0
+
+### Minor Changes
+
+- 860fef46: Rewrites the message-relayer to use the BaseServiceV2.
+
+### Patch Changes
+
+- Updated dependencies [b3f9bdef]
+- Updated dependencies [7ae1c67f]
+- Updated dependencies [e53b5783]
+- Updated dependencies [47e5d118]
+  - @eth-optimism/common-ts@0.2.2
+  - @eth-optimism/sdk@1.0.1
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [42227d69]
+- Updated dependencies [84f63c49]
+  - @eth-optimism/sdk@1.0.0
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [b66e3131]
+- Updated dependencies [5a6f539c]
+- Updated dependencies [27d8942e]
+  - @eth-optimism/sdk@0.2.5
+  - @eth-optimism/core-utils@0.8.1
+
+## 0.3.0
+
+### Minor Changes
+
+- dcdcc757: Removes message relaying utilities from the Message Relayer, to be replaced by the SDK
+
+### Patch Changes
+
+- 189f63be: Update message relayer to log sent tx hashes
+- Updated dependencies [f37c283c]
+- Updated dependencies [3f4d3c13]
+- Updated dependencies [0b4453f7]
+- Updated dependencies [0c54e60e]
+  - @eth-optimism/sdk@0.2.3
+  - @eth-optimism/core-utils@0.8.0
+
+## 0.2.18
+
+### Patch Changes
+
+- 31108ed0: Fixes a bug that prevented the relayer from running correctly.
+- Updated dependencies [b4165299]
+- Updated dependencies [3c2acd91]
+  - @eth-optimism/core-utils@0.7.7
+  - @eth-optimism/contracts@0.5.14
+
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies [438bc78a]
+  - @eth-optimism/contracts@0.5.13
+
+## 0.2.16
+
+### Patch Changes
+
+- ba14c59d: Updates various ethers dependencies to their latest versions
+- Updated dependencies [ba14c59d]
+  - @eth-optimism/contracts@0.5.12
+  - @eth-optimism/core-utils@0.7.6
+
+## 0.2.15
+
+### Patch Changes
+
+- Updated dependencies [e631c39c]
+  - @eth-optimism/contracts@0.5.11
+
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [ad94b9d1]
+  - @eth-optimism/core-utils@0.7.5
+  - @eth-optimism/contracts@0.5.10
+
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [ba96a455]
+- Updated dependencies [c3e85fef]
+  - @eth-optimism/core-utils@0.7.4
+  - @eth-optimism/contracts@0.5.9
+
+## 0.2.12
+
+### Patch Changes
+
+- e7c65ade: Fix docker build
+- Updated dependencies [b3efb8b7]
+- Updated dependencies [279603e5]
+- Updated dependencies [b6040bb3]
+  - @eth-optimism/contracts@0.5.8
+
 ## 0.2.11
 
 ### Patch Changes

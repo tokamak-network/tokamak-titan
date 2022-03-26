@@ -1,10 +1,9 @@
-import { expect } from '../../../setup'
-
 /* External Imports */
 import { ethers } from 'hardhat'
 import { Contract } from 'ethers'
 
 /* Internal Imports */
+import { expect } from '../../../setup'
 import { Lib_RLPWriter_TEST_JSON } from '../../../data'
 
 const encode = async (Lib_RLPWriter: Contract, input: any): Promise<void> => {
@@ -37,6 +36,16 @@ describe('Lib_RLPWriter', () => {
         expect(await encode(Lib_RLPWriter, test.in)).to.equal(test.out)
       })
     }
+  })
+
+  describe('writeBool', () => {
+    it(`should encode bool: true`, async () => {
+      expect(await Lib_RLPWriter.writeBool(true)).to.equal('0x01')
+    })
+
+    it(`should encode bool: false`, async () => {
+      expect(await Lib_RLPWriter.writeBool(false)).to.equal('0x80')
+    })
   })
 
   describe('Use of library with other memory-modifying operations', () => {

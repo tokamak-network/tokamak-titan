@@ -1,6 +1,7 @@
 import path from 'path'
-import glob from 'glob'
 import fs from 'fs'
+
+import glob from 'glob'
 
 /**
  * Script for automatically generating a TypeScript file for retrieving deploy artifact JSON files.
@@ -27,6 +28,8 @@ const main = async () => {
     })
 
   const artifactNames = []
+  const pattern = /\\/g
+
   for (const deploymentName of deploymentNames) {
     const deploymentArtifacts = glob.sync(
       path.join(
@@ -37,7 +40,9 @@ const main = async () => {
     )
 
     for (const artifactPath of deploymentArtifacts) {
-      const relPath = path.relative(__dirname, artifactPath)
+      const relPath = path
+        .relative(__dirname, artifactPath)
+        .replace(pattern, '/')
       const contractName = path.basename(artifactPath, '.json')
       const artifactName = `${deploymentName}__${contractName}`.replace(
         /-/g,

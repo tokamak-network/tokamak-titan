@@ -1,5 +1,26 @@
 # @eth-optimism/common-ts
 
+## 0.2.4
+
+### Patch Changes
+
+- f981b8da: Properly exposes metrics as part of a metrics server at port 7300
+
+## 0.2.3
+
+### Patch Changes
+
+- f7761058: Update log lines for service shutdown
+- 5ae15042: Update metric names to include proper snake_case for strings that include "L1" or "L2"
+- 5cd1e996: Have BaseServiceV2 add spaces to environment variable names
+
+## 0.2.2
+
+### Patch Changes
+
+- b3f9bdef: Have BaseServiceV2 gracefully catch exit signals
+- e53b5783: Introduces the new BaseServiceV2 class.
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,7 +1,9 @@
 package rollup
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -16,12 +18,14 @@ import (
 	"github.com/ethereum-optimism/optimism/l2geth/ethdb"
 	"github.com/ethereum-optimism/optimism/l2geth/event"
 	"github.com/ethereum-optimism/optimism/l2geth/log"
+	"github.com/ethereum-optimism/optimism/l2geth/rlp"
 
 	"github.com/ethereum-optimism/optimism/l2geth/core/rawdb"
 	"github.com/ethereum-optimism/optimism/l2geth/core/types"
 
 	"github.com/ethereum-optimism/optimism/l2geth/eth/gasprice"
 	"github.com/ethereum-optimism/optimism/l2geth/rollup/fees"
+	"github.com/ethereum-optimism/optimism/l2geth/rollup/pub"
 	"github.com/ethereum-optimism/optimism/l2geth/rollup/rcfg"
 )
 
@@ -68,10 +72,12 @@ type SyncService struct {
 	signer                         types.Signer
 	feeThresholdUp                 *big.Float
 	feeThresholdDown               *big.Float
+	txLogger                       pub.Publisher
+	queueSub                       QueueSubscriber
 }
 
 // NewSyncService returns an initialized sync service
-func NewSyncService(ctx context.Context, cfg Config, txpool *core.TxPool, bc *core.BlockChain, db ethdb.Database) (*SyncService, error) {
+func NewSyncService(ctx context.Context, cfg Config, txpool *core.TxPool, bc *core.BlockChain, db ethdb.Database, txLogger pub.Publisher, queueSub QueueSubscriber) (*SyncService, error) {
 	if bc == nil {
 		return nil, errors.New("Must pass BlockChain to SyncService")
 	}
@@ -143,6 +149,8 @@ func NewSyncService(ctx context.Context, cfg Config, txpool *core.TxPool, bc *co
 		signer:                         types.NewEIP155Signer(chainID),
 		feeThresholdDown:               cfg.FeeThresholdDown,
 		feeThresholdUp:                 cfg.FeeThresholdUp,
+		txLogger:                       txLogger,
+		queueSub:                       queueSub,
 	}
 
 	// The chainHeadSub is used to synchronize the SyncService with the chain.
@@ -157,7 +165,8 @@ func NewSyncService(ctx context.Context, cfg Config, txpool *core.TxPool, bc *co
 	// a remote server that indexes the layer one contracts. Place this
 	// code behind this if statement so that this can run without the
 	// requirement of the remote server being up.
-	if service.enable {
+	// If we're syncing from the Queue, then we can skip all this and rely on L2 published transactions
+	if service.enable && service.backend != BackendQueue {
 		// Ensure that the rollup client can connect to a remote server
 		// before starting. Retry until it can connect.
 		tEnsure := time.NewTicker(10 * time.Second)
@@ -245,17 +254,16 @@ func (s *SyncService) Start() error {
 	if s.verifier {
 		go s.VerifierLoop()
 	} else {
-		// The sequencer must sync the transactions to the tip and the
-		// pending queue transactions on start before setting sync status
-		// to false and opening up the RPC to accept transactions.
-		if err := s.syncTransactionsToTip(); err != nil {
-			return fmt.Errorf("Sequencer cannot sync transactions to tip: %w", err)
-		}
-		if err := s.syncQueueToTip(); err != nil {
-			return fmt.Errorf("Sequencer cannot sync queue to tip: %w", err)
-		}
-		s.setSyncStatus(false)
-		go s.SequencerLoop()
+		go func() {
+			if err := s.syncTransactionsToTip(); err != nil {
+				log.Crit("Sequencer cannot sync transactions to tip: %w", err)
+			}
+			if err := s.syncQueueToTip(); err != nil {
+				log.Crit("Sequencer cannot sync queue to tip: %w", err)
+			}
+			s.setSyncStatus(false)
+			go s.SequencerLoop()
+		}()
 	}
 	return nil
 }
@@ -348,10 +356,10 @@ func (s *SyncService) initializeLatestL1(ctcDeployHeight *big.Int) error {
 			qi := tx.GetMeta().QueueIndex
 			// When the queue index is set
 			if qi != nil {
-				if qi == queueIndex {
-					log.Info("Found correct staring queue index", "queue-index", qi)
+				if *qi == *queueIndex {
+					log.Info("Found correct staring queue index", "queue-index", *qi)
 				} else {
-					log.Info("Found incorrect staring queue index, fixing", "old", queueIndex, "new", qi)
+					log.Info("Found incorrect staring queue index, fixing", "old", *queueIndex, "new", *qi)
 					queueIndex = qi
 				}
 				break
@@ -419,6 +427,10 @@ func (s *SyncService) verify() error {
 		if err := s.syncTransactionsToTip(); err != nil {
 			return fmt.Errorf("Verifier cannot sync transactions with BackendL2: %w", err)
 		}
+	case BackendQueue:
+		if err := s.syncTransactionsFromQueue(); err != nil {
+			return fmt.Errorf("Verifier cannot sync transactions with BackendQueue: %w", err)
+		}
 	}
 	return nil
 }
@@ -436,7 +448,7 @@ func (s *SyncService) SequencerLoop() {
 		}
 		s.txLock.Unlock()
 
-		if err := s.updateContext(); err != nil {
+		if err := s.updateL1BlockNumber(); err != nil {
 			log.Error("Could not update execution context", "error", err)
 		}
 	}
@@ -599,17 +611,15 @@ func (s *SyncService) GasPriceOracleOwnerAddress() *common.Address {
 
 /// Update the execution context's timestamp and blocknumber
 /// over time. This is only necessary for the sequencer.
-func (s *SyncService) updateContext() error {
+func (s *SyncService) updateL1BlockNumber() error {
 	context, err := s.client.GetLatestEthContext()
 	if err != nil {
-		return err
+		return fmt.Errorf("Cannot get eth context: %w", err)
 	}
-	current := time.Unix(int64(s.GetLatestL1Timestamp()), 0)
-	next := time.Unix(int64(context.Timestamp), 0)
-	if next.Sub(current) > s.timestampRefreshThreshold {
-		log.Info("Updating Eth Context", "timetamp", context.Timestamp, "blocknumber", context.BlockNumber)
+	latest := s.GetLatestL1BlockNumber()
+	if context.BlockNumber > latest {
+		log.Info("Updating L1 block number", "blocknumber", context.BlockNumber)
 		s.SetLatestL1BlockNumber(context.BlockNumber)
-		s.SetLatestL1Timestamp(context.Timestamp)
 	}
 	return nil
 }
@@ -798,29 +808,61 @@ func (s *SyncService) applyTransactionToTip(tx *types.Transaction) error {
 			return fmt.Errorf("Queue origin L1 to L2 transaction without a timestamp: %s", tx.Hash().Hex())
 		}
 	}
-	// If there is no OVM timestamp assigned to the transaction, then assign a
-	// timestamp and blocknumber to it. This should only be the case for queue
-	// origin sequencer transactions that come in via RPC. The L1 to L2
-	// transactions that come in via `enqueue` should have a timestamp set based
-	// on the L1 block that it was included in.
-	// Note that Ethereum Layer one consensus rules dictate that the timestamp
-	// must be strictly increasing between blocks, so no need to check both the
-	// timestamp and the blocknumber.
+
+	// If there is no L1 timestamp assigned to the transaction, then assign a
+	// timestamp to it. The property that L1 to L2 transactions have the same
+	// timestamp as the L1 block that it was included in is removed for better
+	// UX. This functionality can be added back in during a future release. For
+	// now, the sequencer will assign a timestamp to each transaction.
 	ts := s.GetLatestL1Timestamp()
 	bn := s.GetLatestL1BlockNumber()
-	if tx.L1Timestamp() == 0 {
-		tx.SetL1Timestamp(ts)
+
+	// The L1Timestamp is 0 for QueueOriginSequencer transactions when
+	// running as the sequencer, the transactions are coming in via RPC.
+	// This code path also runs for replicas/verifiers so any logic involving
+	// `time.Now` can only run for the sequencer. All other nodes must listen
+	// to what the sequencer says is the timestamp, otherwise there will be a
+	// network split.
+	// Note that it should never be possible for the timestamp to be set to
+	// 0 when running as a verifier.
+	shouldMalleateTimestamp := !s.verifier && tx.QueueOrigin() == types.QueueOriginL1ToL2
+	if tx.L1Timestamp() == 0 || shouldMalleateTimestamp {
+		// Get the latest known timestamp
+		current := time.Unix(int64(ts), 0)
+		// Get the current clocktime
+		now := time.Now()
+		// If enough time has passed, then assign the
+		// transaction to have the timestamp now. Otherwise,
+		// use the current timestamp
+		if now.Sub(current) > s.timestampRefreshThreshold {
+			current = now
+		}
+		log.Info("Updating latest timestamp", "timestamp", current, "unix", current.Unix())
+		tx.SetL1Timestamp(uint64(current.Unix()))
+	} else if tx.L1Timestamp() == 0 && s.verifier {
+		// This should never happen
+		log.Error("No tx timestamp found when running as verifier", "hash", tx.Hash().Hex())
+	} else if tx.L1Timestamp() < ts {
+		// This should never happen, but sometimes does
+		log.Error("Timestamp monotonicity violation", "hash", tx.Hash().Hex(), "latest", ts, "tx", tx.L1Timestamp())
+	}
+
+	l1BlockNumber := tx.L1BlockNumber()
+	// Set the L1 blocknumber
+	if l1BlockNumber == nil {
 		tx.SetL1BlockNumber(bn)
-	} else if tx.L1Timestamp() > s.GetLatestL1Timestamp() {
-		// If the timestamp of the transaction is greater than the sync
-		// service's locally maintained timestamp, update the timestamp and
-		// blocknumber to equal that of the transaction's. This should happen
-		// with `enqueue` transactions.
+	} else if l1BlockNumber.Uint64() > bn {
+		s.SetLatestL1BlockNumber(l1BlockNumber.Uint64())
+	} else if l1BlockNumber.Uint64() < bn {
+		// l1BlockNumber < latest l1BlockNumber
+		// indicates an error
+		log.Error("Blocknumber monotonicity violation", "hash", tx.Hash().Hex(),
+			"new", l1BlockNumber.Uint64(), "old", bn)
+	}
+
+	// Store the latest timestamp value
+	if tx.L1Timestamp() > ts {
 		s.SetLatestL1Timestamp(tx.L1Timestamp())
-		s.SetLatestL1BlockNumber(tx.L1BlockNumber().Uint64())
-		log.Debug("Updating OVM context based on new transaction", "timestamp", ts, "blocknumber", tx.L1BlockNumber().Uint64(), "queue-origin", tx.QueueOrigin())
-	} else if tx.L1Timestamp() < s.GetLatestL1Timestamp() {
-		log.Error("Timestamp monotonicity violation", "hash", tx.Hash().Hex())
 	}
 
 	index := s.GetLatestIndex()
@@ -842,6 +884,12 @@ func (s *SyncService) applyTransactionToTip(tx *types.Transaction) error {
 
 	// The index was set above so it is safe to dereference
 	log.Debug("Applying transaction to tip", "index", *tx.GetMeta().Index, "hash", tx.Hash().Hex(), "origin", tx.QueueOrigin().String())
+
+	// Log transaction to the failover log
+	if err := s.publishTransaction(tx); err != nil {
+		log.Error("Failed to publish transaction to log", "msg", err)
+		return fmt.Errorf("internal error: transaction logging failed")
+	}
 
 	txs := types.Transactions{tx}
 	errCh := make(chan error, 1)
@@ -1186,28 +1234,93 @@ func (s *SyncService) syncTransactionRange(start, end uint64, backend Backend) e
 	return nil
 }
 
-// updateEthContext will update the OVM execution context's
-// timestamp and blocknumber if enough time has passed since
-// it was last updated. This is a sequencer only function.
-func (s *SyncService) updateEthContext() error {
-	context, err := s.client.GetLatestEthContext()
-	if err != nil {
-		return fmt.Errorf("Cannot get eth context: %w", err)
+// syncTransactionsFromQueue will sync the earliest transaction from an external message queue
+func (s *SyncService) syncTransactionsFromQueue() error {
+	// we don't drop messages unless they're already applied
+	cb := func(ctx context.Context, msg QueueSubscriberMessage) {
+		var (
+			queuedTxMeta QueuedTransactionMeta
+			tx           types.Transaction
+			txMeta       *types.TransactionMeta
+		)
+		log.Debug("Reading transaction from queue", "json", string(msg.Data()))
+
+		if err := json.Unmarshal(msg.Data(), &queuedTxMeta); err != nil {
+			log.Error("Failed to unmarshal logged TransactionMeta", "msg", err)
+			msg.Nack()
+			return
+		}
+		if err := rlp.DecodeBytes(queuedTxMeta.RawTransaction, &tx); err != nil {
+			log.Error("decoding raw transaction failed", "msg", err)
+			msg.Nack()
+			return
+		}
+		if queuedTxMeta.L1BlockNumber == nil || queuedTxMeta.L1Timestamp == nil {
+			log.Error("Missing required queued transaction fields", "msg", string(msg.Data()))
+			msg.Nack()
+			return
+		}
+
+		txMeta = types.NewTransactionMeta(
+			queuedTxMeta.L1BlockNumber,
+			*queuedTxMeta.L1Timestamp,
+			queuedTxMeta.L1MessageSender,
+			*queuedTxMeta.QueueOrigin,
+			queuedTxMeta.Index,
+			queuedTxMeta.QueueIndex,
+			queuedTxMeta.RawTransaction)
+		tx.SetTransactionMeta(txMeta)
+
+		if readTx, _, _, _ := rawdb.ReadTransaction(s.db, tx.Hash()); readTx != nil {
+			msg.Ack()
+			return
+		}
+
+		if err := s.applyTransactionToTip(&tx); err != nil {
+			log.Error("Unable to apply transactions to tip from Queue", "msg", err)
+			msg.Nack()
+			return
+		}
+
+		log.Debug("Successfully applied queued transaction", "txhash", tx.Hash())
+		msg.Ack()
 	}
-	current := time.Unix(int64(s.GetLatestL1Timestamp()), 0)
-	next := time.Unix(int64(context.Timestamp), 0)
-	if next.Sub(current) > s.timestampRefreshThreshold {
-		log.Info("Updating Eth Context", "timetamp", context.Timestamp, "blocknumber", context.BlockNumber)
-		s.SetLatestL1BlockNumber(context.BlockNumber)
-		s.SetLatestL1Timestamp(context.Timestamp)
-	}
-	return nil
+
+	// This blocks until there's a new message in the queue or ctx deadline hits
+	return s.queueSub.ReceiveMessage(s.ctx, cb)
 }
 
 // SubscribeNewTxsEvent registers a subscription of NewTxsEvent and
 // starts sending event to the given channel.
 func (s *SyncService) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return s.scope.Track(s.txFeed.Subscribe(ch))
+}
+
+func (s *SyncService) publishTransaction(tx *types.Transaction) error {
+	rawTx := new(bytes.Buffer)
+	if err := tx.EncodeRLP(rawTx); err != nil {
+		return err
+	}
+
+	if tx.L1BlockNumber() == nil || tx.L1Timestamp() == 0 {
+		return fmt.Errorf("transaction doesn't contain required fields")
+	}
+
+	// Manually populate RawTransaction as it's not always available
+	txMeta := tx.GetMeta()
+	txMeta.RawTransaction = rawTx.Bytes()
+
+	txLog := AsQueuedTransactionMeta(txMeta)
+	encodedTxLog, err := json.Marshal(&txLog)
+	if err != nil {
+		return err
+	}
+
+	if err := s.txLogger.Publish(s.ctx, encodedTxLog); err != nil {
+		pubTxDropCounter.Inc(1)
+		return err
+	}
+	return nil
 }
 
 func stringify(i *uint64) string {
@@ -1221,4 +1334,26 @@ func stringify(i *uint64) string {
 // validation and applies the transaction
 func (s *SyncService) IngestTransaction(tx *types.Transaction) error {
 	return s.applyTransaction(tx)
+}
+
+type QueuedTransactionMeta struct {
+	L1BlockNumber   *big.Int           `json:"l1BlockNumber"`
+	L1Timestamp     *uint64            `json:"l1Timestamp"`
+	L1MessageSender *common.Address    `json:"l1MessageSender"`
+	QueueOrigin     *types.QueueOrigin `json:"queueOrigin"`
+	Index           *uint64            `json:"index"`
+	QueueIndex      *uint64            `json:"queueIndex"`
+	RawTransaction  []byte             `json:"rawTransaction"`
+}
+
+func AsQueuedTransactionMeta(txMeta *types.TransactionMeta) *QueuedTransactionMeta {
+	return &QueuedTransactionMeta{
+		L1BlockNumber:   txMeta.L1BlockNumber,
+		L1Timestamp:     &txMeta.L1Timestamp,
+		L1MessageSender: txMeta.L1MessageSender,
+		QueueOrigin:     &txMeta.QueueOrigin,
+		Index:           txMeta.Index,
+		QueueIndex:      txMeta.QueueIndex,
+		RawTransaction:  txMeta.RawTransaction,
+	}
 }

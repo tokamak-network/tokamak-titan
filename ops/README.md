@@ -26,31 +26,32 @@ The base stack can be started and stopped with a command like this:
 ```
 docker-compose \
     -f docker-compose.yml \
-    -f docker-compose.ts-batch-submitter.yml \
     up --build --detach
 ```
 
 *Note*: This generates a large amount of log data which docker stores by default. See [Disk Usage](#disk-usage).
 
+Also note that Docker Desktop only allocates 2GB of memory by default, which isn't enough to run the docker-compose services reliably.
+
+To allocate more memory, go to Settings > Resources in the Docker UI and use the slider to change the value (_8GB recommended_). Make sure to click Apply & Restart for the changes to take effect.
+
 To start the stack with monitoring enabled, just add the metric composition file.
 ```
 docker-compose \
     -f docker-compose.yml \
-    -f docker-compose.ts-batch-submitter.yml \
     -f docker-compose-metrics.yml \
     up --build --detach
 ```
 
 Optionally, run a verifier along the rest of the stack. Run a replica with the same command by switching the service name!
+
 ```
-docker-compose 
+docker-compose
     -f docker-compose.yml \
-    -f docker-compose.ts-batch-submitter.yml \
     up --scale \
     verifier=1 \
     --build --detach
 ```
-
 
 A Makefile has been provided for convience. The following targets are available.
 - make up
@@ -58,23 +59,14 @@ A Makefile has been provided for convience. The following targets are available.
 - make up-metrics
 - make down-metrics
 
-## Using the Go Batch Submitter
+## Turning off L2 Fee Enforcement
 
-The existing Typescript batch submitter is in the process of being reimplemented
-in Go. During this transition, the user is required to specify which batch
-submitter to use with docker-compose.
+Fees can be turned off at runtime by setting the environment variable
+`ROLLUP_ENFORCE_FEES` to `false`.
 
-The commands above all use the Typescript batch submitter, by specifying
-`-f docker-compose.ts-batch-submitter.yml`. This can be swapped out for the go
-batch submitter by supplying `-f docker-compose.go-batch-submitter.yml` instead.
-
-Additionally, the `make` targets assume the use of the Typescript batch
-submitter. This can be overridden by setting the `BATCH_SUBMITTER` environment
-variable, e.g. `BATCH_SUBMITTER=docker-compose.go-batch-submitter.yml make up`.
-
-Once the transition is complete, specifying the desired batch submitter will be
-obsolete, and the Go batch submitter will be selected by default from the
-`docker-compose.yml` file and `Makefile`.
+```bash
+ROLLUP_ENFORCE_FEES=false docker-compose up
+```
 
 ## Cross domain communication
 

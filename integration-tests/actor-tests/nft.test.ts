@@ -1,8 +1,9 @@
-import { utils, Wallet, Contract, ContractFactory } from 'ethers'
+import { utils, Wallet, Contract } from 'ethers'
+import { expect } from 'chai'
+
 import { actor, run, setupActor, setupRun } from './lib/convenience'
 import { OptimismEnv } from '../test/shared/env'
 import ERC721 from '../artifacts/contracts/NFT.sol/NFT.json'
-import { expect } from 'chai'
 
 interface Context {
   wallet: Wallet
@@ -16,14 +17,7 @@ actor('NFT claimer', () => {
 
   setupActor(async () => {
     env = await OptimismEnv.new()
-
-    const factory = new ContractFactory(
-      ERC721.abi,
-      ERC721.bytecode,
-      env.l2Wallet
-    )
-    contract = await factory.deploy()
-    await contract.deployed()
+    contract = new Contract(process.env.ERC_721_ADDRESS, ERC721.abi)
   })
 
   setupRun(async () => {

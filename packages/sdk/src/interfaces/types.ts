@@ -4,7 +4,10 @@ import {
   TransactionResponse,
 } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
-import { Contract, BigNumber, Overrides } from 'ethers'
+import { Contract, BigNumber } from 'ethers'
+
+import { ICrossChainMessenger } from './cross-chain-messenger'
+import { IBridgeAdapter } from './bridge-adapter'
 
 /**
  * L1 contract references.
@@ -34,7 +37,7 @@ export interface OEL2Contracts {
 }
 
 /**
- * Represents Optimistic Ethereum contracts, assumed to be connected to their appropriate
+ * Represents Optimism contracts, assumed to be connected to their appropriate
  * providers and addresses.
  */
 export interface OEContracts {
@@ -68,27 +71,25 @@ export interface OEContractsLike {
 }
 
 /**
- * Represents list of custom bridges.
+ * Something that looks like the list of custom bridges.
  */
-export interface CustomBridges {
-  l1: {
-    [name: string]: Contract
-  }
-  l2: {
-    [name: string]: Contract
+export interface BridgeAdapterData {
+  [name: string]: {
+    Adapter: new (opts: {
+      messenger: ICrossChainMessenger
+      l1Bridge: AddressLike
+      l2Bridge: AddressLike
+    }) => IBridgeAdapter
+    l1Bridge: AddressLike
+    l2Bridge: AddressLike
   }
 }
 
 /**
  * Something that looks like the list of custom bridges.
  */
-export interface CustomBridgesLike {
-  l1: {
-    [K in keyof CustomBridges['l1']]: AddressLike
-  }
-  l2: {
-    [K in keyof CustomBridges['l2']]: AddressLike
-  }
+export interface BridgeAdapters {
+  [name: string]: IBridgeAdapter
 }
 
 /**
@@ -143,7 +144,6 @@ export interface CrossChainMessageRequest {
   direction: MessageDirection
   target: string
   message: string
-  l2GasLimit: NumberLike
 }
 
 /**
@@ -162,6 +162,7 @@ export interface CoreCrossChainMessage {
  */
 export interface CrossChainMessage extends CoreCrossChainMessage {
   direction: MessageDirection
+  gasLimit: number
   logIndex: number
   blockNumber: number
   transactionHash: string
@@ -188,15 +189,14 @@ export interface TokenBridgeMessage {
  * Enum describing the status of a CrossDomainMessage message receipt.
  */
 export enum MessageReceiptStatus {
-  RELAYED_SUCCEEDED,
   RELAYED_FAILED,
+  RELAYED_SUCCEEDED,
 }
 
 /**
  * CrossDomainMessage receipt.
  */
 export interface MessageReceipt {
-  messageHash: string
   receiptStatus: MessageReceiptStatus
   transactionReceipt: TransactionReceipt
 }
@@ -213,20 +213,35 @@ export interface StateRootBatchHeader {
 }
 
 /**
- * State root batch, including header and actual state roots.
+ * Information about a state root, including header, block number, and root iself.
+ */
+export interface StateRoot {
+  stateRoot: string
+  stateRootIndexInBatch: number
+  batch: StateRootBatch
+}
+
+/**
+ * Information about a batch of state roots.
  */
 export interface StateRootBatch {
+  blockNumber: number
   header: StateRootBatchHeader
   stateRoots: string[]
 }
 
 /**
- * Extended Ethers overrides object with an l2GasLimit field.
- * Only meant to be used for L1 to L2 messages, since L2 to L1 messages don't have a specified gas
- * limit field (gas used depends on the amount of gas provided).
+ * Proof data required to finalize an L2 to L1 message.
  */
-export type L1ToL2Overrides = Overrides & {
-  l2GasLimit: NumberLike
+export interface CrossChainMessageProof {
+  stateRoot: string
+  stateRootBatchHeader: StateRootBatchHeader
+  stateRootProof: {
+    index: number
+    siblings: string[]
+  }
+  stateTrieWitness: string
+  storageTrieWitness: string
 }
 
 /**
@@ -235,7 +250,7 @@ export type L1ToL2Overrides = Overrides & {
 export type TransactionLike = string | TransactionReceipt | TransactionResponse
 
 /**
- * Stuff that can be coerced into a message.
+ * Stuff that can be coerced into a CrossChainMessage.
  */
 export type MessageLike =
   | CrossChainMessage
@@ -243,9 +258,18 @@ export type MessageLike =
   | TokenBridgeMessage
 
 /**
+ * Stuff that can be coerced into a CrossChainMessageRequest.
+ */
+export type MessageRequestLike =
+  | CrossChainMessageRequest
+  | CrossChainMessage
+  | TransactionLike
+  | TokenBridgeMessage
+
+/**
  * Stuff that can be coerced into a provider.
  */
-export type ProviderLike = string | Provider | any
+export type ProviderLike = string | Provider
 
 /**
  * Stuff that can be coerced into a signer.
