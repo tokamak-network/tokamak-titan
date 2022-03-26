@@ -37,6 +37,7 @@
     "ethers": "^5.5.4"
   },
   "devDependencies": {
+    "@eth-optimism/contracts": "0.5.18",
     "@ethersproject/abstract-provider": "^5.5.1",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
