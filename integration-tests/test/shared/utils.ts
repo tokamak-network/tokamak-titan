@@ -31,6 +31,16 @@ const gasPriceValidator = makeValidator((gasPrice) => {
   return num()._parse(gasPrice).toString()
 })
 
+const addressValidator = makeValidator((addr) => {
+  if (!addr) {
+    return ''
+  } else if (utils.isAddress(addr)) {
+    return addr
+  } else {
+    throw new Error('Expected an address')
+  }
+})
+
 const procEnv = cleanEnv(process.env, {
   L1_GAS_PRICE: gasPriceValidator({
     default: '0',
@@ -38,7 +48,7 @@ const procEnv = cleanEnv(process.env, {
   L1_URL: str({ default: 'http://localhost:9545' }),
   L1_POLLING_INTERVAL: num({ default: 10 }),
 
-  L2_CHAINID: num({ default: 987 }),
+  L2_CHAINID: num({ default: 17 }),
   L2_GAS_PRICE: gasPriceValidator({
     default: 'onchain',
   }),
@@ -104,6 +114,25 @@ const procEnv = cleanEnv(process.env, {
   }),
   BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE: str({
     default: 'zlib',
+  }),
+
+  ADDRESS_MANAGER: addressValidator({
+    default: '',
+  }),
+  L1_CROSS_DOMAIN_MESSENGER: addressValidator({
+    default: '',
+  }),
+  L1_STANDARD_BRIDGE: addressValidator({
+    default: '',
+  }),
+  STATE_COMMITMENT_CHAIN: addressValidator({
+    default: '',
+  }),
+  CANONICAL_TRANSACTION_CHAIN: addressValidator({
+    default: '',
+  }),
+  BOND_MANAGER: addressValidator({
+    default: '',
   }),
 })
 

@@ -1,4 +1,4 @@
-import { Event, BigNumber, Overrides } from 'ethers'
+import { Event, BigNumber, Overrides, CallOverrides } from 'ethers'
 import {
   Provider,
   BlockTag,
@@ -45,6 +45,11 @@ export interface ICrossChainMessenger {
    * Chain ID for the L1 network.
    */
   l1ChainId: number
+
+  /**
+   * Chain ID for the L2 network.
+   */
+  l2ChainId: number
 
   /**
    * Contract objects attached to their respective providers and addresses.
@@ -697,7 +702,7 @@ export interface ICrossChainMessenger {
       message: CrossChainMessageRequest,
       opts?: {
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ) => Promise<BigNumber>
 
@@ -714,7 +719,7 @@ export interface ICrossChainMessenger {
       message: MessageLike,
       messageGasLimit: NumberLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -729,7 +734,7 @@ export interface ICrossChainMessenger {
     finalizeMessage(
       message: MessageLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -748,7 +753,7 @@ export interface ICrossChainMessenger {
       l2Token: AddressLike,
       amount: NumberLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -767,7 +772,7 @@ export interface ICrossChainMessenger {
       opts?: {
         recipient?: AddressLike
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -784,7 +789,7 @@ export interface ICrossChainMessenger {
       amount: NumberLike,
       opts?: {
         recipient?: AddressLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -807,7 +812,7 @@ export interface ICrossChainMessenger {
       opts?: {
         recipient?: AddressLike
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
 
@@ -828,7 +833,7 @@ export interface ICrossChainMessenger {
       amount: NumberLike,
       opts?: {
         recipient?: AddressLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber>
   }

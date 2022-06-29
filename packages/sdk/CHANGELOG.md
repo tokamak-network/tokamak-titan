@@ -1,5 +1,120 @@
 # @eth-optimism/sdk
 
+## 1.2.0
+
+### Minor Changes
+
+- 977493bc: Have SDK use L2 chain ID as the source of truth.
+
+### Patch Changes
+
+- Updated dependencies [700dcbb0]
+  - @eth-optimism/core-utils@0.9.0
+  - @eth-optimism/contracts@0.5.29
+
+## 1.1.9
+
+### Patch Changes
+
+- 29ff7462: Revert es target back to 2017
+- Updated dependencies [27234f68]
+- Updated dependencies [29ff7462]
+  - @eth-optimism/contracts@0.5.28
+  - @eth-optimism/core-utils@0.8.7
+
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [7c5ac36f]
+- Updated dependencies [3d4d988c]
+  - @eth-optimism/contracts@0.5.27
+
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [17962ca9]
+  - @eth-optimism/core-utils@0.8.6
+  - @eth-optimism/contracts@0.5.26
+
+## 1.1.6
+
+### Patch Changes
+
+- d18ae135: Updates all ethers versions in response to BN.js bug
+- Updated dependencies [d18ae135]
+  - @eth-optimism/contracts@0.5.25
+  - @eth-optimism/core-utils@0.8.5
+
+## 1.1.5
+
+### Patch Changes
+
+- 86901552: Fixes a bug in the SDK which would cause the SDK to throw if no tx nonce is provided
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [b7a04acf]
+  - @eth-optimism/contracts@0.5.24
+
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [412688d5]
+  - @eth-optimism/contracts@0.5.23
+
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [51adb389]
+- Updated dependencies [5cb3a5f7]
+- Updated dependencies [6b9fc055]
+  - @eth-optimism/contracts@0.5.22
+  - @eth-optimism/core-utils@0.8.4
+
+## 1.1.1
+
+### Patch Changes
+
+- 1338135c: Fixes a bug where the wrong Overrides type was being used for gas estimation functions
+
+## 1.1.0
+
+### Minor Changes
+
+- a9f8e577: New isL2Provider helper function. Internal cleanups.
+
+### Patch Changes
+
+- Updated dependencies [5818decb]
+  - @eth-optimism/contracts@0.5.21
+
+## 1.0.4
+
+### Patch Changes
+
+- b57014d1: Update to typescript@4.6.2
+- Updated dependencies [d040a8d9]
+- Updated dependencies [b57014d1]
+  - @eth-optimism/contracts@0.5.20
+  - @eth-optimism/core-utils@0.8.3
+
+## 1.0.3
+
+### Patch Changes
+
+- c1957126: Update Dockerfile to use Alpine
+- d9a51154: Bump to hardhat@2.9.1
+- Updated dependencies [c1957126]
+- Updated dependencies [d9a51154]
+  - @eth-optimism/contracts@0.5.19
+  - @eth-optimism/core-utils@0.8.2
+
 ## 1.0.2
 
 ### Patch Changes

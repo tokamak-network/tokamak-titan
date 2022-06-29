@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.5.22
+
+### Patch Changes
+
+- ff0723aa: Have L2Geth Verifier sync in parallel with the DTL.
+
+## 0.5.21
+
+### Patch Changes
+
+- 248f73c5: Rerelease the previous version
+
+## 0.5.20
+
+### Patch Changes
+
+- 359bc604: Patch for L1 syncing nodes that got stuck after DTL batch sync errors
+
+## 0.5.19
+
+### Patch Changes
+
+- 1bcee8f1: Fix `eth_getBlockRange`
+- c799535d: Add system addresses for nightly goerli
+
+## 0.5.18
+
+### Patch Changes
+
+- 935a98e6: rollup: fix log.Crit usage
+- 81f09f16: l2geth: Record rollup transaction metrics
+
+## 0.5.17
+
+### Patch Changes
+
+- 13524da4: Style fix in the sync service
+- 160f4c3d: Update docker image to use golang 1.18.0
+- 1a28ba5f: Skip account cmd tests
+- 45582fcc: Skip unused tests in l2geth
+- 0c4d4e08: l2geth: Revert transaction pubsub feature
+
+## 0.5.16
+
+### Patch Changes
+
+- a01a2eb1: Skip TestWSAttachWelcome
+- 23ad6068: Skip some geth console tests that flake in CI
+- 6926b293: Adds a flag for changing the genesis fetch timeout
+
 ## 0.5.15
 
 ### Patch Changes

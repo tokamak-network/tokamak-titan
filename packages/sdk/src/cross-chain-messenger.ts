@@ -7,7 +7,7 @@ import {
   TransactionRequest,
 } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
-import { ethers, BigNumber, Overrides } from 'ethers'
+import { ethers, BigNumber, Overrides, CallOverrides } from 'ethers'
 import { sleep, remove0x } from '@eth-optimism/core-utils'
 import { predeploys } from '@eth-optimism/contracts'
 
@@ -54,6 +54,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
   public l1SignerOrProvider: Signer | Provider
   public l2SignerOrProvider: Signer | Provider
   public l1ChainId: number
+  public l2ChainId: number
   public contracts: OEContracts
   public bridges: BridgeAdapters
   public depositConfirmationBlocks: number
@@ -66,6 +67,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
    * @param opts.l1SignerOrProvider Signer or Provider for the L1 chain, or a JSON-RPC url.
    * @param opts.l2SignerOrProvider Signer or Provider for the L2 chain, or a JSON-RPC url.
    * @param opts.l1ChainId Chain ID for the L1 chain.
+   * @param opts.l2ChainId Chain ID for the L2 chain.
    * @param opts.depositConfirmationBlocks Optional number of blocks before a deposit is confirmed.
    * @param opts.l1BlockTimeSeconds Optional estimated block time in seconds for the L1 chain.
    * @param opts.contracts Optional contract address overrides.
@@ -75,6 +77,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     l1SignerOrProvider: SignerOrProviderLike
     l2SignerOrProvider: SignerOrProviderLike
     l1ChainId: NumberLike
+    l2ChainId: NumberLike
     depositConfirmationBlocks?: NumberLike
     l1BlockTimeSeconds?: NumberLike
     contracts?: DeepPartial<OEContractsLike>
@@ -83,24 +86,25 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     this.l1SignerOrProvider = toSignerOrProvider(opts.l1SignerOrProvider)
     this.l2SignerOrProvider = toSignerOrProvider(opts.l2SignerOrProvider)
     this.l1ChainId = toNumber(opts.l1ChainId)
+    this.l2ChainId = toNumber(opts.l2ChainId)
 
     this.depositConfirmationBlocks =
       opts?.depositConfirmationBlocks !== undefined
         ? toNumber(opts.depositConfirmationBlocks)
-        : DEPOSIT_CONFIRMATION_BLOCKS[this.l1ChainId] || 0
+        : DEPOSIT_CONFIRMATION_BLOCKS[this.l2ChainId] || 0
 
     this.l1BlockTimeSeconds =
       opts?.l1BlockTimeSeconds !== undefined
         ? toNumber(opts.l1BlockTimeSeconds)
         : CHAIN_BLOCK_TIMES[this.l1ChainId] || 1
 
-    this.contracts = getAllOEContracts(this.l1ChainId, {
+    this.contracts = getAllOEContracts(this.l2ChainId, {
       l1SignerOrProvider: this.l1SignerOrProvider,
       l2SignerOrProvider: this.l2SignerOrProvider,
       overrides: opts.contracts,
     })
 
-    this.bridges = getBridgeAdapters(this.l1ChainId, this, {
+    this.bridges = getBridgeAdapters(this.l2ChainId, this, {
       overrides: opts.bridges,
     })
   }
@@ -109,7 +113,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     if (Provider.isProvider(this.l1SignerOrProvider)) {
       return this.l1SignerOrProvider
     } else {
-      return this.l1SignerOrProvider.provider as any
+      return this.l1SignerOrProvider.provider
     }
   }
 
@@ -117,7 +121,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     if (Provider.isProvider(this.l2SignerOrProvider)) {
       return this.l2SignerOrProvider
     } else {
-      return this.l2SignerOrProvider.provider as any
+      return this.l2SignerOrProvider.provider
     }
   }
 
@@ -144,10 +148,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     } = {}
   ): Promise<CrossChainMessage[]> {
     // Wait for the transaction receipt if the input is waitable.
-    // TODO: Maybe worth doing this with more explicit typing but whatever for now.
-    if (typeof (transaction as any).wait === 'function') {
-      await (transaction as any).wait()
-    }
+    await (transaction as TransactionResponse).wait?.()
 
     // Convert the input to a transaction hash.
     const txHash = toTransactionHash(transaction)
@@ -821,7 +822,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     )
 
     const stateTrieProof = await makeStateTrieProof(
-      this.l2Provider as any,
+      this.l2Provider as ethers.providers.JsonRpcProvider,
       resolved.blockNumber,
       this.contracts.l2.OVM_L2ToL1MessagePasser.address,
       messageSlot
@@ -1131,7 +1132,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       message: CrossChainMessageRequest,
       opts?: {
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       const tx = await this.populateTransaction.sendMessage(message, opts)
@@ -1146,7 +1147,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       message: MessageLike,
       messageGasLimit: NumberLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
@@ -1161,7 +1162,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
     finalizeMessage: async (
       message: MessageLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
@@ -1174,7 +1175,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       opts?: {
         recipient?: AddressLike
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
@@ -1186,7 +1187,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       amount: NumberLike,
       opts?: {
         recipient?: AddressLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l2Provider.estimateGas(
@@ -1199,7 +1200,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       l2Token: AddressLike,
       amount: NumberLike,
       opts?: {
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
@@ -1219,7 +1220,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       opts?: {
         recipient?: AddressLike
         l2GasLimit?: NumberLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
@@ -1238,7 +1239,7 @@ export class CrossChainMessenger implements ICrossChainMessenger {
       amount: NumberLike,
       opts?: {
         recipient?: AddressLike
-        overrides?: Overrides
+        overrides?: CallOverrides
       }
     ): Promise<BigNumber> => {
       return this.l2Provider.estimateGas(

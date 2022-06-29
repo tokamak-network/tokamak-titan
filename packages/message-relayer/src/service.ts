@@ -1,7 +1,6 @@
 /* Imports: External */
 import { Signer } from 'ethers'
-import { getContractFactory } from '@eth-optimism/contracts'
-import { sleep } from '@eth-optimism/core-utils'
+import { getChainId, sleep } from '@eth-optimism/core-utils'
 import {
   BaseServiceV2,
   validators,
@@ -39,20 +38,25 @@ export class MessageRelayerService extends BaseServiceV2<
 > {
   constructor(options?: Partial<MessageRelayerOptions>) {
     super({
-      name: 'Message_Relayer',
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      version: require('../package.json').version,
+      name: 'message-relayer',
       options,
       optionsSpec: {
         l1RpcProvider: {
           validator: validators.provider,
           desc: 'Provider for interacting with L1.',
+          secret: true,
         },
         l2RpcProvider: {
           validator: validators.provider,
           desc: 'Provider for interacting with L2.',
+          secret: true,
         },
         l1Wallet: {
           validator: validators.wallet,
           desc: 'Wallet used to interact with L1.',
+          secret: true,
         },
         fromL2TransactionIndex: {
           validator: validators.num,
@@ -86,45 +90,11 @@ export class MessageRelayerService extends BaseServiceV2<
       this.options.l1RpcProvider
     )
 
-    const l1Network = await this.state.wallet.provider.getNetwork()
-    const l1ChainId = l1Network.chainId
-    let contracts = {}
-
-    if (this.options.addressManagerAddress) {
-      const addressManager = getContractFactory('Lib_AddressManager')
-        .connect(this.state.wallet)
-        .attach(this.options.addressManagerAddress)
-      const L1CrossDomainMessenger = await addressManager.getAddress(
-        'Proxy__OVM_L1CrossDomainMessenger'
-      )
-      const L1StandardBridge = await addressManager.getAddress(
-        'Proxy__OVM_L1StandardBridge'
-      )
-      const StateCommitmentChain = await addressManager.getAddress(
-        'StateCommitmentChain'
-      )
-      const CanonicalTransactionChain = await addressManager.getAddress(
-        'CanonicalTransactionChain'
-      )
-      const BondManager = await addressManager.getAddress('BondManager')
-
-      contracts = {
-        l1: {
-          AddressManager: this.options.addressManagerAddress,
-          L1CrossDomainMessenger,
-          L1StandardBridge,
-          StateCommitmentChain,
-          CanonicalTransactionChain,
-          BondManager,
-        },
-      }
-    }
-
     this.state.messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.state.wallet,
       l2SignerOrProvider: this.options.l2RpcProvider,
-      l1ChainId,
-      contracts,
+      l1ChainId: await getChainId(this.state.wallet.provider),
+      l2ChainId: await getChainId(this.options.l2RpcProvider),
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
