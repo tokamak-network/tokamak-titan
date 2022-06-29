@@ -1,22 +1,21 @@
 import { HardhatUserConfig } from 'hardhat/types'
 import 'solidity-coverage'
 import * as dotenv from 'dotenv'
-
-import {
-  DEFAULT_ACCOUNTS_HARDHAT,
-  RUN_OVM_TEST_GAS,
-} from './test/helpers/constants'
+import { ethers } from 'ethers'
 
 // Hardhat plugins
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
-import 'hardhat-deploy'
-import '@typechain/hardhat'
-import './tasks'
-import 'hardhat-gas-reporter'
 import '@primitivefi/hardhat-dodoc'
+import '@typechain/hardhat'
+import 'hardhat-deploy'
+import 'hardhat-gas-reporter'
 import 'hardhat-output-validator'
+import '@eth-optimism/hardhat-deploy-config'
+
+// Hardhat tasks
+import './tasks'
 
 // Load environment variables from .env
 dotenv.config()
@@ -28,8 +27,6 @@ const deploy = process.env.DEPLOY_DIRECTORY || 'deploy'
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
-      accounts: DEFAULT_ACCOUNTS_HARDHAT,
-      blockGasLimit: RUN_OVM_TEST_GAS * 2,
       live: false,
       saveDeployments: false,
       tags: ['local'],
@@ -104,6 +101,7 @@ const config: HardhatUserConfig = {
   paths: {
     deploy: './deploy',
     deployments: './deployments',
+    deployConfig: './deploy-config',
   },
   namedAccounts: {
     deployer: {
@@ -117,7 +115,11 @@ const config: HardhatUserConfig = {
     outputFile: process.env.CI ? 'gas-report.txt' : undefined,
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+    },
   },
   dodoc: {
     runOnCompile: true,
@@ -146,6 +148,87 @@ const config: HardhatUserConfig = {
       variables: false,
     },
     exclude: ['contracts/test-helpers', 'contracts/test-libraries'],
+  },
+  deployConfigSpec: {
+    isForkedNetwork: {
+      type: 'boolean',
+      default: false,
+    },
+    numDeployConfirmations: {
+      type: 'number',
+      default: 0,
+    },
+    gasPrice: {
+      type: 'number',
+      default: undefined,
+    },
+    l1BlockTimeSeconds: {
+      type: 'number',
+    },
+    l2BlockGasLimit: {
+      type: 'number',
+    },
+    l2ChainId: {
+      type: 'number',
+    },
+    ctcL2GasDiscountDivisor: {
+      type: 'number',
+    },
+    ctcEnqueueGasCost: {
+      type: 'number',
+    },
+    sccFaultProofWindowSeconds: {
+      type: 'number',
+    },
+    sccSequencerPublishWindowSeconds: {
+      type: 'number',
+    },
+    ovmSequencerAddress: {
+      type: 'address',
+    },
+    ovmProposerAddress: {
+      type: 'address',
+    },
+    ovmBlockSignerAddress: {
+      type: 'address',
+    },
+    ovmFeeWalletAddress: {
+      type: 'address',
+    },
+    ovmAddressManagerOwner: {
+      type: 'address',
+    },
+    ovmGasPriceOracleOwner: {
+      type: 'address',
+    },
+    ovmWhitelistOwner: {
+      type: 'address',
+      default: ethers.constants.AddressZero,
+    },
+    gasPriceOracleOverhead: {
+      type: 'number',
+      default: 2750,
+    },
+    gasPriceOracleScalar: {
+      type: 'number',
+      default: 1_500_000,
+    },
+    gasPriceOracleDecimals: {
+      type: 'number',
+      default: 6,
+    },
+    gasPriceOracleL1BaseFee: {
+      type: 'number',
+      default: 1,
+    },
+    gasPriceOracleL2GasPrice: {
+      type: 'number',
+      default: 1,
+    },
+    hfBerlinBlock: {
+      type: 'number',
+      default: 0,
+    },
   },
 }
 

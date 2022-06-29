@@ -1,5 +1,88 @@
 # Changelog
 
+## 0.5.29
+
+### Patch Changes
+
+- Updated dependencies [700dcbb0]
+  - @eth-optimism/core-utils@0.9.0
+
+## 0.5.28
+
+### Patch Changes
+
+- 27234f68: Use hardhat-deploy-config for deployments
+- 29ff7462: Revert es target back to 2017
+- Updated dependencies [29ff7462]
+  - @eth-optimism/core-utils@0.8.7
+
+## 0.5.27
+
+### Patch Changes
+
+- 7c5ac36f: goerli redeploy
+- 3d4d988c: package: contracts-governance
+
+## 0.5.26
+
+### Patch Changes
+
+- Updated dependencies [17962ca9]
+  - @eth-optimism/core-utils@0.8.6
+
+## 0.5.25
+
+### Patch Changes
+
+- d18ae135: Updates all ethers versions in response to BN.js bug
+- Updated dependencies [d18ae135]
+  - @eth-optimism/core-utils@0.8.5
+
+## 0.5.24
+
+### Patch Changes
+
+- b7a04acf: Remove unused network name parameter in contract deploy configs
+
+## 0.5.23
+
+### Patch Changes
+
+- 412688d5: Replace calls to getNetwork() with getChainId util
+
+## 0.5.22
+
+### Patch Changes
+
+- 51adb389: Add Teleportr mainnet deployment
+- Updated dependencies [5cb3a5f7]
+- Updated dependencies [6b9fc055]
+  - @eth-optimism/core-utils@0.8.4
+
+## 0.5.21
+
+### Patch Changes
+
+- 5818decb: Remove l2 gas price hardhat task
+
+## 0.5.20
+
+### Patch Changes
+
+- d040a8d9: Deleted update and helper functions/tests from Lib_MerkleTrie.sol and Lib_SecureMerkleTrie.sol
+- b57014d1: Update to typescript@4.6.2
+- Updated dependencies [b57014d1]
+  - @eth-optimism/core-utils@0.8.3
+
+## 0.5.19
+
+### Patch Changes
+
+- c1957126: Update Dockerfile to use Alpine
+- d9a51154: Bump to hardhat@2.9.1
+- Updated dependencies [c1957126]
+  - @eth-optimism/core-utils@0.8.2
+
 ## 0.5.18
 
 ### Patch Changes

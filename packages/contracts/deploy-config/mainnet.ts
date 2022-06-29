@@ -1,7 +1,4 @@
-import { DeployConfig } from '../src/deploy-config'
-
-const config: DeployConfig = {
-  network: 'mainnet',
+const config = {
   numDeployConfirmations: 4,
   gasPrice: 150_000_000_000,
   l1BlockTimeSeconds: 15,

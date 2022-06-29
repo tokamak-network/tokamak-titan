@@ -1,5 +1,56 @@
 # @eth-optimism/integration-tests
 
+## 0.5.16
+
+### Patch Changes
+
+- 977493bc: Update SDK version and usage to account for new constructor
+
+## 0.5.15
+
+### Patch Changes
+
+- 29ff7462: Revert es target back to 2017
+
+## 0.5.14
+
+### Patch Changes
+
+- f688a631: integration-tests: Override default bridge adapters
+- d18ae135: Updates all ethers versions in response to BN.js bug
+
+## 0.5.13
+
+### Patch Changes
+
+- 412688d5: Replace calls to getNetwork() with getChainId util
+
+## 0.5.12
+
+### Patch Changes
+
+- 53fac1df: Facilitate actor testing on nightly
+
+## 0.5.11
+
+### Patch Changes
+
+- 36a91c30: Fix various actor tests
+
+## 0.5.10
+
+### Patch Changes
+
+- db02f97f: Add tests for system addrs on verifiers/replicas
+
+## 0.5.9
+
+### Patch Changes
+
+- 5bf390b4: Update chainid
+- c1957126: Update Dockerfile to use Alpine
+- d9a51154: Bump to hardhat@2.9.1
+
 ## 0.5.8
 
 ### Patch Changes

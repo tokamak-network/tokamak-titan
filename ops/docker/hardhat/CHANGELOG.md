@@ -1,5 +1,23 @@
 # @eth-optimism/hardhat-node
 
+## 0.2.0
+
+### Minor Changes
+
+- 587a7d0d: Correct configuration file behavior
+
+## 0.1.5
+
+### Patch Changes
+
+- 29ff7462: Revert es target back to 2017
+
+## 0.1.4
+
+### Patch Changes
+
+- 847a6338: Bump to hardhat@2.9.1
+
 ## 0.1.3
 
 ### Patch Changes
