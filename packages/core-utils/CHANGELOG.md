@@ -1,5 +1,48 @@
 # @eth-optimism/core-utils
 
+## 0.9.0
+
+### Minor Changes
+
+- 700dcbb0: Update geth's Genesis type to work with modern geth
+
+## 0.8.7
+
+### Patch Changes
+
+- 29ff7462: Revert es target back to 2017
+
+## 0.8.6
+
+### Patch Changes
+
+- 17962ca9: Update geth genesis type
+
+## 0.8.5
+
+### Patch Changes
+
+- d18ae135: Updates all ethers versions in response to BN.js bug
+
+## 0.8.4
+
+### Patch Changes
+
+- 5cb3a5f7: Add a `calldataCost` function that computes the cost of calldata
+- 6b9fc055: Adds a one-liner for getting chain ID from provider
+
+## 0.8.3
+
+### Patch Changes
+
+- b57014d1: Update to typescript@4.6.2
+
+## 0.8.2
+
+### Patch Changes
+
+- c1957126: Update Dockerfile to use Alpine
+
 ## 0.8.1
 
 ### Patch Changes

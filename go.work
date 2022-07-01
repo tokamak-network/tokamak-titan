@@ -1,0 +1,24 @@
+go 1.18
+
+use (
+	./batch-submitter
+	./bss-core
+	./gas-oracle
+	./indexer
+	./l2geth
+	./l2geth-exporter
+	./op-batcher
+	./op-bindings
+	./op-e2e
+	./op-exporter
+	./op-node
+	./op-proposer
+	./proxyd
+	./teleportr
+	./state-surgery
+)
+
+replace github.com/ethereum/go-ethereum v1.10.17 => github.com/ethereum-optimism/reference-optimistic-geth v0.0.0-20220616183505-9a67f31e4592
+
+// For local debugging:
+//replace github.com/ethereum/go-ethereum v1.10.17 => ../go-ethereum

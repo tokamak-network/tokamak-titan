@@ -5,12 +5,15 @@
   - 'ops/**/*'
   - 'packages/batch-submitter/**/*'
   - 'packages/contracts/**/*'
+  - 'packages/contracts-periphery/**/*'
   - 'packages/data-transport-layer/**/*'
+  - 'packages/drippie-mon/**/*'
   - 'packages/message-relayer/**/*'
+  - 'packages/fault-detector/**/*'
   - 'patches/**/*'
 
 M-ci:
-  - any: ['.github/**/*']
+  - any: ['.github/**/*', '.circleci/**/*']
 
 M-l2geth:
   - any: ['l2geth/**/*']
@@ -24,6 +27,9 @@ M-batch-submitter:
 M-contracts:
   - any: ['packages/contracts/**/*']
 
+M-contracts-periphery:
+  - any: ['packages/contracts-periphery/**/*']
+
 M-core-utils:
   - any: ['packages/core-utils/**/*']
 
@@ -35,3 +41,8 @@ M-sdk:
 
 M-ops:
   - any: ['ops/**/*']
+
+C-Protocol-Critical:
+  - 'packages/data-transport-layer/**/*.ts'
+  - 'packages/contracts/**/*.sol'
+  - 'l2geth/**/*.go'

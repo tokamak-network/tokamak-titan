@@ -1,5 +1,154 @@
 # @eth-optimism/message-relayer
 
+## 0.5.4
+
+### Patch Changes
+
+- 977493bc: Update SDK version and usage to account for new constructor
+- Updated dependencies [977493bc]
+- Updated dependencies [700dcbb0]
+- Updated dependencies [3d1cb720]
+  - @eth-optimism/sdk@1.2.0
+  - @eth-optimism/core-utils@0.9.0
+  - @eth-optimism/common-ts@0.6.0
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [cb71fcde]
+- Updated dependencies [10e41522]
+  - @eth-optimism/common-ts@0.5.0
+
+## 0.5.2
+
+### Patch Changes
+
+- 29ff7462: Revert es target back to 2017
+- Updated dependencies [c201f3f1]
+- Updated dependencies [29ff7462]
+- Updated dependencies [52b26878]
+  - @eth-optimism/common-ts@0.4.0
+  - @eth-optimism/core-utils@0.8.7
+  - @eth-optimism/sdk@1.1.9
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [9ba869a7]
+- Updated dependencies [050859fd]
+  - @eth-optimism/common-ts@0.3.1
+
+## 0.5.0
+
+### Minor Changes
+
+- 84a8934c: BaseServiceV2 exposes service name and version as standard synthetic metric
+
+### Patch Changes
+
+- Updated dependencies [d9e39931]
+- Updated dependencies [84a8934c]
+  - @eth-optimism/common-ts@0.3.0
+
+## 0.4.13
+
+### Patch Changes
+
+- Updated dependencies [9ecbf3e5]
+  - @eth-optimism/common-ts@0.2.10
+  - @eth-optimism/sdk@1.1.8
+
+## 0.4.12
+
+### Patch Changes
+
+- Updated dependencies [17962ca9]
+  - @eth-optimism/core-utils@0.8.6
+  - @eth-optimism/common-ts@0.2.9
+  - @eth-optimism/sdk@1.1.7
+
+## 0.4.11
+
+### Patch Changes
+
+- d18ae135: Updates all ethers versions in response to BN.js bug
+- Updated dependencies [f16383f2]
+- Updated dependencies [d18ae135]
+  - @eth-optimism/common-ts@0.2.8
+  - @eth-optimism/core-utils@0.8.5
+  - @eth-optimism/sdk@1.1.6
+
+## 0.4.10
+
+### Patch Changes
+
+- Updated dependencies [86901552]
+  - @eth-optimism/sdk@1.1.5
+
+## 0.4.9
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.1.4
+
+## 0.4.8
+
+### Patch Changes
+
+- 412688d5: Replace calls to getNetwork() with getChainId util
+  - @eth-optimism/sdk@1.1.3
+
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies [5cb3a5f7]
+- Updated dependencies [6b9fc055]
+  - @eth-optimism/core-utils@0.8.4
+  - @eth-optimism/sdk@1.1.2
+  - @eth-optimism/common-ts@0.2.7
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [1338135c]
+  - @eth-optimism/sdk@1.1.1
+
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [a9f8e577]
+  - @eth-optimism/sdk@1.1.0
+
+## 0.4.4
+
+### Patch Changes
+
+- b57014d1: Update to typescript@4.6.2
+- Updated dependencies [b57014d1]
+  - @eth-optimism/common-ts@0.2.6
+  - @eth-optimism/core-utils@0.8.3
+  - @eth-optimism/sdk@1.0.4
+
+## 0.4.3
+
+### Patch Changes
+
+- c1957126: Update Dockerfile to use Alpine
+- d9a51154: Bump to hardhat@2.9.1
+- Updated dependencies [e36b085c]
+- Updated dependencies [c1957126]
+- Updated dependencies [51673b90]
+- Updated dependencies [7a179003]
+- Updated dependencies [d9a51154]
+  - @eth-optimism/common-ts@0.2.5
+  - @eth-optimism/core-utils@0.8.2
+  - @eth-optimism/sdk@1.0.3
+
 ## 0.4.2
 
 ### Patch Changes

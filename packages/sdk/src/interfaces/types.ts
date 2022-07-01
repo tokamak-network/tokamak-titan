@@ -10,6 +10,27 @@ import { ICrossChainMessenger } from './cross-chain-messenger'
 import { IBridgeAdapter } from './bridge-adapter'
 
 /**
+ * L1 network chain IDs
+ */
+export enum L1ChainID {
+  MAINNET = 1,
+  GOERLI = 5,
+  KOVAN = 42,
+  HARDHAT_LOCAL = 31337,
+}
+
+/**
+ * L2 network chain IDs
+ */
+export enum L2ChainID {
+  OPTIMISM = 10,
+  OPTIMISM_GOERLI = 420,
+  OPTIMISM_KOVAN = 69,
+  OPTIMISM_HARDHAT_LOCAL = 31337,
+  OPTIMISM_HARDHAT_DEVNET = 17,
+}
+
+/**
  * L1 contract references.
  */
 export interface OEL1Contracts {
