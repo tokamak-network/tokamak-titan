@@ -52,6 +52,12 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8545',
       accounts: [privateKey],
     },
+    rinkeby: {
+      chainId: 4,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
     kovan: {
       chainId: 42,
       url: process.env.CONTRACTS_RPC_URL || '',
