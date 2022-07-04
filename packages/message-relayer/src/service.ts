@@ -1,7 +1,7 @@
 /* Imports: External */
 import { Signer } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
-import { getChainId, sleep } from '@eth-optimism/core-utils'
+import { Address, getChainId, sleep } from '@eth-optimism/core-utils'
 import {
   BaseServiceV2,
   validators,
@@ -22,6 +22,7 @@ type MessageRelayerOptions = {
   l2RpcProvider: Provider
   l1Wallet: Signer
   fromL2TransactionIndex?: number
+  addressManagerAddress?: Address
 }
 
 type MessageRelayerMetrics = {
@@ -68,6 +69,10 @@ export class MessageRelayerService extends BaseServiceV2<
           validator: validators.num,
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
+        },
+        addressManagerAddress: {
+          validator: validators.str,
+          desc: 'Contract address of Address Manager.',
         },
       },
       metricsSpec: {
