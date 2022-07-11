@@ -23,6 +23,12 @@ export const predeploys = {
 
   // We're also putting WETH9 at the old OVM_ETH address.
   WETH9: '0x4200000000000000000000000000000000000006',
+
+  // BOBA_TEMPORARY: L2 BOBA Token Address
+  L2StandardERC20: '0x4200000000000000000000000000000000000023',
+  // BOBA_TEMPORARY: Boba gas price oracle
+  Proxy__Boba_GasPriceOracle: '0x4200000000000000000000000000000000000024',
+  Boba_GasPriceOracle: '0x4200000000000000000000000000000000000025',
 }
 
 export const futurePredeploys = {

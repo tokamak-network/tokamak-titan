@@ -1,6 +1,8 @@
 /* Imports: Internal */
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 
+import { registerAddress } from '../src/hardhat-deploy-ethers'
+import { predeploys } from '../src/predeploys'
 import { names } from '../src/address-names'
 
 /* Imports: External */
@@ -14,6 +16,20 @@ const deployFn: DeployFunction = async (hre) => {
     args: [],
     log: true,
     waitConfirmations: hre.deployConfig.numDeployConfirmations,
+  })
+
+  // BOBA_TEMPORARY
+  await registerAddress({
+    hre,
+    name: 'TK_L2BOBA',
+    address: predeploys.L2StandardERC20,
+  })
+
+  // BOBA_TEMPORARY
+  await registerAddress({
+    hre,
+    name: 'Boba_GasPriceOracle',
+    address: predeploys.Boba_GasPriceOracle,
   })
 }
 
