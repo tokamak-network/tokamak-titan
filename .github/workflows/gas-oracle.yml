@@ -6,7 +6,9 @@ on:
       - 'gas-oracle/**'
   pull_request:
     paths:
-      - 'gas-oracle/*'
+      - 'gas-oracle/**'
+    branches:
+      - 'main'
 
 defaults:
   run:

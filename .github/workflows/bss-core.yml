@@ -6,7 +6,9 @@ on:
       - 'bss-core/**'
   pull_request:
     paths:
-      - 'bss-core/*'
+      - 'bss-core/**'
+    branches:
+      - 'main'
 
 defaults:
   run:

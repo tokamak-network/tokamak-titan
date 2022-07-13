@@ -6,7 +6,9 @@ on:
       - 'batch-submitter/**'
   pull_request:
     paths:
-      - 'batch-submitter/*'
+      - 'batch-submitter/**'
+    branches:
+      - 'main'
 
 defaults:
   run:
