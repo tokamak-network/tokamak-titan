@@ -1,0 +1,51 @@
+name: l2geth tests
+
+on:
+  push:
+    paths:
+      - 'l2geth/**'
+  pull_request:
+    paths:
+      - 'l2geth/**'
+    branches:
+      - 'main'
+
+defaults:
+  run:
+    working-directory: './l2geth'
+
+jobs:
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.18
+
+  #     - uses: actions/checkout@v3
+
+  #     - name: Lint
+  #       run: make lint
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: make
+
+      # - name: Unit Test
+      #   run: env GO111MODULE=on go run build/ci.go test -coverage
+
+      - name: Unit Test
+        run: make test
