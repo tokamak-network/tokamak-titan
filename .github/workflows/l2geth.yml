@@ -9,6 +9,7 @@ on:
       - 'l2geth/**'
     branches:
       - 'main'
+  workflow_dispatch:
 
 defaults:
   run:
@@ -33,19 +34,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Build
         run: make
-
-      # - name: Unit Test
-      #   run: env GO111MODULE=on go run build/ci.go test -coverage
 
       - name: Unit Test
         run: make test

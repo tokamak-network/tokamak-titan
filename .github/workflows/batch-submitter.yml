@@ -1,4 +1,4 @@
-name: batch-submitter lint and unit tests
+name: batch-submitter tests
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - 'batch-submitter/**'
     branches:
       - 'main'
+  workflow_dispatch:
 
 defaults:
   run:
@@ -48,7 +49,4 @@ jobs:
         run: make
 
       - name: Unit Test
-        run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
-
-      - name: Code Coverage
-        run: cat coverage.out
+        run: go test -v ./...
