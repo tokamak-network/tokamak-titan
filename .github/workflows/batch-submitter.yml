@@ -16,7 +16,30 @@ defaults:
     working-directory: './batch-submitter'
 
 jobs:
-  tests:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - uses: actions/checkout@v3
+
+      - run: ls
+
+      - run: pwd
+
+      - run: ls ../
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: batch-submitter
+
+  unittest:
+    name: Unit Test
     runs-on: ubuntu-latest
 
     steps:
@@ -27,9 +50,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Lint
-        run: make lint
 
       - name: Unit Test
         run: make test
