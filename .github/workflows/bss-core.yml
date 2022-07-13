@@ -31,8 +31,8 @@ jobs:
           version: latest
           working-directory: bss-core
 
-  unittest:
-    name: Unit Test
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
 
     steps:

@@ -31,8 +31,8 @@ jobs:
           version: latest
           working-directory: batch-submitter
 
-  unittest:
-    name: Unit Test
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +43,9 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Build
+        run: make
 
       - name: Unit Test
         run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
