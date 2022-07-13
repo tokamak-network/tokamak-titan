@@ -4,9 +4,6 @@ on:
   push:
     paths:
       - 'gas-oracle/**'
-    branches:
-      - 'main'
-      - '*'
   pull_request:
     paths:
       - 'gas-oracle/*'
