@@ -1,0 +1,645 @@
+name: Tokamak Optimism Public (Release Version)
+
+on:
+  push:
+    tags:
+      - "release-*"
+
+jobs:
+  l2geth:
+    name: Publish L2Geth
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Publish L2Geth
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./l2geth/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.l2geth:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.l2geth:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.l2geth:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.l2geth:latest
+
+  gas-oracle:
+    name: Publish Gas Oracle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Publish Gas Oracle
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./gas-oracle/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.gas-oracle:latest
+
+  hardhat-node:
+    name: Publish Hardhat Node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./hardhat/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Publish Hardhat Node
+        uses: docker/build-push-action@v2
+        with:
+          context: ./ops/docker/hardhat
+          file: ./ops/docker/hardhat/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.hardhat-node:latest
+
+  message-relayer:
+    name: Publish Message Relayer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
+          push: true
+          tags: |
+            onthertech/optimism.message-relayer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.message-relayer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.message-relayer:latest
+
+  tokamak-message-relayer:
+    name: Publish Tokamak Message Relayer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
+          push: true
+          tags: |
+            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.tokamak-message-relayer:latest
+
+  fault-detector:
+    name: Publish Fault Detector
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./fault-detector/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: fault-detector
+          push: true
+          tags: |
+            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.fault-detector:latest
+
+  drippie-mon:
+    name: Publish Drippie Monitor
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./drippie-mon/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: drippie-mon
+          push: true
+          tags: |
+            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.drippie-mon:latest
+
+  data-transport-layer:
+    name: Publish Data Transport Layer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./data-transport-layer/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: data-transport-layer
+          push: true
+          tags: |
+            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.data-transport-layer:latest
+
+  contracts:
+    name: Publish Deployer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./contracts/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: deployer
+          push: true
+          tags: |
+            onthertech/optimism.deployer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.deployer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.deployer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.deployer:latest
+
+  integration_tests:
+    name: Publish Integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: integration-tests
+          push: true
+          tags: |
+            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.integration-tests:latest
+
+  replica-healthcheck:
+    name: Publish Replica Healthcheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./replica-healthcheck/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: replica-healthcheck
+          push: true
+          tags: |
+            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.replica-healthcheck:latest
+
+  proxyd:
+    name: Publish proxyd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./proxyd/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.proxyd:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.proxyd:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.proxyd:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.proxyd:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+
+  op-exporter:
+    name: Publish op-exporter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./op-exporter/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.op-exporter:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+
+  l2geth-exporter:
+    name: Publish l2geth-exporter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./l2geth-exporter/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.l2geth-exporter:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+
+  batch-submitter-service:
+    name: Publish batch-submitter-service
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./batch-submitter/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.batch-submitter-service:latest
+
+  indexer:
+    name: Publish indexer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./indexer/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.indexer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.indexer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.indexer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.indexer:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+
+  teleportr:
+    name: Publish Teleportr
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Get versions
+        id: extractver
+        run: |
+          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
+          echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
+          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./teleportr/Dockerfile
+          push: true
+          tags: |
+            onthertech/optimism.teleportr:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/optimism.teleportr:${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.teleportr:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/optimism.teleportr:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}

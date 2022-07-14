@@ -6,6 +6,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "packages/tokamak/*",
       "batch-submitter",
       "bss-core",
       "gas-oracle",

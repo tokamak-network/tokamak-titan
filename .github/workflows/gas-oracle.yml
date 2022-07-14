@@ -1,0 +1,54 @@
+name: gas-oracle lint and unit tests
+
+on:
+  push:
+    paths:
+      - 'gas-oracle/**'
+  pull_request:
+    paths:
+      - 'gas-oracle/**'
+    branches:
+      - 'main'
+
+defaults:
+  run:
+    working-directory: './gas-oracle'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - uses: actions/checkout@v3
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: gas-oracle
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: make
+
+      - name: Unit Test
+        run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
+
+      - name: Code Coverage
+        run: cat coverage.out
