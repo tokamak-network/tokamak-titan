@@ -140,3 +140,25 @@ DATA_TRANSPORT_LAYER__POLLING_INTERVAL=100
 ROLLUP_POLL_INTERVAL_FLAG=500ms
 ```
 - [./envs/geth.env#L8](./envs/geth.env#L8)
+
+## Deploy contracts using script
+
+With l1_chain up and running, you can deploy contracts using scripts.
+
+### Set the environment
+
+We provide environment for local network. If you want to run another network, you can modify environment configuration.
+
+```bash
+cp .env.example .env
+```
+
+### Build and run l1_chain
+```bash
+docker-compose build l1_chain
+```
+
+### Deploy the contract
+```bash
+./script/deploy-contracts.sh
+```
