@@ -62,6 +62,12 @@ CMD ["yarn", "test:integration"]
 
 
 FROM base as message-relayer
+WORKDIR /opt/optimism/packages/message-relayer
+COPY ./ops/scripts/relayer.sh .
+CMD ["npm", "run", "start"]
+
+
+FROM base as tokamak-message-relayer
 WORKDIR /opt/optimism/packages/tokamak/message-relayer
 COPY ./ops/scripts/relayer.sh .
 CMD ["npm", "run", "start"]
