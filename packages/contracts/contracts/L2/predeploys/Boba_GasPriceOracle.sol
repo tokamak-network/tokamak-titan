@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 /* Library Imports */
 import { Lib_PredeployAddresses } from "../../libraries/constants/Lib_PredeployAddresses.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /* Contract Imports */
 import { L2StandardBridge } from "../messaging/L2StandardBridge.sol";
@@ -19,7 +18,6 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
  */
 contract Boba_GasPriceOracle {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     /*************
      * Constants *
