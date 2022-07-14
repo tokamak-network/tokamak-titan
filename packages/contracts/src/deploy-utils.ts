@@ -42,7 +42,10 @@ export const deployAndVerifyAndThen = async ({
   await hre.ethers.provider.waitForTransaction(result.transactionHash)
 
   if (result.newlyDeployed) {
-    if (!(await isHardhatNode(hre))) {
+    if (
+      !(await isHardhatNode(hre)) &&
+      process.env.VERIFY_CONTRACTS !== 'false'
+    ) {
       // Verification sometimes fails, even when the contract is correctly deployed and eventually
       // verified. Possibly due to a race condition. We don't want to halt the whole deployment
       // process just because that happens.
