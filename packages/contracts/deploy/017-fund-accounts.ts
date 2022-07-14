@@ -1,5 +1,4 @@
 /* Imports: External */
-import { sleep } from '@eth-optimism/core-utils'
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 import { defaultHardhatNetworkHdAccountsConfigParams } from 'hardhat/internal/core/config/default-config'
 import { normalizeHardhatNetworkAccountsConfig } from 'hardhat/internal/core/providers/util'
@@ -43,53 +42,50 @@ const deployFn: DeployFunction = async (hre) => {
       hre.ethers.provider
     )
 
-    // Fund the accounts in parallel to speed things up.
-
-    // Promise 객체를 병렬로 처리하여 한꺼번에 가져옴
-    // async/await보다 빠름
-    await Promise.all(
-      accounts.map(async (account, index) => {
-        // Add a sleep here to avoid any potential issues with spamming hardhat. Not sure if this
-        // is strictly necessary but it can't hurt.
-        await sleep(200 * index)
-
-        const wallet = new hre.ethers.Wallet(
-          account.privateKey,
-          hre.ethers.provider
-        )
-        // check l1 balance
-        const balance = await wallet.getBalance()
-        const depositAmount = balance.div(2) // Deposit half of the wallet's balance into L2.
-
-        // Deposit ETH
-        await L1StandardBridge.connect(wallet).depositETH(8_000_000, '0x', {
+    for (const account of accounts) {
+      const wallet = new hre.ethers.Wallet(
+        account.privateKey,
+        hre.ethers.provider
+      )
+      const balance = await wallet.getBalance()
+      const depositAmount = balance.div(2) // Deposit half of the wallet's balance into L2.
+      const fundETHTx = await L1StandardBridge.connect(wallet).depositETH(
+        8_000_000,
+        '0x',
+        {
           value: depositAmount,
           gasLimit: 2_000_000, // Idk, gas estimation was broken and this fixes it.
-        })
-        console.log(
-          `✓ Funded ${wallet.address} on L2 with ${hre.ethers.utils.formatEther(
-            depositAmount
-          )} ETH`
-        )
-        // BOBA_TEMPORARY: Deposit Boba tokens to L2 accounts
-        const depositBobaAmount = hre.ethers.utils.parseEther('5000')
-        const L2BobaAddress = predeploys.L2StandardERC20
-        await L1BobaToken.connect(BobaHolder).approve(
-          L1StandardBridge.address,
-          depositBobaAmount
-        )
-        await L1StandardBridge.connect(BobaHolder).depositERC20To(
-          L1BobaToken.address,
-          L2BobaAddress,
-          wallet.address,
-          depositBobaAmount,
-          8_000_000,
-          '0x',
-          { gasLimit: 2_000_000 } // Idk, gas estimation was broken and this fixes it.
-        )
-        console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 BOBA`)
-      })
-    )
+        }
+      )
+      await fundETHTx.wait()
+      console.log(
+        `✓ Funded ${wallet.address} on L2 with ${hre.ethers.utils.formatEther(
+          depositAmount
+        )} ETH`
+      )
+
+      // Deposit Boba tokens to L2 accounts
+      const depositBobaAmount = hre.ethers.utils.parseEther('5000')
+      const L2BobaAddress = predeploys.L2StandardERC20
+      const approveTx = await L1BobaToken.connect(BobaHolder).approve(
+        L1StandardBridge.address,
+        depositBobaAmount
+      )
+      await approveTx.wait()
+      const fundBobaTx = await L1StandardBridge.connect(
+        BobaHolder
+      ).depositERC20To(
+        L1BobaToken.address,
+        L2BobaAddress,
+        wallet.address,
+        depositBobaAmount,
+        8_000_000,
+        '0x',
+        { gasLimit: 2_000_000 } // Idk, gas estimation was broken and this fixes it.
+      )
+      await fundBobaTx.wait()
+      console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 BOBA`)
+    }
   }
 }
 

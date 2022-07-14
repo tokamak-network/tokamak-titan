@@ -57,9 +57,6 @@ contract Boba_GasPriceOracle {
     // Record the wallet address that wants to use boba as fee token
     mapping(address => bool) public bobaFeeTokenUsers;
 
-    // Boba fee for the meta transaction
-    // uint256 public metaTransactionFee = 3e18;
-
     // Received ETH amount for the swap - 0.005
     uint256 public receivedETHAmount = 5e15;
 
@@ -72,13 +69,11 @@ contract Boba_GasPriceOracle {
 
     event TransferOwnership(address, address);
     event UseBobaAsFeeToken(address);
-    // event SwapBOBAForETHMetaTransaction(address);
     event UseETHAsFeeToken(address);
     event UpdatePriceRatio(address, uint256, uint256);
     event UpdateMaxPriceRatio(address, uint256);
     event UpdateMinPriceRatio(address, uint256);
     event UpdateGasPriceOracleAddress(address, address);
-    // event UpdateMetaTransactionFee(address, uint256);
     event UpdateReceivedETHAmount(address, uint256);
     event WithdrawBOBA(address, address);
     event WithdrawETH(address, address);
@@ -164,32 +159,6 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Add the users that want to use BOBA as the fee token
-     * using the Meta Transaction
-     * NOTE: Only works for the mainnet and local testnet
-     */
-    // function swapBOBAForETHMetaTransaction(
-    //     address tokenOwner,
-    //     address spender,
-    //     uint256 value,
-    //     uint256 deadline,
-    //     uint8 v,
-    //     bytes32 r,
-    //     bytes32 s
-    // ) public {
-    //     require(!Address.isContract(tokenOwner), "Account not EOA");
-    //     require(spender == address(this), "Spender is not this contract");
-    //     uint256 totalCost = receivedETHAmount.mul(marketPriceRatio).add(metaTransactionFee);
-    //     require(value >= totalCost, "Value is not enough");
-    //     L2StandardERC20 bobaToken = L2StandardERC20(l2BobaAddress);
-    //     bobaToken.permit(tokenOwner, spender, value, deadline, v, r, s);
-    //     IERC20(l2BobaAddress).safeTransferFrom(tokenOwner, address(this), totalCost);
-    //     (bool sent, ) = address(tokenOwner).call{ value: receivedETHAmount }("");
-    //     require(sent, "Failed to send ETH");
-    //     emit SwapBOBAForETHMetaTransaction(tokenOwner);
-    // }
-
-    /**
      * Add the users that want to use ETH as the fee token
      */
     function useETHAsFeeToken() public {
@@ -245,16 +214,6 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Update the fee for the meta transaction
-     * @param _metaTransactionFee the fee for the meta transaction
-     */
-    // function updateMetaTransactionFee(uint256 _metaTransactionFee) public onlyOwner {
-    //     require(_metaTransactionFee > 0);
-    //     metaTransactionFee = _metaTransactionFee;
-    //     emit UpdateMetaTransactionFee(owner(), _metaTransactionFee);
-    // }
-
-    /**
      * Update the received ETH amount
      * @param _receivedETHAmount the received ETH amount
      */
@@ -263,13 +222,6 @@ contract Boba_GasPriceOracle {
         receivedETHAmount = _receivedETHAmount;
         emit UpdateReceivedETHAmount(owner(), _receivedETHAmount);
     }
-
-    /**
-     * Get the price for swapping BOBA for ETH
-     */
-    // function getBOBAForSwap() public view returns (uint256) {
-    //     return receivedETHAmount.mul(marketPriceRatio).add(metaTransactionFee);
-    // }
 
     /**
      * Get L1 Boba fee for fee estimation

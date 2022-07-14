@@ -83,23 +83,6 @@ function gasPriceOracleAddress() external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
-### getBOBAForSwap
-
-```solidity
-function getBOBAForSwap() external view returns (uint256)
-```
-
-Get the price for swapping BOBA for ETH
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
 ### getL1BobaFee
 
 ```solidity
@@ -177,23 +160,6 @@ function marketPriceRatio() external view returns (uint256)
 
 ```solidity
 function maxPriceRatio() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-### metaTransactionFee
-
-```solidity
-function metaTransactionFee() external view returns (uint256)
 ```
 
 
@@ -323,22 +289,6 @@ Update the maximum price ratio of ETH and BOBA
 |---|---|---|
 | _maxPriceRatio | uint256 | the maximum price ratio of ETH and BOBA
 
-### updateMetaTransactionFee
-
-```solidity
-function updateMetaTransactionFee(uint256 _metaTransactionFee) external nonpayable
-```
-
-Update the fee for the meta transaction
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _metaTransactionFee | uint256 | the fee for the meta transaction
-
 ### updateMinPriceRatio
 
 ```solidity
@@ -394,7 +344,7 @@ Update the received ETH amount
 function useBobaAsFeeToken() external nonpayable
 ```
 
-Add the users that want to use BOBA as the fee token BOBA를 요금 토큰으로 사용하려는 사용자 추가
+Add the users that want to use BOBA as the fee token
 
 
 
@@ -436,22 +386,6 @@ withdraw ETH tokens to l2 fee wallet
 
 ## Events
 
-### SwapBOBAForETHMetaTransaction
-
-```solidity
-event SwapBOBAForETHMetaTransaction(address)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0  | address | undefined |
-
 ### TransferOwnership
 
 ```solidity
@@ -490,23 +424,6 @@ event UpdateGasPriceOracleAddress(address, address)
 
 ```solidity
 event UpdateMaxPriceRatio(address, uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0  | address | undefined |
-| _1  | uint256 | undefined |
-
-### UpdateMetaTransactionFee
-
-```solidity
-event UpdateMetaTransactionFee(address, uint256)
 ```
 
 

@@ -4,19 +4,48 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 
 import * as mkdirp from 'mkdirp'
-import { ethers } from 'ethers'
+import { ethers, utils, BigNumber, Wallet } from 'ethers'
 import { task } from 'hardhat/config'
 import { remove0x } from '@eth-optimism/core-utils'
 
 import { predeploys } from '../src/predeploys'
 import { getContractFromArtifact } from '../src/deploy-utils'
 import { names } from '../src/address-names'
+import { getDeployedContract } from '../src/hardhat-deploy-ethers'
 
+// deployer
+const deployer = new Wallet(process.env['CONTRACTS_DEPLOYER_KEY'])
+
+// BOBA_TEMPORARY
+// add storage slots for Proxy__Boba_GasPriceOracle
+const addSlotsForBobaProxyContract = (
+  dump: any,
+  predeployAddress: string,
+  variable: any
+) => {
+  for (const keyName of Object.keys(variable)) {
+    const key = utils.hexlify(utils.toUtf8Bytes(keyName))
+    const index = BigNumber.from('0').toHexString()
+    const newKeyPreimage = utils.concat([key, utils.hexZeroPad(index, 32)])
+    const compositeKey = utils.keccak256(utils.hexlify(newKeyPreimage))
+    dump[predeployAddress].storage[compositeKey] = variable[keyName]
+  }
+  return dump
+}
+
+// hardhat command
 task('take-dump').setAction(async (args, hre) => {
+  // BOBA_TEMPORARY
+  const L1BobaToken = await getDeployedContract(hre, 'TK_L1BOBA', {
+    iface: 'BOBA',
+  })
   /* eslint-disable @typescript-eslint/no-var-requires */
 
   // Needs to be imported here or hardhat will throw a fit about hardhat being imported from
   // within the configuration file.
+
+  // computeStorageSlots: Computes the key/value storage slot pairs that would be used if a given set of variable values were applied to a given contract.
+  // getStorageLayout: Retrieves the storageLayout portion of the compiler artifact for a given contract by name.
   const {
     computeStorageSlots,
     getStorageLayout,
@@ -65,7 +94,6 @@ task('take-dump').setAction(async (args, hre) => {
     },
     OVM_ETH: {
       l2Bridge: predeploys.L2StandardBridge,
-      l1Token: ethers.constants.AddressZero,
       _name: 'Ether',
       _symbol: 'ETH',
     },
@@ -87,9 +115,34 @@ task('take-dump').setAction(async (args, hre) => {
       symbol: 'WETH',
       decimals: 18,
     },
+    // Token decimal is 0 for BOBA Token
+    L2StandardERC20: {
+      _name: 'Boba Network',
+      _symbol: 'BOBA',
+      l1Token: L1BobaToken.address,
+      l2Bridge: predeploys.L2StandardBridge,
+    },
+    Proxy__Boba_GasPriceOracle: {
+      proxyOwner: deployer.address,
+      proxyTarget: predeploys.Boba_GasPriceOracle,
+    },
+    Boba_GasPriceOracle: {
+      _owner: hre.deployConfig.ovmGasPriceOracleOwner,
+      feeWallet: hre.deployConfig.ovmFeeWalletAddress,
+      l2BobaAddress: predeploys.L2StandardERC20,
+      minPriceRatio: 500,
+      maxPriceRatio: 5000,
+      priceRatio: 2000,
+      gasPriceOracleAddress: predeploys.OVM_GasPriceOracle,
+      receivedETHAmount: utils.parseEther('0.005'),
+      marketPriceRatio: 2000,
+    },
   }
 
   const dump = {}
+
+  // generate dump
+  // address, balanace, storage slot, deployedcode
   for (const predeployName of Object.keys(predeploys)) {
     const predeployAddress = predeploys[predeployName]
     dump[predeployAddress] = {
@@ -103,6 +156,10 @@ task('take-dump').setAction(async (args, hre) => {
       // directly used in Solidity (yet). This bytecode string simply executes the 0x4B opcode
       // and returns the address given by that opcode.
       dump[predeployAddress].code = '0x4B60005260206000F3'
+      // BOBA_TEMPORARY
+    } else if (predeployName === 'Proxy__Boba_GasPriceOracle') {
+      const artifact = getContractArtifact('Lib_ResolvedDelegateBobaProxy')
+      dump[predeployAddress].code = artifact.deployedBytecode
     } else {
       const artifact = getContractArtifact(predeployName)
       dump[predeployAddress].code = artifact.deployedBytecode
@@ -110,15 +167,48 @@ task('take-dump').setAction(async (args, hre) => {
 
     // Compute and set the required storage slots for each contract that needs it.
     if (predeployName in variables) {
+      if (predeployName === 'Proxy__Boba_GasPriceOracle') {
+        // Add a proxy contract for Boba_GasPriceOracle
+        addSlotsForBobaProxyContract(
+          dump,
+          predeployAddress,
+          variables[predeployName]
+        )
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        const storageLayout = await getStorageLayout('Boba_GasPriceOracle')
+        const slots = computeStorageSlots(
+          storageLayout,
+          variables['Boba_GasPriceOracle']
+        )
+        for (const slot of slots) {
+          dump[predeploys.Proxy__Boba_GasPriceOracle].storage[slot.key] =
+            slot.val
+        }
+        continue
+      }
       const storageLayout = await getStorageLayout(predeployName)
-      const slots = computeStorageSlots(storageLayout, variables[predeployName])
-      for (const slot of slots) {
-        dump[predeployAddress].storage[slot.key] = slot.val
+      // Calculate the mapping keys
+      if (predeployName === 'Lib_ResolvedDelegateBobaProxy') {
+        addSlotsForBobaProxyContract(
+          dump,
+          predeployAddress,
+          variables[predeployName]
+        )
+      } else {
+        const slots = computeStorageSlots(
+          storageLayout,
+          variables[predeployName]
+        )
+        for (const slot of slots) {
+          dump[predeployAddress].storage[slot.key] = slot.val
+          // Add the storage slots for Proxy__BobaTuringCredit
+        }
       }
     }
   }
 
   // Grab the commit hash so we can stick it in the genesis file.
+  // Add commit hash to the genesis file
   let commit: string
   try {
     const { stdout } = await promisify(exec)('git rev-parse HEAD')
