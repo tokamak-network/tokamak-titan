@@ -1,4 +1,4 @@
-name: gas-oracle lint and unit tests
+name: gas-oracle tests
 
 on:
   push:
@@ -48,7 +48,4 @@ jobs:
         run: make
 
       - name: Unit Test
-        run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
-
-      - name: Code Coverage
-        run: cat coverage.out
+        run: go test -v ./...
