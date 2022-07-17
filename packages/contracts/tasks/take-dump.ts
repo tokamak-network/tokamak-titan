@@ -16,9 +16,8 @@ import { getDeployedContract } from '../src/hardhat-deploy-ethers'
 // deployer
 const deployer = new Wallet(process.env['CONTRACTS_DEPLOYER_KEY'])
 
-// BOBA_TEMPORARY
-// add storage slots for Proxy__Boba_GasPriceOracle
-const addSlotsForBobaProxyContract = (
+// add storage slots for Proxy__Tokamak_GasPriceOracle
+const addSlotsForTokamakProxyContract = (
   dump: any,
   predeployAddress: string,
   variable: any
@@ -35,9 +34,8 @@ const addSlotsForBobaProxyContract = (
 
 // hardhat command
 task('take-dump').setAction(async (args, hre) => {
-  // BOBA_TEMPORARY
-  const L1BobaToken = await getDeployedContract(hre, 'TK_L1BOBA', {
-    iface: 'BOBA',
+  const L1TokamakToken = await getDeployedContract(hre, 'TK_L1TOKAMAK', {
+    iface: 'TOKAMAK',
   })
   /* eslint-disable @typescript-eslint/no-var-requires */
 
@@ -115,21 +113,20 @@ task('take-dump').setAction(async (args, hre) => {
       symbol: 'WETH',
       decimals: 18,
     },
-    // Token decimal is 0 for BOBA Token
     L2StandardERC20: {
-      _name: 'Boba Network',
-      _symbol: 'BOBA',
-      l1Token: L1BobaToken.address,
+      _name: 'Tokamak Test Token',
+      _symbol: 'TOKAMAK',
+      l1Token: L1TokamakToken.address,
       l2Bridge: predeploys.L2StandardBridge,
     },
-    Proxy__Boba_GasPriceOracle: {
+    Proxy__Tokamak_GasPriceOracle: {
       proxyOwner: deployer.address,
-      proxyTarget: predeploys.Boba_GasPriceOracle,
+      proxyTarget: predeploys.Tokamak_GasPriceOracle,
     },
-    Boba_GasPriceOracle: {
+    Tokamak_GasPriceOracle: {
       _owner: hre.deployConfig.ovmGasPriceOracleOwner,
       feeWallet: hre.deployConfig.ovmFeeWalletAddress,
-      l2BobaAddress: predeploys.L2StandardERC20,
+      l2TokamakAddress: predeploys.L2StandardERC20,
       minPriceRatio: 500,
       maxPriceRatio: 5000,
       priceRatio: 2000,
@@ -156,9 +153,8 @@ task('take-dump').setAction(async (args, hre) => {
       // directly used in Solidity (yet). This bytecode string simply executes the 0x4B opcode
       // and returns the address given by that opcode.
       dump[predeployAddress].code = '0x4B60005260206000F3'
-      // BOBA_TEMPORARY
-    } else if (predeployName === 'Proxy__Boba_GasPriceOracle') {
-      const artifact = getContractArtifact('Lib_ResolvedDelegateBobaProxy')
+    } else if (predeployName === 'Proxy__Tokamak_GasPriceOracle') {
+      const artifact = getContractArtifact('Lib_ResolvedDelegateTokamakProxy')
       dump[predeployAddress].code = artifact.deployedBytecode
     } else {
       const artifact = getContractArtifact(predeployName)
@@ -167,29 +163,28 @@ task('take-dump').setAction(async (args, hre) => {
 
     // Compute and set the required storage slots for each contract that needs it.
     if (predeployName in variables) {
-      if (predeployName === 'Proxy__Boba_GasPriceOracle') {
-        // Add a proxy contract for Boba_GasPriceOracle
-        addSlotsForBobaProxyContract(
+      if (predeployName === 'Proxy__Tokamak_GasPriceOracle') {
+        addSlotsForTokamakProxyContract(
           dump,
           predeployAddress,
           variables[predeployName]
         )
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const storageLayout = await getStorageLayout('Boba_GasPriceOracle')
+        const storageLayout = await getStorageLayout('Tokamak_GasPriceOracle')
         const slots = computeStorageSlots(
           storageLayout,
-          variables['Boba_GasPriceOracle']
+          variables['Tokamak_GasPriceOracle']
         )
         for (const slot of slots) {
-          dump[predeploys.Proxy__Boba_GasPriceOracle].storage[slot.key] =
+          dump[predeploys.Proxy__Tokamak_GasPriceOracle].storage[slot.key] =
             slot.val
         }
         continue
       }
       const storageLayout = await getStorageLayout(predeployName)
       // Calculate the mapping keys
-      if (predeployName === 'Lib_ResolvedDelegateBobaProxy') {
-        addSlotsForBobaProxyContract(
+      if (predeployName === 'Lib_ResolvedDelegateTokamakProxy') {
+        addSlotsForTokamakProxyContract(
           dump,
           predeployAddress,
           variables[predeployName]
@@ -201,7 +196,6 @@ task('take-dump').setAction(async (args, hre) => {
         )
         for (const slot of slots) {
           dump[predeployAddress].storage[slot.key] = slot.val
-          // Add the storage slots for Proxy__BobaTuringCredit
         }
       }
     }

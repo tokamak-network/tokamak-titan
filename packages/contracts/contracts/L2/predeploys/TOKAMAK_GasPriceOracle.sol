@@ -14,16 +14,17 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @title Boba_GasPriceOracle
+ * @title Tokamak_GasPriceOracle
  */
-contract Boba_GasPriceOracle {
+contract Tokamak_GasPriceOracle {
     using SafeERC20 for IERC20;
 
     /*************
      * Constants *
      *************/
 
-    // Minimum BOBA balance that can be withdrawn in a single withdrawal.
+    // Minimum TOKAMAK balance that can be withdrawn in a single withdrawal.
+    // 150 TOKAMAK
     uint256 public constant MIN_WITHDRAWAL_AMOUNT = 150e18;
 
     /*************
@@ -36,27 +37,24 @@ contract Boba_GasPriceOracle {
     // Address that will hold the fees once withdrawn. Dynamically initialized within l2geth.
     address public feeWallet;
 
-    // L2 Boba token address
-    address public l2BobaAddress;
+    // L2 Tokamak token address
+    address public l2TokamakAddress;
 
-    // The maximum value of ETH and BOBA
+    // The maximum price ratio value of ETH and TOKAMAK
     uint256 public maxPriceRatio = 5000;
 
-    // The minimum value of ETH and BOBA
+    // The minimum price ratio value of ETH and TOKAMAK
     uint256 public minPriceRatio = 500;
 
-    // The price ratio of ETH and BOBA
-    // This price ratio considers the saving percentage of using BOBA as the fee token
+    // The price ratio of ETH and TOKAMAK
+    // This price ratio considers the saving percentage of using TOKAMAK as the fee token
     uint256 public priceRatio;
 
-    // Gas price oracle address
+    // Gas price oracle address (OVM_GasPriceOracle)
     address public gasPriceOracleAddress = 0x420000000000000000000000000000000000000F;
 
-    // Record the wallet address that wants to use boba as fee token
-    mapping(address => bool) public bobaFeeTokenUsers;
-
-    // Received ETH amount for the swap - 0.005
-    uint256 public receivedETHAmount = 5e15;
+    // Record the wallet address that wants to use tokamak as fee token
+    mapping(address => bool) public tokamakFeeTokenUsers;
 
     // Price ratio without discount
     uint256 public marketPriceRatio;
@@ -66,14 +64,13 @@ contract Boba_GasPriceOracle {
      *************/
 
     event TransferOwnership(address, address);
-    event UseBobaAsFeeToken(address);
+    event UseTokamakAsFeeToken(address);
     event UseETHAsFeeToken(address);
     event UpdatePriceRatio(address, uint256, uint256);
     event UpdateMaxPriceRatio(address, uint256);
     event UpdateMinPriceRatio(address, uint256);
     event UpdateGasPriceOracleAddress(address, address);
-    event UpdateReceivedETHAmount(address, uint256);
-    event WithdrawBOBA(address, address);
+    event WithdrawTOKAMAK(address, address);
     event WithdrawETH(address, address);
 
     /**********************
@@ -122,20 +119,19 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Initialize feeWallet and l2BobaAddress.
+     * Initialize feeWallet and l2TokamakAddress.
      */
-    function initialize(address payable _feeWallet, address _l2BobaAddress)
+    function initialize(address payable _feeWallet, address _l2TokamakAddress)
         public
         onlyNotInitialized
     {
-        require(_feeWallet != address(0) && _l2BobaAddress != address(0));
+        require(_feeWallet != address(0) && _l2TokamakAddress != address(0));
         feeWallet = _feeWallet;
-        l2BobaAddress = _l2BobaAddress;
+        l2TokamakAddress = _l2TokamakAddress;
 
         // Initialize the parameters
         _owner = msg.sender;
         gasPriceOracleAddress = 0x420000000000000000000000000000000000000F;
-        // metaTransactionFee = 3e18;
         maxPriceRatio = 5000;
         priceRatio = 2000;
         minPriceRatio = 500;
@@ -145,15 +141,15 @@ contract Boba_GasPriceOracle {
     /**
      * Add the users that want to use BOBA as the fee token
      */
-    function useBobaAsFeeToken() public {
+    function useTokamakAsFeeToken() public {
         require(!Address.isContract(msg.sender), "Account not EOA");
-        // Users should have more than 3 BOBA
+        // Users should have more than 3 TOKAMAK
         require(
-            L2StandardERC20(l2BobaAddress).balanceOf(msg.sender) >= 3e18,
-            "Insufficient Boba balance"
+            L2StandardERC20(l2TokamakAddress).balanceOf(msg.sender) >= 3e18,
+            "Insufficient Tokamak balance"
         );
-        bobaFeeTokenUsers[msg.sender] = true;
-        emit UseBobaAsFeeToken(msg.sender);
+        tokamakFeeTokenUsers[msg.sender] = true;
+        emit UseTokamakAsFeeToken(msg.sender);
     }
 
     /**
@@ -163,14 +159,14 @@ contract Boba_GasPriceOracle {
         require(!Address.isContract(msg.sender), "Account not EOA");
         // Users should have more than 0.002 ETH
         require(address(msg.sender).balance >= 2e15, "Insufficient ETH balance");
-        bobaFeeTokenUsers[msg.sender] = false;
+        tokamakFeeTokenUsers[msg.sender] = false;
         emit UseETHAsFeeToken(msg.sender);
     }
 
     /**
-     * Update the price ratio of ETH and BOBA
-     * @param _priceRatio the price ratio of ETH and BOBA
-     * @param _marketPriceRatio tha market price ratio of ETH and BOBA
+     * Update the price ratio of ETH and TOKAMAK
+     * @param _priceRatio the price ratio of ETH and TOKAMAK
+     * @param _marketPriceRatio tha market price ratio of ETH and TOKAMAK
      */
     function updatePriceRatio(uint256 _priceRatio, uint256 _marketPriceRatio) public onlyOwner {
         require(_priceRatio <= maxPriceRatio && _priceRatio >= minPriceRatio);
@@ -181,8 +177,8 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Update the maximum price ratio of ETH and BOBA
-     * @param _maxPriceRatio the maximum price ratio of ETH and BOBA
+     * Update the maximum price ratio of ETH and TOKAMAK
+     * @param _maxPriceRatio the maximum price ratio of ETH and TOKAMAK
      */
     function updateMaxPriceRatio(uint256 _maxPriceRatio) public onlyOwner {
         require(_maxPriceRatio >= minPriceRatio && _maxPriceRatio > 0);
@@ -191,8 +187,8 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Update the minimum price ratio of ETH and BOBA
-     * @param _minPriceRatio the minimum price ratio of ETH and BOBA
+     * Update the minimum price ratio of ETH and TOKAMAK
+     * @param _minPriceRatio the minimum price ratio of ETH and TOKAMAK
      */
     function updateMinPriceRatio(uint256 _minPriceRatio) public onlyOwner {
         require(_minPriceRatio <= maxPriceRatio && _minPriceRatio > 0);
@@ -212,42 +208,32 @@ contract Boba_GasPriceOracle {
     }
 
     /**
-     * Update the received ETH amount
-     * @param _receivedETHAmount the received ETH amount
-     */
-    function updateReceivedETHAmount(uint256 _receivedETHAmount) public onlyOwner {
-        require(_receivedETHAmount > 1e15 && _receivedETHAmount < 10e15);
-        receivedETHAmount = _receivedETHAmount;
-        emit UpdateReceivedETHAmount(owner(), _receivedETHAmount);
-    }
-
-    /**
-     * Get L1 Boba fee for fee estimation
+     * Get L1 Tokamak fee for fee estimation
      * @param _txData the data payload
      */
-    function getL1BobaFee(bytes memory _txData) public view returns (uint256) {
+    function getL1TokamakFee(bytes memory _txData) public view returns (uint256) {
         OVM_GasPriceOracle gasPriceOracleContract = OVM_GasPriceOracle(gasPriceOracleAddress);
         return gasPriceOracleContract.getL1Fee(_txData) * priceRatio;
     }
 
     /**
-     * withdraw BOBA tokens to l1 fee wallet
+     * withdraw TOKAMAK tokens to l1 fee wallet
      */
-    function withdrawBOBA() public {
+    function withdrawTOKAMAK() public {
         require(
-            L2StandardERC20(l2BobaAddress).balanceOf(address(this)) >= MIN_WITHDRAWAL_AMOUNT,
+            L2StandardERC20(l2TokamakAddress).balanceOf(address(this)) >= MIN_WITHDRAWAL_AMOUNT,
             // solhint-disable-next-line max-line-length
-            "Boba_GasPriceOracle: withdrawal amount must be greater than minimum withdrawal amount"
+            "Tokamak_GasPriceOracle: withdrawal amount must be greater than minimum withdrawal amount"
         );
 
         L2StandardBridge(Lib_PredeployAddresses.L2_STANDARD_BRIDGE).withdrawTo(
-            l2BobaAddress,
+            l2TokamakAddress,
             feeWallet,
-            L2StandardERC20(l2BobaAddress).balanceOf(address(this)),
+            L2StandardERC20(l2TokamakAddress).balanceOf(address(this)),
             0,
             bytes("")
         );
-        emit WithdrawBOBA(owner(), feeWallet);
+        emit WithdrawTOKAMAK(owner(), feeWallet);
     }
 
     /**
