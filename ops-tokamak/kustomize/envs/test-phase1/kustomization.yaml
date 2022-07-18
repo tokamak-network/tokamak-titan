@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+  - name: data-transport-layer
+    envs:
+      - ./data-transport-layer.env
+  - name: l2geth
+    envs:
+      - ./l2geth.env
+  - name: l1chain
+    envs:
+      - ./l1chain.env
+  - name: deployer
+    envs:
+      - ./deployer.env
+  - name: batch-submitter
+    envs:
+      - ./batch-submitter.env
+  - name: relayer
+    envs:
+      - ./relayer.env
+  - name: common
+    envs:
+      - ./common.env
+
+secretGenerator:
+  - name: secret
+    envs:
+      - ./secret.env

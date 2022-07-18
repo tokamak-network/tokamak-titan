@@ -52,3 +52,6 @@ coverage.out
 # Ignore bedrock go bindings local output files
 op-bindings/bin
 op-exporter
+
+# Ignore secret env
+secret.env
