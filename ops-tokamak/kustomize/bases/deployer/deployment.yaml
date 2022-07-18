@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployer
+spec:
+  replicas: 1
+  template:
+    spec:
+      terminationGracePeriodSeconds: 10
+      restartPolicy: Always
+      initContainers:
+        - name: wait-for-l1
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-l1.sh']
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+          envFrom:
+            - configMapRef:
+                name: common
+      containers:
+        - name: deployer
+          image: onthertech/optimism.deployer
+          imagePullPolicy: IfNotPresent
+          command: ['./deployer.sh']
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+          resources: {}
+          envFrom:
+            - configMapRef:
+                name: deployer
+            - secretRef:
+                name: secret
+          volumeMounts:
+            - name: deployer-data
+              mountPath: /opt/optimism/packages/contracts/genesis
+      volumes:
+        - name: deployer-data
+          emptyDir: {}
+        - name: wait-scripts
+          configMap:
+            name: wait-scripts
+            defaultMode: 0777

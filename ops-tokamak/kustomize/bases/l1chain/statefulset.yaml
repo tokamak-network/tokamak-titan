@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: l1chain
+spec:
+  replicas: 1
+  serviceName: l1chain
+  template:
+    spec:
+      terminationGracePeriodSeconds: 10
+      restartPolicy: Always
+      containers:
+        - name: l1chain
+          image: onthertech/optimism.hardhat-node
+          imagePullPolicy: IfNotPresent
+          command: ['yarn', 'start', '--hostname', '0.0.0.0']
+          ports:
+            - containerPort: 8545
+              protocol: TCP
+          resources: {}
+          envFrom:
+            - configMapRef:
+                name: l1chain
+          volumeMounts:
+            - name: l1chain-data
+              mountPath: /geth
+      volumes:
+        - name: l1chain-data
+          emptyDir: {}

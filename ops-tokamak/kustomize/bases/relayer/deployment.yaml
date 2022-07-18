@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relayer
+spec:
+  replicas: 1
+  template:
+    spec:
+      terminationGracePeriodSeconds: 10
+      restartPolicy: Always
+      initContainers:
+        - name: wait-for-l1
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-l1.sh']
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+          envFrom:
+            - configMapRef:
+                name: common
+        - name: wait-for-l2
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-l2.sh']
+          envFrom:
+            - configMapRef:
+                name: common
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+      containers:
+        - name: relayer
+          image: onthertech/optimism.message-relayer
+          imagePullPolicy: IfNotPresent
+          command: ['./relayer.sh']
+          resources: {}
+          envFrom:
+            - configMapRef:
+                name: relayer
+            - secretRef:
+                name: secret
+      volumes:
+        - name: wait-scripts
+          configMap:
+            name: wait-scripts
+            defaultMode: 0777

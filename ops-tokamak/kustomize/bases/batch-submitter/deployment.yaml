@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: batch-submitter
+spec:
+  replicas: 1
+  template:
+    spec:
+      terminationGracePeriodSeconds: 10
+      restartPolicy: Always
+      initContainers:
+        - name: wait-for-l1
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-l1.sh']
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+          envFrom:
+            - configMapRef:
+                name: common
+        - name: wait-for-deployer
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-deployer.sh']
+          envFrom:
+            - configMapRef:
+                name: common
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+        - name: wait-for-l2
+          image: nicolaka/netshoot
+          command: ['bash', '-c', '/script/wait/wait-for-l2.sh']
+          envFrom:
+            - configMapRef:
+                name: common
+          volumeMounts:
+            - name: wait-scripts
+              mountPath: /script/wait
+      containers:
+        - name: batch-submitter
+          image: onthertech/optimism.batch-submitter-service
+          imagePullPolicy: IfNotPresent
+          command: ['./batch-submitter.sh']
+          resources: {}
+          envFrom:
+            - configMapRef:
+                name: batch-submitter
+            - secretRef:
+                name: secret
+      volumes:
+        - name: wait-scripts
+          configMap:
+            name: wait-scripts
+            defaultMode: 0777

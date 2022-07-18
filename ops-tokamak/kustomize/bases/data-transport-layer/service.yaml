@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-transport-layer
+spec:
+  selector:
+    app: data-transport-layer
+  type: NodePort
+  ports:
+    - name: http
+      port: 7878
+      nodePort: 30878
