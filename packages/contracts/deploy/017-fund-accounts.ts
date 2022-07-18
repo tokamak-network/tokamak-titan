@@ -25,9 +25,8 @@ const deployFn: DeployFunction = async (hre) => {
       }
     )
 
-    // BOBA_TEMPORARY: get TK_L1BOBA token contract
-    const L1BobaToken = await getDeployedContract(hre, 'TK_L1BOBA', {
-      iface: 'BOBA',
+    const L1TokamakToken = await getDeployedContract(hre, 'TK_L1TOKAMAK', {
+      iface: 'TOKAMAK',
     })
 
     // Default has 20 accounts but we restrict to 20 accounts manually as well just to prevent
@@ -36,8 +35,7 @@ const deployFn: DeployFunction = async (hre) => {
       defaultHardhatNetworkHdAccountsConfigParams
     ).slice(0, 20)
 
-    // BOBA_TEMPORARY: Boba holder
-    const BobaHolder = new hre.ethers.Wallet(
+    const TokamakHolder = new hre.ethers.Wallet(
       accounts[0].privateKey,
       hre.ethers.provider
     )
@@ -64,27 +62,29 @@ const deployFn: DeployFunction = async (hre) => {
         )} ETH`
       )
 
-      // Deposit Boba tokens to L2 accounts
-      const depositBobaAmount = hre.ethers.utils.parseEther('5000')
-      const L2BobaAddress = predeploys.L2StandardERC20
-      const approveTx = await L1BobaToken.connect(BobaHolder).approve(
+      // deposit 5000 TOKAMAK to each L2 address
+      const depositTokamakAmount = hre.ethers.utils.parseEther('5000')
+      const L2TokamakAddress = predeploys.L2StandardERC20
+      // ERC20 approve
+      const approveTx = await L1TokamakToken.connect(TokamakHolder).approve(
         L1StandardBridge.address,
-        depositBobaAmount
+        depositTokamakAmount
       )
       await approveTx.wait()
-      const fundBobaTx = await L1StandardBridge.connect(
-        BobaHolder
+      // deposit TOKAMAK
+      const fundTokamakTx = await L1StandardBridge.connect(
+        TokamakHolder
       ).depositERC20To(
-        L1BobaToken.address,
-        L2BobaAddress,
+        L1TokamakToken.address,
+        L2TokamakAddress,
         wallet.address,
-        depositBobaAmount,
+        depositTokamakAmount,
         8_000_000,
         '0x',
         { gasLimit: 2_000_000 } // Idk, gas estimation was broken and this fixes it.
       )
-      await fundBobaTx.wait()
-      console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 BOBA`)
+      await fundTokamakTx.wait()
+      console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 TOKAMAK`)
     }
   }
 }

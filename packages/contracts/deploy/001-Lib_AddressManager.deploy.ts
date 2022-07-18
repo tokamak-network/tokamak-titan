@@ -18,18 +18,16 @@ const deployFn: DeployFunction = async (hre) => {
     waitConfirmations: hre.deployConfig.numDeployConfirmations,
   })
 
-  // BOBA_TEMPORARY
   await registerAddress({
     hre,
-    name: 'TK_L2BOBA',
+    name: 'TK_L2TOKAMAK',
     address: predeploys.L2StandardERC20,
   })
 
-  // BOBA_TEMPORARY
   await registerAddress({
     hre,
-    name: 'Boba_GasPriceOracle',
-    address: predeploys.Boba_GasPriceOracle,
+    name: 'Tokamak_GasPriceOracle',
+    address: predeploys.Tokamak_GasPriceOracle,
   })
 }
 

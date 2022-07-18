@@ -26,7 +26,7 @@ export const predeploys = {
 
   // L2 Tokamak Token Address
   L2StandardERC20: '0x4200000000000000000000000000000000000023',
-  // gas price oracle for TOKAMAK
+  // gas price oracle for Tokamak
   Proxy__Tokamak_GasPriceOracle: '0x4200000000000000000000000000000000000024',
   Tokamak_GasPriceOracle: '0x4200000000000000000000000000000000000025',
 }

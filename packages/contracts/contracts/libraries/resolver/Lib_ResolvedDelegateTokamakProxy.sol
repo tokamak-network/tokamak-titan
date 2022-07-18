@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >0.7.5;
+pragma solidity ^0.8.9;
 
 /**
- * @title Lib_ResolvedDelegateBobaProxy
+ * @title Lib_ResolvedDelegateTokamakProxy
  */
-contract Lib_ResolvedDelegateBobaProxy {
+contract Lib_ResolvedDelegateTokamakProxy {
     /*************
      * Variables *
      *************/

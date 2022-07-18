@@ -139,7 +139,7 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Add the users that want to use BOBA as the fee token
+     * Add the users that want to use TOKAMAK as the fee token
      */
     function useTokamakAsFeeToken() public {
         require(!Address.isContract(msg.sender), "Account not EOA");
@@ -220,12 +220,13 @@ contract Tokamak_GasPriceOracle {
      * withdraw TOKAMAK tokens to l1 fee wallet
      */
     function withdrawTOKAMAK() public {
+        // check L2 balance whether it is possible to withdraw
         require(
             L2StandardERC20(l2TokamakAddress).balanceOf(address(this)) >= MIN_WITHDRAWAL_AMOUNT,
             // solhint-disable-next-line max-line-length
             "Tokamak_GasPriceOracle: withdrawal amount must be greater than minimum withdrawal amount"
         );
-
+        // send amount of TOKAMAK balance to L1
         L2StandardBridge(Lib_PredeployAddresses.L2_STANDARD_BRIDGE).withdrawTo(
             l2TokamakAddress,
             feeWallet,
@@ -240,6 +241,7 @@ contract Tokamak_GasPriceOracle {
      * withdraw ETH tokens to l2 fee wallet
      */
     function withdrawETH() public onlyOwner {
+        // transfer with call()
         (bool sent, ) = feeWallet.call{ value: address(this).balance }("");
         require(sent, "Failed to send ETH to fee wallet");
         emit WithdrawETH(owner(), feeWallet);
