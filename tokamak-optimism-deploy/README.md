@@ -1,4 +1,4 @@
-# ops-tokamak
+# tokamak-optimism-deploy
 Resources for running the tokamak network based on kubernetes
 
 ## Directory Strcture
@@ -25,7 +25,7 @@ Test-phase1 is for local network test. It consists of one `l1`, one `l2`, one `d
 
 You can set the configuration by editing `*.env` files in `kustomize/envs/test-phase1`.
 
-You must create `secret.env` file by referencing `secret.env.example`.
+You must create `secret.env` in by referencing `secret.env.example`.
 
 ## Run
 This is an example of `test-phase1`.
