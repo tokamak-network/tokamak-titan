@@ -30,7 +30,7 @@ const addSlotsForTokamakProxyContract = (
 
 // hardhat command
 task('take-dump').setAction(async (args, hre) => {
-  const L1TokamakToken = await hre.deployments.get('TK_L1TOKAMAK')
+  const L1TokamakToken = await hre.deployments.get('L1TokamakToken')
   console.log('L1TokamakToken.address: ', L1TokamakToken.address)
 
   // deployer

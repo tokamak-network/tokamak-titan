@@ -12,5 +12,10 @@ import { ERC20Mintable } from "./ERC20Mintable.sol";
  * @dev Current implementations is just for testing seigniorage manager.
  */
 contract TOKAMAK is ERC20, Ownable, ERC20Mintable {
-    constructor() ERC20("Tokamak Test Token", "TOKAMAK") {}
+    uint224 public constant maxSupply = 50000000e18; // 50 million TOKAMAK
+
+    constructor() ERC20("Tokamak Test Token", "TOKAMAK") {
+        // mint maxSupply at genesis, allocated to deployer
+        _mint(_msgSender(), maxSupply);
+    }
 }

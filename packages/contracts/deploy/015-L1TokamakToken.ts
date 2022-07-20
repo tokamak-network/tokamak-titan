@@ -7,7 +7,7 @@ import { deployAndRegister } from '../src/deploy-utils'
 const deployFn: DeployFunction = async (hre) => {
   await deployAndRegister({
     hre,
-    name: 'TK_L1TOKAMAK',
+    name: 'L1TokamakToken',
     contract: 'TOKAMAK',
     args: [],
   })

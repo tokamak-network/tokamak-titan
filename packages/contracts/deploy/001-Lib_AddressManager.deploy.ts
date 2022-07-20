@@ -21,7 +21,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   await registerAddress({
     hre,
-    name: 'TK_L2TOKAMAK',
+    name: 'L2TokamakToken',
     address: predeploys.L2StandardERC20,
   })
 

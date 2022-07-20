@@ -24,7 +24,7 @@ const deployFn: DeployFunction = async (hre) => {
       }
     )
 
-    const L1TokamakToken = await getContractFromArtifact(hre, 'TK_L1TOKAMAK')
+    const L1TokamakToken = await getContractFromArtifact(hre, 'L1TokamakToken')
 
     // Default has 20 accounts but we restrict to 20 accounts manually as well just to prevent
     // future problems if the number of default accounts increases for whatever reason.
@@ -70,7 +70,6 @@ const deployFn: DeployFunction = async (hre) => {
         depositTokamakAmount
       )
       await approveTx.wait()
-      console.log('approveTx: ', JSON.stringify(approveTx, null, 4))
       // deposit TOKAMAK
       const fundTokamakTx = await L1StandardBridge.connect(
         TokamakHolder
@@ -83,7 +82,6 @@ const deployFn: DeployFunction = async (hre) => {
         '0x',
         { gasLimit: 2_000_000 } // Idk, gas estimation was broken and this fixes it.
       )
-      // console.log('fundTokamakTx: ', JSON.stringify(fundTokamakTx, null, 4))
       await fundTokamakTx.wait()
       console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 TOKAMAK`)
     }
