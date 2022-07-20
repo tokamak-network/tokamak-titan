@@ -1,7 +1,12 @@
 import { ethers, Contract } from 'ethers'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
-import { sleep, awaitCondition, getChainId } from '@eth-optimism/core-utils'
+import {
+  sleep,
+  awaitCondition,
+  getChainId,
+  hexStringEquals,
+} from '@eth-optimism/core-utils'
 import { HttpNetworkConfig } from 'hardhat/types'
 
 /**
@@ -258,6 +263,108 @@ export const getContractFromArtifact = async (
       signerOrProvider
     ),
   })
+}
+
+export const waitUntilTrue = async (
+  check: () => Promise<boolean>,
+  opts: {
+    retries?: number
+    delay?: number
+  } = {}
+) => {
+  opts.retries = opts.retries || 100
+  opts.delay = opts.delay || 5000
+
+  let retries = 0
+  while (!(await check())) {
+    if (retries > opts.retries) {
+      throw new Error(`check failed after ${opts.retries} attempts`)
+    }
+    retries++
+    await sleep(opts.delay)
+  }
+}
+
+export const registerAddress = async ({
+  hre,
+  name,
+  address,
+}): Promise<void> => {
+  // TODO: Cache these 2 across calls?
+  const { deployer } = await hre.getNamedAccounts()
+
+  const Lib_AddressManager = await getContractFromArtifact(
+    hre,
+    'Lib_AddressManager',
+    {
+      signerOrProvider: deployer,
+    }
+  )
+
+  const currentAddress = await Lib_AddressManager.getAddress(name)
+  if (address === currentAddress) {
+    console.log(
+      `✓ Not registering address for ${name} because it's already been correctly registered`
+    )
+    return
+  }
+
+  console.log(`Registering address for ${name} to ${address}...`)
+  await Lib_AddressManager.setAddress(name, address)
+
+  console.log(`Waiting for registration to reflect on-chain...`)
+  await waitUntilTrue(async () => {
+    return hexStringEquals(await Lib_AddressManager.getAddress(name), address)
+  })
+
+  console.log(`✓ Registered address for ${name}`)
+}
+
+export const deployAndRegister = async ({
+  hre,
+  name,
+  args,
+  contract,
+  iface,
+  postDeployAction,
+}: {
+  hre: any
+  name: string
+  args: any[]
+  contract?: string
+  iface?: string
+  postDeployAction?: (contract: Contract) => Promise<void>
+}) => {
+  const { deploy } = hre.deployments
+  const { deployer } = await hre.getNamedAccounts()
+
+  const result = await deploy(name, {
+    contract,
+    from: deployer,
+    args,
+    log: true,
+  })
+
+  await hre.ethers.provider.waitForTransaction(result.transactionHash)
+
+  if (result.newlyDeployed) {
+    if (postDeployAction) {
+      const signer = hre.ethers.provider.getSigner(deployer)
+      let abi = result.abi
+      if (iface !== undefined) {
+        const factory = await hre.ethers.getContractFactory(iface)
+        abi = factory.interface
+      }
+      const instance = new Contract(result.address, abi, signer)
+      await postDeployAction(instance)
+    }
+
+    await registerAddress({
+      hre,
+      name,
+      address: result.address,
+    })
+  }
 }
 
 export const isHardhatNode = async (hre) => {

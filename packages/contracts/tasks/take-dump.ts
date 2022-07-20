@@ -4,17 +4,13 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 
 import * as mkdirp from 'mkdirp'
-import { ethers, utils, BigNumber, Wallet } from 'ethers'
+import { ethers, utils, BigNumber } from 'ethers'
 import { task } from 'hardhat/config'
 import { remove0x } from '@eth-optimism/core-utils'
 
 import { predeploys } from '../src/predeploys'
 import { getContractFromArtifact } from '../src/deploy-utils'
 import { names } from '../src/address-names'
-import { getDeployedContract } from '../src/hardhat-deploy-ethers'
-
-// deployer
-const deployer = new Wallet(process.env['CONTRACTS_DEPLOYER_KEY'])
 
 // add storage slots for Proxy__Tokamak_GasPriceOracle
 const addSlotsForTokamakProxyContract = (
@@ -34,9 +30,13 @@ const addSlotsForTokamakProxyContract = (
 
 // hardhat command
 task('take-dump').setAction(async (args, hre) => {
-  const L1TokamakToken = await getDeployedContract(hre, 'TK_L1TOKAMAK', {
-    iface: 'TOKAMAK',
-  })
+  const L1TokamakToken = await hre.deployments.get('TK_L1TOKAMAK')
+  console.log('L1TokamakToken.address: ', L1TokamakToken.address)
+
+  // deployer
+  const { deployer } = await hre.getNamedAccounts()
+  console.log('deployer: ', JSON.stringify(deployer, null, 4))
+
   /* eslint-disable @typescript-eslint/no-var-requires */
 
   // Needs to be imported here or hardhat will throw a fit about hardhat being imported from
@@ -120,7 +120,7 @@ task('take-dump').setAction(async (args, hre) => {
       l2Bridge: predeploys.L2StandardBridge,
     },
     Proxy__Tokamak_GasPriceOracle: {
-      proxyOwner: deployer.address,
+      proxyOwner: deployer,
       proxyTarget: predeploys.Tokamak_GasPriceOracle,
     },
     Tokamak_GasPriceOracle: {

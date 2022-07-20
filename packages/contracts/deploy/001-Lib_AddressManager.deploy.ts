@@ -1,7 +1,7 @@
 /* Imports: Internal */
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 
-import { registerAddress } from '../src/hardhat-deploy-ethers'
+import { registerAddress } from '../src/deploy-utils'
 import { predeploys } from '../src/predeploys'
 import { names } from '../src/address-names'
 
@@ -11,6 +11,7 @@ const deployFn: DeployFunction = async (hre) => {
   const { deploy } = hre.deployments
   const { deployer } = await hre.getNamedAccounts()
 
+  // deploy a contract
   await deploy(names.unmanaged.Lib_AddressManager, {
     from: deployer,
     args: [],

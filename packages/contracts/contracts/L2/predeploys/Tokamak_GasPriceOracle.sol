@@ -17,6 +17,7 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
  * @title Tokamak_GasPriceOracle
  */
 contract Tokamak_GasPriceOracle {
+    // TODO: define value of the constants
     using SafeERC20 for IERC20;
 
     /*************
