@@ -24,10 +24,7 @@ const deployFn: DeployFunction = async (hre) => {
       }
     )
 
-    const L1TokamakToken = await hre.deployments.get('TK_L1TOKAMAK')
-    console.log('L1TokamakToken: ', JSON.stringify(L1TokamakToken, null, 4))
-    // const balance = await hre.ethers.provider.getBalance(L1TokamakToken.address)
-    // console.log('L1 contract balance: ', balance)
+    const L1TokamakToken = await getContractFromArtifact(hre, 'TK_L1TOKAMAK')
 
     // Default has 20 accounts but we restrict to 20 accounts manually as well just to prevent
     // future problems if the number of default accounts increases for whatever reason.
@@ -35,24 +32,18 @@ const deployFn: DeployFunction = async (hre) => {
       defaultHardhatNetworkHdAccountsConfigParams
     ).slice(0, 20)
 
-    // console.log('accounts: ', accounts)
-    // first l1 account
+    // first l1 account = deployer
     const TokamakHolder = new hre.ethers.Wallet(
       accounts[0].privateKey,
       hre.ethers.provider
     )
-    console.log('TokamakHolder: ', JSON.stringify(TokamakHolder, null, 4))
-    // console.log('balance of TokamakHolder: ', TokamakHolder.getBalance())
 
     for (const account of accounts) {
-      // console.log('acccount: ', JSON.stringify(account, null, 4))
       const wallet = new hre.ethers.Wallet(
         account.privateKey,
         hre.ethers.provider
       )
-      // console.log('wallet: ', JSON.stringify(wallet, null, 4))
       const balance = await wallet.getBalance()
-      // console.log('balance: ', JSON.stringify(balance, null, 4))
       const depositAmount = balance.div(2) // Deposit half of the wallet's balance into L2.
       const fundETHTx = await L1StandardBridge.connect(wallet).depositETH(
         8_000_000,
@@ -62,7 +53,6 @@ const deployFn: DeployFunction = async (hre) => {
           gasLimit: 2_000_000, // Idk, gas estimation was broken and this fixes it.
         }
       )
-      // console.log('fundETHTx: ', JSON.stringify(fundETHTx, null, 4))
 
       await fundETHTx.wait()
       console.log(
@@ -73,18 +63,14 @@ const deployFn: DeployFunction = async (hre) => {
 
       // deposit 5000 TOKAMAK to each L2 address
       const depositTokamakAmount = hre.ethers.utils.parseEther('5000')
-      // console.log(
-      //   'depositTokamakAmount: ',
-      //   JSON.stringify(depositTokamakAmount, null, 4)
-      // )
       const L2TokamakAddress = predeploys.L2StandardERC20
       // ERC20 approve
-      // const approveTx = await L1TokamakToken.connect(TokamakHolder).approve(
-      //   L1StandardBridge.address,
-      //   depositTokamakAmount
-      // )
-      // console.log('approveTx: ', JSON.stringify(approveTx, null, 4))
-      // await approveTx.wait()
+      const approveTx = await L1TokamakToken.connect(TokamakHolder).approve(
+        L1StandardBridge.address,
+        depositTokamakAmount
+      )
+      await approveTx.wait()
+      console.log('approveTx: ', JSON.stringify(approveTx, null, 4))
       // deposit TOKAMAK
       const fundTokamakTx = await L1StandardBridge.connect(
         TokamakHolder
