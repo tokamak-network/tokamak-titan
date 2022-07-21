@@ -31,11 +31,9 @@ const addSlotsForTokamakProxyContract = (
 // hardhat command
 task('take-dump').setAction(async (args, hre) => {
   const L1TokamakToken = await hre.deployments.get('L1TokamakToken')
-  console.log('L1TokamakToken.address: ', L1TokamakToken.address)
 
   // deployer
   const { deployer } = await hre.getNamedAccounts()
-  console.log('deployer: ', JSON.stringify(deployer, null, 4))
 
   /* eslint-disable @typescript-eslint/no-var-requires */
 
@@ -131,7 +129,6 @@ task('take-dump').setAction(async (args, hre) => {
       maxPriceRatio: 5000,
       priceRatio: 2000,
       gasPriceOracleAddress: predeploys.OVM_GasPriceOracle,
-      receivedETHAmount: utils.parseEther('0.005'),
       marketPriceRatio: 2000,
     },
   }
