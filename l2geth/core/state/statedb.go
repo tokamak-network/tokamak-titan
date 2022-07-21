@@ -69,6 +69,14 @@ func GetOVMBalanceKey(addr common.Address) common.Hash {
 	return common.BytesToHash(digest)
 }
 
+func GetFeeTokenSelectionKey(addr common.Address) common.Hash {
+	position := common.Big7
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
+	hasher.Write(common.LeftPadBytes(position.Bytes(), 32))
+	digest := hasher.Sum(nil)
+	return common.BytesToHash(digest)
+}
 // StateDBs within the ethereum protocol are used to store anything
 // within the merkle trie. StateDBs take care of caching and storing
 // nested states. It's the general query interface to retrieve:
@@ -263,6 +271,13 @@ func (s *StateDB) GetNonce(addr common.Address) uint64 {
 	}
 
 	return 0
+}
+
+// Retrieve the fee token selection
+func (s *StateDB) GetFeeTokenSelection(addr common.Address) *big.Int {
+	key := GetFeeTokenSelectionKey(addr)
+	bal := s.GetState(rcfg.OvmTokamakGasPricOracle, key)
+	return bal.Big()
 }
 
 // TxIndex returns the current transaction index set by Prepare.

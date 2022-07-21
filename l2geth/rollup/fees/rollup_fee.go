@@ -95,6 +95,8 @@ func CalculateTotalFee(tx *types.Transaction, gpo RollupOracle) (*big.Int, error
 	return fee, nil
 }
 
+
+
 // CalculateMsgFee will calculate the total fee given a Message.
 // This function is used during the state transition to transfer
 // value to the sequencer. Since Messages do not have a signature
@@ -162,19 +164,30 @@ func DeriveL1GasInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, 
 		return nil, nil, nil, nil, err
 	}
 
-	l1GasPrice, overhead, scalar := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
+	l1GasPrice, overhead, scalar, _ := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
 	l1GasUsed := CalculateL1GasUsed(raw, overhead)
 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
 	return l1Fee, l1GasPrice, l1GasUsed, scalar, nil
 }
 
-func readGPOStorageSlots(addr common.Address, state StateDB) (*big.Int, *big.Int, *big.Float) {
+// DeriveL1GasDataInfo reads L1 gas related information to be included
+// on the receipt
+// new method of DeriveL1GasInfo
+func DeriveL1GasDataInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
+	l1GasPrice, overhead, scalar, _ := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
+	l1GasUsed := CalculateL1GasUsed(msg.Data(), overhead)
+	l1Fee := CalculateL1Fee(msg.Data(), overhead, l1GasPrice, scalar)
+	return l1Fee, l1GasPrice, l1GasUsed, scalar, nil
+}
+
+func readGPOStorageSlots(addr common.Address, state StateDB) (*big.Int, *big.Int, *big.Float, *big.Int) {
+	l2GasPrice := state.GetState(addr, rcfg.L2GasPriceSlot) // new variable
 	l1GasPrice := state.GetState(addr, rcfg.L1GasPriceSlot)
 	overhead := state.GetState(addr, rcfg.OverheadSlot)
 	scalar := state.GetState(addr, rcfg.ScalarSlot)
 	decimals := state.GetState(addr, rcfg.DecimalsSlot)
 	scaled := ScaleDecimals(scalar.Big(), decimals.Big())
-	return l1GasPrice.Big(), overhead.Big(), scaled
+	return l1GasPrice.Big(), overhead.Big(), scaled, l2GasPrice.Big()
 }
 
 // ScaleDecimals will scale a value by decimals
