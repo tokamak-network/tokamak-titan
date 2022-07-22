@@ -70,6 +70,7 @@ func GetOVMBalanceKey(addr common.Address) common.Hash {
 }
 
 func GetFeeTokenSelectionKey(addr common.Address) common.Hash {
+	// 7th slot
 	position := common.Big7
 	hasher := sha3.NewLegacyKeccak256()
 	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
@@ -275,9 +276,18 @@ func (s *StateDB) GetNonce(addr common.Address) uint64 {
 
 // Retrieve the fee token selection
 func (s *StateDB) GetFeeTokenSelection(addr common.Address) *big.Int {
+	// get key (= hash value)
 	key := GetFeeTokenSelectionKey(addr)
+	// get value corresponding to the key in OvmTokamakGasPricOracle
 	bal := s.GetState(rcfg.OvmTokamakGasPricOracle, key)
 	return bal.Big()
+}
+
+func (s *StateDB) GetTokamakPriceRatio() *big.Int {
+	// 5th slot of OvmTokamakGasPricOracle
+	keyPriceRatio := common.BigToHash(big.NewInt(5))
+	value := s.GetState(rcfg.OvmTokamakGasPricOracle, keyPriceRatio)
+	return value.Big()
 }
 
 // TxIndex returns the current transaction index set by Prepare.

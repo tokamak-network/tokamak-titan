@@ -546,6 +546,7 @@ func isForkIncompatible(s1, s2, head *big.Int) bool {
 }
 
 // isForked returns whether a fork scheduled at block s is active at the given head block.
+// if head is higher than forked block height, return true
 func isForked(s, head *big.Int) bool {
 	if s == nil || head == nil {
 		return false

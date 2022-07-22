@@ -63,7 +63,12 @@ type StateTransition struct {
 	state      vm.StateDB
 	evm        *vm.EVM
 	// UsingOVM
-	l1Fee *big.Int
+	l1Fee      *big.Int
+	l2ExtraGas *big.Int
+	// Tokamak fee token selection flag
+	isTokamakFeeTokenSelect bool
+	// Fee ratio between TOKAMAK and ETH
+	tokamakPriceRatio *big.Int
 }
 
 // Message represents a message sent to a contract.
@@ -126,23 +131,44 @@ func IntrinsicGas(data []byte, contractCreation, isHomestead bool, isEIP2028 boo
 // NewStateTransition initialises and returns a new state transition object.
 func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition {
 	l1Fee := new(big.Int)
+	l2ExtraGas := new(big.Int)
+	tokamakPriceRatio := new(big.Int)
+	gasPrice := msg.GasPrice()
+	// default is ETH
+	isTokamakFeeTokenSelect := false
 	if rcfg.UsingOVM {
+		// msg.GasPrice is not 0
 		if msg.GasPrice().Cmp(common.Big0) != 0 {
 			// Compute the L1 fee before the state transition
 			// so it only has to be read from state one time.
 			l1Fee, _ = fees.CalculateL1MsgFee(msg, evm.StateDB, nil)
 		}
+		feeTokenSelection := evm.StateDB.GetFeeTokenSelection(msg.From())
+		// if TOKAMAK is fee token, the gas price is 0
+		if feeTokenSelection.Cmp(common.Big1) == 0 {
+			isTokamakFeeTokenSelect = true
+			// TODO: Is the gas price 0 when the fee token is TOKAMAK?
+			gasPrice = big.NewInt(0)
+			tokamakPriceRatio = evm.StateDB.GetTokamakPriceRatio()
+		}
 	}
 
 	return &StateTransition{
-		gp:       gp,
-		evm:      evm,
-		msg:      msg,
-		gasPrice: msg.GasPrice(),
-		value:    msg.Value(),
-		data:     msg.Data(),
-		state:    evm.StateDB,
-		l1Fee:    l1Fee,
+		gp:  gp,
+		evm: evm,
+		msg: msg,
+		// gasPrice is normally set via msg.GasPrice() but we override
+		// gasPrice to pass information about the fee choice
+		gasPrice:   gasPrice,
+		value:      msg.Value(),
+		data:       msg.Data(),
+		state:      evm.StateDB,
+		l1Fee:      l1Fee,
+		l2ExtraGas: l2ExtraGas,
+		// TOKAMAK fee token selection flag
+		isTokamakFeeTokenSelect: isTokamakFeeTokenSelect,
+		// TOKAMAK price relative to ETH
+		tokamakPriceRatio: tokamakPriceRatio,
 	}
 }
 

@@ -105,25 +105,9 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// on the receipt. This must happen before the state transition
 	// to ensure that the correct information is used.
 
-	var (
-		l1Fee      *big.Int
-		l1GasPrice *big.Int
-		l1GasUsed  *big.Int
-		scalar     *big.Float
-	)
-	// Get the gas infomation on l1 according the header number is forked or not
-	if config.IsFeeTokenUpdate(header.Number) {
-		// use new method
-		l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasDataInfo(msg, statedb)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		l1Fee, l1GasPrice, l1GasUsed, scalar, err = fees.DeriveL1GasInfo(msg, statedb)
-		if err != nil {
-			return nil, err
-		}
-	}
+	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
+	if err != nil {
+		return nil, err
 	// Determine the L2 Tokamak fee
 	feeTokenSelection := statedb.GetFeeTokenSelection(msg.From())
 
