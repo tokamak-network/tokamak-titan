@@ -69,6 +69,16 @@ func GetOVMBalanceKey(addr common.Address) common.Hash {
 	return common.BytesToHash(digest)
 }
 
+func GetTokamakBalanceKey(addr common.Address) common.Hash {
+	// slot 0
+	position := common.Big0
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
+	hasher.Write(common.LeftPadBytes(position.Bytes(), 32))
+	digest := hasher.Sum(nil)
+	return common.BytesToHash(digest)
+}
+
 func GetFeeTokenSelectionKey(addr common.Address) common.Hash {
 	// 7th slot
 	position := common.Big7
@@ -78,6 +88,7 @@ func GetFeeTokenSelectionKey(addr common.Address) common.Hash {
 	digest := hasher.Sum(nil)
 	return common.BytesToHash(digest)
 }
+
 // StateDBs within the ethereum protocol are used to store anything
 // within the merkle trie. StateDBs take care of caching and storing
 // nested states. It's the general query interface to retrieve:
@@ -265,6 +276,13 @@ func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 	}
 }
 
+// Get balance from the L2 Tokamak contract
+func (s *StateDB) GetTokamakBalance(addr common.Address) *big.Int {
+	key := GetTokamakBalanceKey(addr)
+	bal := s.GetState(rcfg.OvmL2TokamakToken, key)
+	return bal.Big()
+}
+
 func (s *StateDB) GetNonce(addr common.Address) uint64 {
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
@@ -433,6 +451,23 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 			stateObject.SubBalance(amount)
 		}
 	}
+}
+
+func (s *StateDB) AddTokamakBalance(addr common.Address, amount *big.Int) {
+	// Get balance from TOKAMAK contract
+	key := GetTokamakBalanceKey(addr)
+	value := s.GetState(rcfg.OvmL2TokamakToken, key)
+	bal := value.Big()
+	bal = bal.Add(bal, amount)
+	s.SetState(rcfg.OvmL2TokamakToken, key, common.BigToHash(bal))
+}
+
+func (s *StateDB) SubTokamakBalance(addr common.Address, amount *big.Int) {
+	key := GetTokamakBalanceKey(addr)
+	value := s.GetState(rcfg.OvmL2TokamakToken, key)
+	bal := value.Big()
+	bal = bal.Sub(bal, amount)
+	s.SetState(rcfg.OvmL2TokamakToken, key, common.BigToHash(bal))
 }
 
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {

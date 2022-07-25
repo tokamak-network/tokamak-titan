@@ -120,6 +120,7 @@ func CalculateTotalMsgFee(msg Message, state StateDB, gasUsed *big.Int, gpo *com
 // a Message and a StateDB
 func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.Int, error) {
 	tx := asTransaction(msg)
+	// tx raw data
 	raw, err := rlpEncode(tx)
 	if err != nil {
 		return nil, err
@@ -128,7 +129,7 @@ func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.In
 	if gpo == nil {
 		gpo = &rcfg.L2GasPriceOracleAddress
 	}
-
+	// get l1GasPrice, overhead, scalar
 	l1GasPrice, overhead, scalar := readGPOStorageSlots(*gpo, state)
 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
 	return l1Fee, nil

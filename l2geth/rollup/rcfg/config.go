@@ -12,6 +12,8 @@ var (
 	UsingOVM bool
 	// OvmTokamakGasPricOracle is tokamak gas price oracle
 	OvmTokamakGasPricOracle common.Address
+	// OvmL2TokamakToken is tokamak token address
+	OvmL2TokamakToken common.Address
 )
 var (
 	// L2GasPriceSlot refers to the storage slot that the L2 gas price is stored
