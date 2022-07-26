@@ -227,6 +227,7 @@ var (
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 	TestRules       = TestChainConfig.Rules(new(big.Int))
 
+	// TODO: determine chainID for Tokamak Network
 	// OpMainnetChainID is the ID of Optimism's mainnet chain.
 	OpMainnetChainID = big.NewInt(10)
 

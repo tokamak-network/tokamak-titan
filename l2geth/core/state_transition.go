@@ -33,6 +33,7 @@ import (
 
 var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
+	errInsufficientTokamakBalanceForGas = errors.New("insufficient tokamak balance to pay for gas")
 )
 
 /*
@@ -223,7 +224,7 @@ func (st *StateTransition) buyGas() error {
 		tokamakval = new(big.Int).Mul(ethval, st.tokamakPriceRatio)
 		// TOKAMAK balance check
 		if st.state.GetTokamakBalance(st.msg.From()).Cmp(tokamakval) < 0 {
-			return errInsufficientBalanceForGas
+			return errInsufficientTokamakBalanceForGas
 		}
 	}
 	// deduct st.msg.Gas in the gaspool

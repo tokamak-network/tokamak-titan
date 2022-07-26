@@ -294,7 +294,7 @@ func (s *StateDB) GetNonce(addr common.Address) uint64 {
 
 // Retrieve the fee token selection
 func (s *StateDB) GetFeeTokenSelection(addr common.Address) *big.Int {
-	// get key (= hash value)
+	// get key
 	key := GetFeeTokenSelectionKey(addr)
 	// get value corresponding to the key in OvmTokamakGasPricOracle
 	bal := s.GetState(rcfg.OvmTokamakGasPricOracle, key)

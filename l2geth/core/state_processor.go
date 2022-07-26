@@ -108,6 +108,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
 	if err != nil {
 		return nil, err
+	}
 	// Determine the L2 Tokamak fee
 	feeTokenSelection := statedb.GetFeeTokenSelection(msg.From())
 
@@ -115,6 +116,14 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
 		return nil, err
+	}
+
+	// Calculate the L2 Tokamak fee
+	L2TokamakFee := new(big.Int)
+	if feeTokenSelection.Cmp(common.Big1) == 0 {
+		tokamakPriceRatio := statedb.GetTokamakPriceRatio()
+		// L2TokamakFee = gas * msg.GasPrice() * tokamakPriceRatio
+		L2TokamakFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tokamakPriceRatio))
 	}
 
 	// Update the state with pending changes
@@ -156,6 +165,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.BlockHash = statedb.BlockHash()
 	receipt.BlockNumber = header.Number
 	receipt.TransactionIndex = uint(statedb.TxIndex())
+	receipt.L2TokamakFee = L2TokamakFee
 
 	return receipt, err
 }
