@@ -108,7 +108,7 @@ services:
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: message-relayer
+      target: tokamak-message-relayer
     image: onthertech/optimism.message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
     entrypoint: ./relayer.sh
     environment:
