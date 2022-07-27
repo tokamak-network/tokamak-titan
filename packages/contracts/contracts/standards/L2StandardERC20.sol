@@ -24,6 +24,7 @@ contract L2StandardERC20 is IL2StandardERC20, ERC20 {
         l2Bridge = _l2Bridge;
     }
 
+    // Verify that msg.sender is the owner of l2 standard bridge
     modifier onlyL2Bridge() {
         require(msg.sender == l2Bridge, "Only L2 Bridge can mint and burn");
         _;
