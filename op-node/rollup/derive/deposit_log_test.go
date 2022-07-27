@@ -6,11 +6,14 @@ import (
 	"testing"
 
 	"github.com/ethereum-optimism/optimism/op-node/testutils"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnmarshalLogEvent(t *testing.T) {
+	// t.Skip("not working because deposit_log_create not working properly")
 	for i := int64(0); i < 100; i++ {
 		t.Run(fmt.Sprintf("random_deposit_%d", i), func(t *testing.T) {
 			rng := rand.New(rand.NewSource(1234 + i))
@@ -43,6 +46,44 @@ type receiptData struct {
 	DepositLogs []bool
 }
 
+func makeReceipts(rng *rand.Rand, blockHash common.Hash, depositContractAddr common.Address, testReceipts []receiptData) (receipts []*types.Receipt, expectedDeposits []*types.DepositTx) {
+	logIndex := uint(0)
+	for txIndex, rData := range testReceipts {
+		var logs []*types.Log
+		status := types.ReceiptStatusSuccessful
+		if !rData.goodReceipt {
+			status = types.ReceiptStatusFailed
+		}
+		for _, isDeposit := range rData.DepositLogs {
+			var ev *types.Log
+			if isDeposit {
+				source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
+				dep := testutils.GenerateDeposit(source.SourceHash(), rng)
+				if status == types.ReceiptStatusSuccessful {
+					expectedDeposits = append(expectedDeposits, dep)
+				}
+				ev = MarshalDepositLogEvent(depositContractAddr, dep)
+			} else {
+				ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
+			}
+			ev.TxIndex = uint(txIndex)
+			ev.Index = logIndex
+			ev.BlockHash = blockHash
+			logs = append(logs, ev)
+			logIndex++
+		}
+
+		receipts = append(receipts, &types.Receipt{
+			Type:             types.DynamicFeeTxType,
+			Status:           status,
+			Logs:             logs,
+			BlockHash:        blockHash,
+			TransactionIndex: uint(txIndex),
+		})
+	}
+	return
+}
+
 type DeriveUserDepositsTestCase struct {
 	name string
 	// generate len(receipts) receipts
@@ -50,6 +91,7 @@ type DeriveUserDepositsTestCase struct {
 }
 
 func TestDeriveUserDeposits(t *testing.T) {
+	// t.Skip("not working because deposit_log_create not working properly")
 	testCases := []DeriveUserDepositsTestCase{
 		{"no deposits", []receiptData{}},
 		{"other log", []receiptData{{true, []bool{false}}}},
@@ -64,49 +106,14 @@ func TestDeriveUserDeposits(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			rng := rand.New(rand.NewSource(1234 + int64(i)))
-			var receipts []*types.Receipt
-			var expectedDeposits []*types.DepositTx
-			logIndex := uint(0)
 			blockHash := testutils.RandomHash(rng)
-			for txIndex, rData := range testCase.receipts {
-				var logs []*types.Log
-				status := types.ReceiptStatusSuccessful
-				if !rData.goodReceipt {
-					status = types.ReceiptStatusFailed
-				}
-				for _, isDeposit := range rData.DepositLogs {
-					var ev *types.Log
-					if isDeposit {
-						source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
-						dep := testutils.GenerateDeposit(source.SourceHash(), rng)
-						if status == types.ReceiptStatusSuccessful {
-							expectedDeposits = append(expectedDeposits, dep)
-						}
-						ev = MarshalDepositLogEvent(MockDepositContractAddr, dep)
-					} else {
-						ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
-					}
-					ev.TxIndex = uint(txIndex)
-					ev.Index = logIndex
-					ev.BlockHash = blockHash
-					logs = append(logs, ev)
-					logIndex++
-				}
-
-				receipts = append(receipts, &types.Receipt{
-					Type:             types.DynamicFeeTxType,
-					Status:           status,
-					Logs:             logs,
-					BlockHash:        blockHash,
-					TransactionIndex: uint(txIndex),
-				})
-			}
-			got, errs := UserDeposits(receipts, MockDepositContractAddr)
-			assert.Equal(t, len(errs), 0)
-			assert.Equal(t, len(got), len(expectedDeposits))
+			receipts, expectedDeposits := makeReceipts(rng, blockHash, MockDepositContractAddr, testCase.receipts)
+			got, err := UserDeposits(receipts, MockDepositContractAddr)
+			require.NoError(t, err)
+			require.Equal(t, len(got), len(expectedDeposits))
 			for d, depTx := range got {
 				expected := expectedDeposits[d]
-				assert.Equal(t, expected, depTx)
+				require.Equal(t, expected, depTx)
 			}
 		})
 	}

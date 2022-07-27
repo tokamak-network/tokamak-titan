@@ -37,7 +37,7 @@ finalization.
   - [On L2](#on-l2)
   - [On L1](#on-l1)
 - [The L2ToL1MessagePasser Contract](#the-l2tol1messagepasser-contract)
-  - [Address Aliasing](#address-aliasing)
+  - [Addresses are not Aliased on Withdrawals](#addresses-are-not-aliased-on-withdrawals)
 - [The Optimism Portal Contract](#the-optimism-portal-contract)
 - [Withdrawal Verification and Finalization](#withdrawal-verification-and-finalization)
 - [Security Considerations](#security-considerations)

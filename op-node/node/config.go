@@ -6,18 +6,17 @@ import (
 	"math"
 
 	"github.com/ethereum-optimism/optimism/op-node/p2p"
-
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
 )
 
 type Config struct {
 	L1 L1EndpointSetup
 	L2 L2EndpointSetup
 
-	Rollup rollup.Config
+	Driver driver.Config
 
-	// Sequencer flag, enables sequencing
-	Sequencer bool
+	Rollup rollup.Config
 
 	// P2PSigner will be used for signing off on published content
 	// if the node is sequencing and if the p2p stack is enabled
@@ -36,6 +35,10 @@ type Config struct {
 type RPCConfig struct {
 	ListenAddr string
 	ListenPort int
+}
+
+func (cfg *RPCConfig) HttpEndpoint() string {
+	return fmt.Sprintf("http://%s:%d", cfg.ListenAddr, cfg.ListenPort)
 }
 
 type MetricsConfig struct {

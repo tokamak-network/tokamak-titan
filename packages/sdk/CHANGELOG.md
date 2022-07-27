@@ -1,5 +1,33 @@
 # @eth-optimism/sdk
 
+## 1.3.1
+
+### Patch Changes
+
+- 680714c1: Updates the CCM to throw a better error for missing or invalid chain IDs
+- 29830750: Update the Goerli SCC's address
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [1de4f48e]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/contracts@0.5.31
+
+## 1.3.0
+
+### Minor Changes
+
+- 032f7214: Update Goerli SDK addresses for new Goerli testnet
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [6e3449ba]
+- Updated dependencies [f9fee446]
+  - @eth-optimism/contracts@0.5.30
+  - @eth-optimism/core-utils@0.9.1
+
 ## 1.2.0
 
 ### Minor Changes

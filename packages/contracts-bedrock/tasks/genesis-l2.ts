@@ -1,7 +1,10 @@
 import fs from 'fs'
+import path from 'path'
 import assert from 'assert'
 
 import { OptimismGenesis, State } from '@eth-optimism/core-utils'
+import 'hardhat-deploy'
+import '@eth-optimism/hardhat-deploy-config'
 import { ethers } from 'ethers'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -26,15 +29,21 @@ const assertEvenLength = (str: string) => {
   assert(str.length % 2 === 0, str)
 }
 
-// TODO: this can be replaced with the smock version after
-// a new release of foundry-rs/hardhat
+// TODO: fix this to be compatible with smock's version
 const getStorageLayout = async (
   hre: HardhatRuntimeEnvironment,
   name: string
 ) => {
   const buildInfo = await hre.artifacts.getBuildInfo(name)
-  const key = Object.keys(buildInfo.output.contracts)[0]
-  return (buildInfo.output.contracts[key][name] as any).storageLayout
+  const keys = Object.keys(buildInfo.output.contracts)
+  for (const key of keys) {
+    if (name === path.basename(key, '.sol')) {
+      const contract = buildInfo.output.contracts[key]
+      const storageLayout = (contract[name] as any).storageLayout
+      return storageLayout || { storage: [], types: {} }
+    }
+  }
+  throw new Error(`Cannot locate storageLayout for ${name}`)
 }
 
 task('genesis-l2', 'create a genesis config')
@@ -43,6 +52,7 @@ task('genesis-l2', 'create a genesis config')
     'The file to write the output JSON to',
     'genesis.json'
   )
+  .addOptionalParam('l1RpcUrl', 'The L1 RPC URL', 'http://127.0.0.1:8545')
   .setAction(async (args, hre) => {
     const {
       computeStorageSlots,
@@ -50,6 +60,8 @@ task('genesis-l2', 'create a genesis config')
     } = require('@defi-wonderland/smock/dist/src/utils')
 
     const { deployConfig } = hre
+
+    const l1 = new ethers.providers.StaticJsonRpcProvider(args.l1RpcUrl)
 
     // Use the addresses of the proxies here instead of the implementations
     // Be backwards compatible
@@ -95,9 +107,6 @@ task('genesis-l2', 'create a genesis config')
       SequencerFeeVault: {
         l1FeeWallet: ethers.constants.AddressZero,
       },
-      OptimismMintableTokenFactory: {
-        bridge: ethers.constants.AddressZero,
-      },
       L1Block: {
         number: deployConfig.l1BlockInitialNumber,
         timestamp: deployConfig.l1BlockInitialTimestamp,
@@ -105,7 +114,7 @@ task('genesis-l2', 'create a genesis config')
         hash: deployConfig.l1BlockInitialHash,
         sequenceNumber: deployConfig.l1BlockInitialSequenceNumber,
       },
-      OVM_ETH: {
+      LegacyERC20ETH: {
         bridge: predeploys.L2StandardBridge,
         remoteToken: ethers.constants.AddressZero,
         _name: 'Ether',
@@ -132,20 +141,19 @@ task('genesis-l2', 'create a genesis config')
       predeployAddrs.add(ethers.utils.getAddress(addr))
     }
 
-    // TODO: geth likes strings for nonce and balance now
     const alloc: State = {}
 
     // Set a proxy at each predeploy address
     const proxy = await hre.artifacts.readArtifact('Proxy')
-    for (let i = 0; i <= 0xffff; i++) {
+    for (let i = 0; i <= 2048; i++) {
       const num = ethers.utils.hexZeroPad('0x' + i.toString(16), 2)
       const addr = ethers.utils.getAddress(
         ethers.utils.hexConcat([prefix, num])
       )
 
-      // There is no proxy at OVM_ETH or the GovernanceToken
+      // There is no proxy at LegacyERC20ETH or the GovernanceToken
       if (
-        addr === ethers.utils.getAddress(predeploys.OVM_ETH) ||
+        addr === ethers.utils.getAddress(predeploys.LegacyERC20ETH) ||
         addr === ethers.utils.getAddress(predeploys.GovernanceToken)
       ) {
         continue
@@ -161,6 +169,28 @@ task('genesis-l2', 'create a genesis config')
       }
 
       if (predeployAddrs.has(ethers.utils.getAddress(addr))) {
+        const predeploy = Object.entries(predeploys).find(([, address]) => {
+          return ethers.utils.getAddress(address) === addr
+        })
+
+        // Really shouldn't happen, since predeployAddrs is a set generated from predeploys.
+        if (predeploy === undefined) {
+          throw new Error('could not find address')
+        }
+
+        const name = predeploy[0]
+        if (variables[name]) {
+          const storageLayout = await getStorageLayout(hre, name)
+          if (storageLayout === undefined) {
+            throw new Error(`cannot find storage layout for ${name}`)
+          }
+          const slots = computeStorageSlots(storageLayout, variables[name])
+
+          for (const slot of slots) {
+            alloc[addr].storage[slot.key] = slot.val
+          }
+        }
+
         alloc[addr].storage[implementationSlot] = toCodeAddr(addr)
       }
     }
@@ -190,16 +220,28 @@ task('genesis-l2', 'create a genesis config')
 
     if (deployConfig.fundDevAccounts) {
       const accounts = [
-        '0xde3829a23df1479438622a08a116e8eb3f620bb5',
-        '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
-        '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        '0x14dC79964da2C08b23698B3D3cc7Ca32193d9955',
+        '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+        '0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec',
+        '0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f',
+        '0x2546BcD3c84621e976D8185a91A922aE77ECEc30',
         '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+        '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        '0x71bE63f3384f5fb98995898A86B02Fb2426c5788',
+        '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+        '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+        '0x976EA74026E726554dB657fA54763abd0C3a0aa9',
+        '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc',
+        '0xBcd4042DE499D14e55001CcbB24a551F3b954096',
+        '0xFABB0ac9d68B0B445fB7357272Ff202C5651694a',
+        '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720',
+        '0xbDA5747bFD65F08deb54cb465eB87D40e51B197E',
+        '0xcd3B766CCDd6AE721141F452C550Ca635964ce71',
+        '0xdD2FD4581271e230360230F9337D5c0430Bf44C0',
+        '0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097',
+        '0xde3829a23df1479438622a08a116e8eb3f620bb5',
+        '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
       ]
-
-      const signers = await hre.ethers.getSigners()
-      for (const signer of signers) {
-        accounts.push(signer.address)
-      }
 
       for (const account of accounts) {
         alloc[account] = {
@@ -217,7 +259,7 @@ task('genesis-l2', 'create a genesis config')
       const artifact = await hre.artifacts.readArtifact(name)
       assertEvenLength(artifact.deployedBytecode)
 
-      const allocAddr = name === 'OVM_ETH' ? addr : toCodeAddr(addr)
+      const allocAddr = name === 'LegacyERC20ETH' ? addr : toCodeAddr(addr)
       assertEvenLength(allocAddr)
 
       alloc[allocAddr] = {
@@ -226,14 +268,10 @@ task('genesis-l2', 'create a genesis config')
         code: artifact.deployedBytecode,
         storage: {},
       }
-
-      const storageLayout = await getStorageLayout(hre, name)
-      const slots = computeStorageSlots(storageLayout, variables[name])
-
-      for (const slot of slots) {
-        alloc[allocAddr].storage[slot.key] = slot.val
-      }
     }
+
+    const portal = await hre.deployments.get('OptimismPortalProxy')
+    const l1StartingBlock = await l1.getBlock(portal.receipt.blockHash)
 
     const genesis: OptimismGenesis = {
       config: {
@@ -249,25 +287,18 @@ task('genesis-l2', 'create a genesis config')
         muirGlacierBlock: 0,
         berlinBlock: 0,
         londonBlock: 0,
-        mergeForkBlock: 0,
+        mergeNetsplitBlock: 0,
         terminalTotalDifficulty: 0,
-        clique: {
-          period: 0,
-          epoch: 30000,
+        optimism: {
+          baseFeeRecipient: deployConfig.optimismBaseFeeRecipient,
+          l1FeeRecipient: deployConfig.optimismL1FeeRecipient,
         },
       },
       nonce: '0x1234',
       difficulty: '0x1',
-      timestamp: ethers.BigNumber.from(
-        deployConfig.startingTimestamp
-      ).toHexString(),
+      timestamp: ethers.BigNumber.from(l1StartingBlock.timestamp).toHexString(),
       gasLimit: deployConfig.genesisBlockGasLimit,
       extraData: deployConfig.genesisBlockExtradata,
-      optimism: {
-        enabled: true,
-        baseFeeRecipient: deployConfig.optimsismBaseFeeRecipient,
-        l1FeeRecipient: deployConfig.optimismL1FeeRecipient,
-      },
       alloc,
     }
 

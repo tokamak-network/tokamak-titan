@@ -254,8 +254,8 @@ feed contract][deposit-feed-contract] on L1.
 The deposit contract is deployed to L1. Deposited transactions are derived from the values in
 the `TransactionDeposited` event(s) emitted by the deposit contract.
 
-The deposit contract is responsible for maintaing the [guaranteed gas market](./guaranteed-gas-market.md),
-charging deposits for gas to be used on L2, and ensuring that the total amount of guaranted
+The deposit contract is responsible for maintaining the [guaranteed gas market](./guaranteed-gas-market.md),
+charging deposits for gas to be used on L2, and ensuring that the total amount of guaranteed
 gas in a single L1 block does not exceed the L2 block gas limit.
 
 The deposit contract handles two special cases:

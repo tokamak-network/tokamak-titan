@@ -1,5 +1,79 @@
 # @eth-optimism/contracts-bedrock
 
+## 0.5.2
+
+### Patch Changes
+
+- 1a22e822: Standardizes revert strings globally
+- 5e113137: Fixes a bug in the L2 Bedrock genesis script
+- 177a9ea8: Cleans linting errors in MerkleTrie.sol
+- 7d68f82f: Adds a new event SentMessageExtension1 to the CrossDomainMessenger contract. Includes additional data that's being attached to messages sent after the Bedrock upgrade.
+- 90630336: Properly generates and exports ABI and artifact files that can be imported by client libraries
+- 8bd7abde: Moves various legacy contracts into the legacy folder
+- 7e6eb9b2: The output oracle's getL2Output function now reverts when no output is returned
+- f243dacf: Bump to use solidity 0.8.15
+- 8d26459b: Remove subversion byte from deposit tx
+- fa9823f3: Naming improvements for functions and variables in the L2OutputOracle
+- 0bf3b9b4: Update forge-std
+- e764cbb7: Shortens library names
+- 3a0271f8: Introduces Types.sol
+- 5de373ea: Semver contract updated to include a getter for the full version string
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+  - @eth-optimism/core-utils@0.9.2
+
+## 0.5.1
+
+### Patch Changes
+
+- e4693481: Clean up BytesUtils
+- b7b77d6c: Updates CrossDomainMessenger.baseGas to more accurately reflect gas costs
+- 9d435aec: Cleans up natspec in MerkleTrie and SecureMerkleTrie contracts
+- 87f745b5: Cleans up various compiler warnings
+- 8a3074ab: Minor cleanups to initialization and semver for L1 contracts
+- e1501bc0: Clears most contract linting warnings
+
+## 0.5.0
+
+### Minor Changes
+
+- 42a4cc30: Remove Lib* and OVM* prefixes from all contracts
+
+### Patch Changes
+
+- 0cb3929e: Move encoding and hashing into Encoding and Hashing libraries
+- 28bd76ae: Cleans up hashing and encoding library natspec and function names
+- 4279647f: Port RLPWriter tests
+- ce6cb121: Use external version of ExcessivelySafeCall
+- 8986f165: Fix solc warnings in ProxyAdmin
+- 69ee689f: Remove unnecessary DefaultValues library
+- 2e89f634: Fixes a bug that caused L2 timestamps to be computed incorrectly
+- 49d33b08: Standardizes comments, errors, and events for contracts in the /universal package
+- 821907e2: Bump typechain to 8.1.0
+- 91b31168: Clean up comments and errors for legacy contracts
+- 3c5726d4: Cleaned up enums, should be CapitalCase enums and UPPER_CASE values
+- eb11a5bb: Add comments to RLP libraries
+- 092b0901: Update to new L2 tx hash style for deposits
+- 4ea33e13: Standardizes initialization logic for L1 contracts
+- 297af083: Move contracts written by external parties into a vendor folder
+- 71800503: Reduce the number of compiler warnings
+- 611d93a1: Remove storage slot buffer in xdomain messengers
+- 75089d0a: Cleans up initialization logic everywhere
+- b9a90f32: Rename OptimismMintableTokenFactory to OptimismMintableERC20Factory
+- 50e20ea1: Fix initialization logic
+- 6f74ca9f: Clean up the PredeployAddresses library
+- c031ec95: Tests for RLPReader
+- 9c8b1f00: Bump forge-std to 62caef29b0f87a2c6aaaf634b2ca4c09b6867c92
+- 89d01f2e: Add semver to L2 contracts
+- 7d9820b6: Resolve compiler warnings in Proxy.sol
+- f9fee446: Move the `DepositTx` type to `core-utils`. This way it can be more easily used across projects
+- 5050e0fb: Remove "not implemented" errors in virtual functions
+- 78d7c2ec: Update typechain pipeline
+- 89d01f2e: Update dev deps
+- Updated dependencies [f9fee446]
+  - @eth-optimism/core-utils@0.9.1
+
 ## 0.4.1
 
 ### Patch Changes

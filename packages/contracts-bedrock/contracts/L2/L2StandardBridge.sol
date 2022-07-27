@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.15;
 
-import { Lib_PredeployAddresses } from "../libraries/Lib_PredeployAddresses.sol";
+import { Predeploys } from "../libraries/Predeploys.sol";
 import { StandardBridge } from "../universal/StandardBridge.sol";
+import { Semver } from "../universal/Semver.sol";
 import { OptimismMintableERC20 } from "../universal/OptimismMintableERC20.sol";
 
 /**
@@ -15,76 +16,75 @@ import { OptimismMintableERC20 } from "../universal/OptimismMintableERC20.sol";
  *         Examples of some token types that may not be properly supported by this contract include,
  *         but are not limited to: tokens with transfer fees, rebasing tokens, and
  *         tokens with blocklists.
- *         TODO: ensure that this has 1:1 backwards compatibility
  */
-contract L2StandardBridge is StandardBridge {
+contract L2StandardBridge is StandardBridge, Semver {
     /**
      * @custom:legacy
      * @notice Emitted whenever a withdrawal from L2 to L1 is initiated.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the withdrawer.
-     * @param _to        Address of the recipient on L1.
-     * @param _amount    Amount of the ERC20 withdrawn.
-     * @param _extraData Extra data attached to the withdrawal.
+     * @param l1Token   Address of the token on L1.
+     * @param l2Token   Address of the corresponding token on L2.
+     * @param from      Address of the withdrawer.
+     * @param to        Address of the recipient on L1.
+     * @param amount    Amount of the ERC20 withdrawn.
+     * @param extraData Extra data attached to the withdrawal.
      */
     event WithdrawalInitiated(
-        address indexed _l1Token,
-        address indexed _l2Token,
-        address indexed _from,
-        address _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed from,
+        address to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
      * @custom:legacy
      * @notice Emitted whenever an ERC20 deposit is finalized.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the depositor.
-     * @param _to        Address of the recipient on L2.
-     * @param _amount    Amount of the ERC20 deposited.
-     * @param _extraData Extra data attached to the deposit.
+     * @param l1Token   Address of the token on L1.
+     * @param l2Token   Address of the corresponding token on L2.
+     * @param from      Address of the depositor.
+     * @param to        Address of the recipient on L2.
+     * @param amount    Amount of the ERC20 deposited.
+     * @param extraData Extra data attached to the deposit.
      */
     event DepositFinalized(
-        address indexed _l1Token,
-        address indexed _l2Token,
-        address indexed _from,
-        address _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed from,
+        address to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
      * @custom:legacy
      * @notice Emitted whenever a deposit fails.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the depositor.
-     * @param _to        Address of the recipient on L2.
-     * @param _amount    Amount of the ERC20 deposited.
-     * @param _extraData Extra data attached to the deposit.
+     * @param l1Token   Address of the token on L1.
+     * @param l2Token   Address of the corresponding token on L2.
+     * @param from      Address of the depositor.
+     * @param to        Address of the recipient on L2.
+     * @param amount    Amount of the ERC20 deposited.
+     * @param extraData Extra data attached to the deposit.
      */
     event DepositFailed(
-        address indexed _l1Token,
-        address indexed _l2Token,
-        address indexed _from,
-        address _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed from,
+        address to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
-     * @notice Initializes the L2StandardBridge.
+     * @custom:semver 0.0.1
      *
      * @param _otherBridge Address of the L1StandardBridge.
      */
-    function initialize(address payable _otherBridge) public {
-        _initialize(payable(Lib_PredeployAddresses.L2_CROSS_DOMAIN_MESSENGER), _otherBridge);
+    constructor(address payable _otherBridge) Semver(0, 0, 1) {
+        initialize(_otherBridge);
     }
 
     /**
@@ -148,12 +148,21 @@ contract L2StandardBridge is StandardBridge {
         uint256 _amount,
         bytes calldata _extraData
     ) external payable virtual {
-        if (_l1Token == address(0) && _l2Token == Lib_PredeployAddresses.OVM_ETH) {
+        if (_l1Token == address(0) && _l2Token == Predeploys.LEGACY_ERC20_ETH) {
             finalizeBridgeETH(_from, _to, _amount, _extraData);
         } else {
             finalizeBridgeERC20(_l2Token, _l1Token, _from, _to, _amount, _extraData);
         }
         emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _extraData);
+    }
+
+    /**
+     * @notice Initializer.
+     *
+     * @param _otherBridge Address of the L1StandardBridge.
+     */
+    function initialize(address payable _otherBridge) public initializer {
+        __StandardBridge_init(payable(Predeploys.L2_CROSS_DOMAIN_MESSENGER), _otherBridge);
     }
 
     /**
@@ -176,8 +185,12 @@ contract L2StandardBridge is StandardBridge {
         bytes calldata _extraData
     ) internal {
         address l1Token = OptimismMintableERC20(_l2Token).l1Token();
-        if (_l2Token == Lib_PredeployAddresses.OVM_ETH) {
-            require(msg.value == _amount, "ETH withdrawals must include sufficient ETH value.");
+        if (_l2Token == Predeploys.LEGACY_ERC20_ETH) {
+            require(
+                msg.value == _amount,
+                "L2StandardBridge: ETH withdrawals must include sufficient ETH value"
+            );
+
             _initiateBridgeETH(_from, _to, _amount, _minGasLimit, _extraData);
         } else {
             _initiateBridgeERC20(_l2Token, l1Token, _from, _to, _amount, _minGasLimit, _extraData);

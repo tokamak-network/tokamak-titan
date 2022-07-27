@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.15;
 
-import { Lib_PredeployAddresses } from "../libraries/Lib_PredeployAddresses.sol";
+import { Predeploys } from "../libraries/Predeploys.sol";
 import { StandardBridge } from "../universal/StandardBridge.sol";
+import { Semver } from "../universal/Semver.sol";
 
 /**
  * @custom:proxied
@@ -11,96 +12,109 @@ import { StandardBridge } from "../universal/StandardBridge.sol";
  *         L2. ERC20 tokens deposited into L2 are escrowed within this contract until withdrawal.
  *         ETH is transferred to and escrowed within the OptimismPortal contract.
  */
-contract L1StandardBridge is StandardBridge {
+contract L1StandardBridge is StandardBridge, Semver {
     /**
      * @custom:legacy
      * @notice Emitted whenever a deposit of ETH from L1 into L2 is initiated.
      *
-     * @param _from      Address of the depositor.
-     * @param _to        Address of the recipient on L2.
-     * @param _amount    Amount of ETH deposited.
-     * @param _extraData Extra data attached to the deposit.
+     * @param from      Address of the depositor.
+     * @param to        Address of the recipient on L2.
+     * @param amount    Amount of ETH deposited.
+     * @param extraData Extra data attached to the deposit.
      */
     event ETHDepositInitiated(
-        address indexed _from,
-        address indexed _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
      * @custom:legacy
      * @notice Emitted whenever a withdrawal of ETH from L2 to L1 is finalized.
      *
-     * @param _from      Address of the withdrawer.
-     * @param _to        Address of the recipient on L1.
-     * @param _amount    Amount of ETH withdrawn.
-     * @param _extraData Extra data attached to the withdrawal.
+     * @param from      Address of the withdrawer.
+     * @param to        Address of the recipient on L1.
+     * @param amount    Amount of ETH withdrawn.
+     * @param extraData Extra data attached to the withdrawal.
      */
     event ETHWithdrawalFinalized(
-        address indexed _from,
-        address indexed _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
      * @custom:legacy
      * @notice Emitted whenever an ERC20 deposit is initiated.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the depositor.
-     * @param _to        Address of the recipient on L2.
-     * @param _amount    Amount of the ERC20 deposited.
-     * @param _extraData Extra data attached to the deposit.
+     * @param l1Token   Address of the token on L1.
+     * @param l2Token   Address of the corresponding token on L2.
+     * @param from      Address of the depositor.
+     * @param to        Address of the recipient on L2.
+     * @param amount    Amount of the ERC20 deposited.
+     * @param extraData Extra data attached to the deposit.
      */
     event ERC20DepositInitiated(
-        address indexed _l1Token,
-        address indexed _l2Token,
-        address indexed _from,
-        address _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed from,
+        address to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
      * @custom:legacy
      * @notice Emitted whenever an ERC20 withdrawal is finalized.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the withdrawer.
-     * @param _to        Address of the recipient on L1.
-     * @param _amount    Amount of the ERC20 withdrawn.
-     * @param _extraData Extra data attached to the withdrawal.
+     * @param l1Token   Address of the token on L1.
+     * @param l2Token   Address of the corresponding token on L2.
+     * @param from      Address of the withdrawer.
+     * @param to        Address of the recipient on L1.
+     * @param amount    Amount of the ERC20 withdrawn.
+     * @param extraData Extra data attached to the withdrawal.
      */
     event ERC20WithdrawalFinalized(
-        address indexed _l1Token,
-        address indexed _l2Token,
-        address indexed _from,
-        address _to,
-        uint256 _amount,
-        bytes _extraData
+        address indexed l1Token,
+        address indexed l2Token,
+        address indexed from,
+        address to,
+        uint256 amount,
+        bytes extraData
     );
 
     /**
-     * @notice Initializes the L1StandardBridge.
+     * @custom:semver 0.0.1
      *
      * @param _messenger Address of the L1CrossDomainMessenger.
      */
-    function initialize(address payable _messenger) public {
-        _initialize(_messenger, payable(Lib_PredeployAddresses.L2_STANDARD_BRIDGE));
+    constructor(address payable _messenger) Semver(0, 0, 1) {
+        initialize(_messenger);
     }
 
     /**
      * @custom:legacy
-     * @notice Retrieves the access of the corresponding L2 bridge contract.
+     * @notice Finalizes a withdrawal of ERC20 tokens from L2.
      *
-     * @return Address of the corresponding L2 bridge contract.
+     * @param _l1Token   Address of the token on L1.
+     * @param _l2Token   Address of the corresponding token on L2.
+     * @param _from      Address of the withdrawer on L2.
+     * @param _to        Address of the recipient on L1.
+     * @param _amount    Amount of ETH to withdraw.
+     * @param _extraData Optional data forwarded from L2.
      */
-    function l2TokenBridge() external returns (address) {
-        return address(otherBridge);
+    function finalizeERC20Withdrawal(
+        address _l1Token,
+        address _l2Token,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _extraData
+    ) external onlyOtherBridge {
+        emit ERC20WithdrawalFinalized(_l1Token, _l2Token, _from, _to, _amount, _extraData);
+        finalizeBridgeERC20(_l1Token, _l2Token, _from, _to, _amount, _extraData);
     }
 
     /**
@@ -221,25 +235,21 @@ contract L1StandardBridge is StandardBridge {
 
     /**
      * @custom:legacy
-     * @notice Finalizes a withdrawal of ERC20 tokens from L2.
+     * @notice Retrieves the access of the corresponding L2 bridge contract.
      *
-     * @param _l1Token   Address of the token on L1.
-     * @param _l2Token   Address of the corresponding token on L2.
-     * @param _from      Address of the withdrawer on L2.
-     * @param _to        Address of the recipient on L1.
-     * @param _amount    Amount of ETH to withdraw.
-     * @param _extraData Optional data forwarded from L2.
+     * @return Address of the corresponding L2 bridge contract.
      */
-    function finalizeERC20Withdrawal(
-        address _l1Token,
-        address _l2Token,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata _extraData
-    ) external onlyOtherBridge {
-        emit ERC20WithdrawalFinalized(_l1Token, _l2Token, _from, _to, _amount, _extraData);
-        finalizeBridgeERC20(_l1Token, _l2Token, _from, _to, _amount, _extraData);
+    function l2TokenBridge() external view returns (address) {
+        return address(otherBridge);
+    }
+
+    /**
+     * @notice Initializer.
+     *
+     * @param _messenger Address of the L1CrossDomainMessenger.
+     */
+    function initialize(address payable _messenger) public initializer {
+        __StandardBridge_init(_messenger, payable(Predeploys.L2_STANDARD_BRIDGE));
     }
 
     /**
@@ -254,7 +264,7 @@ contract L1StandardBridge is StandardBridge {
         address _from,
         address _to,
         uint32 _minGasLimit,
-        bytes memory _extraData
+        bytes calldata _extraData
     ) internal {
         emit ETHDepositInitiated(_from, _to, msg.value, _extraData);
         _initiateBridgeETH(_from, _to, msg.value, _minGasLimit, _extraData);

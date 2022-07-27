@@ -56,7 +56,7 @@ deposits.
 token deposits (tokens are locked on L1, then minted on L2 via a deposited transaction).
 - **BatchInbox**: An L1 address to which the Batch Submitter submits transaction batches.
   - Transaction batches include L2 transaction calldata, timestamps, and ordering information.
-  - The BatchInbox is a regular EOA address. This lets us pass on gast cost savings by not executing any EVM code.
+  - The BatchInbox is a regular EOA address. This lets us pass on gas cost savings by not executing any EVM code.
 
 - **L2OutputOracle**: A smart contract that stores [L2 output roots](./glossary.md#l2-output) for use with withdrawals
 and fault proofs.
@@ -91,7 +91,7 @@ Since the EE uses Geth under the hood, Optimism uses Geth's built-in peer-to-pee
 propagate transactions. The same network can also be used to propagate submitted blocks and support snap-sync.
 
 Unsubmitted blocks, however, are propagated using a separate peer-to-peer network of Rollup Nodes. This is optional,
-however, and is provided as a convnience to lower latency for verifiers and their JSON-RPC clients.
+however, and is provided as a convenience to lower latency for verifiers and their JSON-RPC clients.
 
 The below diagram illustrates how the sequencer and verifiers fit together:
 
@@ -175,7 +175,7 @@ derivation function performs the following steps:
 3. Submits the payload attributes to the Engine API, where they are converted into blocks and added to the canonical
 chain.
 
-This process is then repeated with incrementing epohcs until the tip of L1 is reached.
+This process is then repeated with incrementing epochs until the tip of L1 is reached.
 
 ### Engine API
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 import { Owned } from "@rari-capital/solmate/src/auth/Owned.sol";
 
@@ -17,9 +17,10 @@ contract Transactor is Owned {
      * Sends a CALL to a target address.
      *
      * @param _target Address to call.
-     * @param _data Data to send with the call.
-     * @param _gas Amount of gas to send with the call.
-     * @param _value ETH value to send with the call.
+     * @param _data   Data to send with the call.
+     * @param _gas    Amount of gas to send with the call.
+     * @param _value  ETH value to send with the call.
+     *
      * @return Boolean success value.
      * @return Bytes data returned by the call.
      */
@@ -36,8 +37,9 @@ contract Transactor is Owned {
      * Sends a DELEGATECALL to a target address.
      *
      * @param _target Address to call.
-     * @param _data Data to send with the call.
-     * @param _gas Amount of gas to send with the call.
+     * @param _data   Data to send with the call.
+     * @param _gas    Amount of gas to send with the call.
+     *
      * @return Boolean success value.
      * @return Bytes data returned by the call.
      */

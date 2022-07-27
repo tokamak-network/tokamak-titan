@@ -31,8 +31,8 @@ type rpcServer struct {
 	l2.Source
 }
 
-func newRPCServer(ctx context.Context, rpcCfg *RPCConfig, rollupCfg *rollup.Config, l2Client l2EthClient, log log.Logger, appVersion string, m *metrics.Metrics) (*rpcServer, error) {
-	api := newNodeAPI(rollupCfg, l2Client, log.New("rpc", "node"), m)
+func newRPCServer(ctx context.Context, rpcCfg *RPCConfig, rollupCfg *rollup.Config, l2Client l2EthClient, dr driverClient, log log.Logger, appVersion string, m *metrics.Metrics) (*rpcServer, error) {
+	api := newNodeAPI(rollupCfg, l2Client, dr, log.New("rpc", "node"), m)
 	// TODO: extend RPC config with options for WS, IPC and HTTP RPC connections
 	endpoint := net.JoinHostPort(rpcCfg.ListenAddr, strconv.Itoa(rpcCfg.ListenPort))
 	r := &rpcServer{
@@ -61,7 +61,7 @@ func (s *rpcServer) EnableP2P(backend *p2p.APIBackend) {
 
 func (s *rpcServer) Start() error {
 	srv := rpc.NewServer()
-	if err := node.RegisterApis(s.apis, nil, srv, true); err != nil {
+	if err := node.RegisterApis(s.apis, nil, srv); err != nil {
 		return err
 	}
 

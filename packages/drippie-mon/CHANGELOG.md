@@ -1,5 +1,46 @@
 # @eth-optimism/drippie-mon
 
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [93d3bd41]
+- Updated dependencies [680714c1]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [29830750]
+- Updated dependencies [bcfd1edc]
+- Updated dependencies [0bf3b9b4]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/contracts-periphery@0.2.1
+  - @eth-optimism/sdk@1.3.1
+  - @eth-optimism/common-ts@0.6.2
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [032f7214]
+  - @eth-optimism/sdk@1.3.0
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [95fc3fbf]
+- Updated dependencies [019657db]
+- Updated dependencies [6ff5c0a3]
+- Updated dependencies [119f0e97]
+- Updated dependencies [9c8b1f00]
+- Updated dependencies [8a335b7b]
+- Updated dependencies [f9fee446]
+- Updated dependencies [89d01f2e]
+  - @eth-optimism/contracts-periphery@0.2.0
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/sdk@1.2.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 0.3.5
 
 ### Patch Changes

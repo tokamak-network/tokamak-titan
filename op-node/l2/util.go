@@ -64,7 +64,7 @@ func (res *AccountResult) Verify(stateRoot common.Hash) error {
 	trieDB := trie.NewDatabase(db)
 
 	// wrap our DB of trie nodes with a Trie interface, and anchor it at the trusted state root
-	proofTrie, err := trie.New(stateRoot, trieDB)
+	proofTrie, err := trie.New(stateRoot, stateRoot, trieDB)
 	if err != nil {
 		return fmt.Errorf("failed to load db wrapper around kv store")
 	}
@@ -113,7 +113,8 @@ func BlockToBatch(config *rollup.Config, block *types.Block) (*derive.BatchData,
 		return nil, fmt.Errorf("invalid L1 info deposit tx in block: %v", err)
 	}
 	return &derive.BatchData{BatchV1: derive.BatchV1{
-		Epoch:        rollup.Epoch(l1Info.Number), // the L1 block number equals the L2 epoch.
+		EpochNum:     rollup.Epoch(l1Info.Number), // the L1 block number equals the L2 epoch.
+		EpochHash:    l1Info.BlockHash,
 		Timestamp:    block.Time(),
 		Transactions: opaqueTxs,
 	}}, nil
