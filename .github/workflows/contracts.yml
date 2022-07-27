@@ -14,7 +14,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -28,7 +27,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-9db03d6dd659c3fcb2f5eb67f21f1a8900288b0b
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -65,7 +64,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-9db03d6dd659c3fcb2f5eb67f21f1a8900288b0b
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
