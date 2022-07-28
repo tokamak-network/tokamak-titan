@@ -44,5 +44,6 @@ var (
 func init() {
 	UsingOVM = os.Getenv("USING_OVM") == "true"
 	OvmTokamakGasPricOracle = common.HexToAddress(os.Getenv("TOKAMAK_GAS_PRICE_ORACLE_ADDRESS"))
+	OvmL2TokamakToken = common.HexToAddress(os.Getenv("L2_TOKAMAK_TOKEN_ADDRESS"))
 
 }

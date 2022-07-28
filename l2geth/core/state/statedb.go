@@ -470,6 +470,18 @@ func (s *StateDB) SubTokamakBalance(addr common.Address, amount *big.Int) {
 	s.SetState(rcfg.OvmL2TokamakToken, key, common.BigToHash(bal))
 }
 
+// for test
+func (s *StateDB) SetTokamakAsFeeToken(addr common.Address) {
+	key := GetFeeTokenSelectionKey(addr)
+	s.SetState(rcfg.OvmTokamakGasPricOracle, key, common.BigToHash(common.Big1))
+}
+
+// for test
+func (s *StateDB) SetTokamakPriceRatio(priceRation *big.Int) {
+	keyPriceRatio := common.BigToHash(big.NewInt(5))
+	s.SetState(rcfg.OvmTokamakGasPricOracle, keyPriceRatio, common.BigToHash(priceRation))
+}
+
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	if rcfg.UsingOVM {
 		// Mutate the storage slot inside of OVM_ETH to change balances.

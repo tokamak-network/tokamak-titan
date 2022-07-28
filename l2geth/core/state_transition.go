@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
+	errInsufficientBalanceForGas        = errors.New("insufficient balance to pay for gas")
 	errInsufficientTokamakBalanceForGas = errors.New("insufficient tokamak balance to pay for gas")
 )
 
@@ -219,6 +219,7 @@ func (st *StateTransition) buyGas() error {
 
 	if st.isTokamakFeeTokenSelect {
 		// note that in this case, st.gasPrice = 0 but st.msg.GasPrice() is NOT zero
+		// st.msg.Gas() = st.msg.gasLimit
 		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 		// msg.Gas * msg.GasPrice * tokamakPriceRatio
 		tokamakval = new(big.Int).Mul(ethval, st.tokamakPriceRatio)
@@ -323,14 +324,14 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 	}
 	// if the from account use TOKAMAK as fee token, add balance to st.gas * st.msg.GasPrice() * tokamakPriceRatio
-		// st.gas = st.gas + refund(st.gasUsed() / 2)
+	// st.gas = st.gas + refund(st.gasUsed() / 2)
 	st.refundGas()
 
 	// TOKMAK is used to pay for the gas fee
 	if st.isTokamakFeeTokenSelect {
 		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
 		tokamakval := new(big.Int).Mul(ethval, st.tokamakPriceRatio)
-		st.state.AddTokamakBalance(rcfg.OvmL2TokamakToken, tokamakval)
+		st.state.AddTokamakBalance(rcfg.OvmTokamakGasPricOracle, tokamakval)
 	}
 	if rcfg.UsingOVM {
 		// The L2 Fee is the same as the fee that is charged in the normal geth
