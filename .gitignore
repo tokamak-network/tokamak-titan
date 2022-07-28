@@ -40,6 +40,9 @@ packages/contracts-bedrock/deployments/anvil
 .env
 .env*
 !.env.example
+!.env.dev
+!.env.rinkeby
+!.env.local
 *.log
 
 .devnet
