@@ -70,10 +70,11 @@ type Receipt struct {
 	TransactionIndex uint        `json:"transactionIndex"`
 
 	// UsingOVM
-	L1GasPrice *big.Int   `json:"l1GasPrice" gencodec:"required"`
-	L1GasUsed  *big.Int   `json:"l1GasUsed" gencodec:"required"`
-	L1Fee      *big.Int   `json:"l1Fee" gencodec:"required"`
-	FeeScalar  *big.Float `json:"l1FeeScalar" gencodec:"required"`
+	L1GasPrice   *big.Int   `json:"l1GasPrice" gencodec:"required"`
+	L1GasUsed    *big.Int   `json:"l1GasUsed" gencodec:"required"`
+	L1Fee        *big.Int   `json:"l1Fee" gencodec:"required"`
+	FeeScalar    *big.Float `json:"l1FeeScalar" gencodec:"required"`
+	L2TokamakFee *big.Int   `json:"l2TokamakFee"`
 }
 
 type receiptMarshaling struct {
@@ -102,10 +103,11 @@ type storedReceiptRLP struct {
 	CumulativeGasUsed uint64
 	Logs              []*LogForStorage
 	// UsingOVM
-	L1GasUsed  *big.Int
-	L1GasPrice *big.Int
-	L1Fee      *big.Int
-	FeeScalar  string
+	L1GasUsed    *big.Int
+	L1GasPrice   *big.Int
+	L1Fee        *big.Int
+	FeeScalar    string
+	L2TokamakFee *big.Int
 }
 
 // v4StoredReceiptRLP is the storage encoding of a receipt used in database version 4.
@@ -216,6 +218,7 @@ func (r *ReceiptForStorage) EncodeRLP(w io.Writer) error {
 		L1GasPrice:        r.L1GasPrice,
 		L1Fee:             r.L1Fee,
 		FeeScalar:         feeScalar,
+		L2TokamakFee:      r.L2TokamakFee,
 	}
 	for i, log := range r.Logs {
 		enc.Logs[i] = (*LogForStorage)(log)
@@ -272,6 +275,7 @@ func decodeStoredReceiptRLP(r *ReceiptForStorage, blob []byte) error {
 	r.L1GasPrice = stored.L1GasPrice
 	r.L1Fee = stored.L1Fee
 	r.FeeScalar = scalar
+	r.L2TokamakFee = stored.L2TokamakFee
 
 	return nil
 }

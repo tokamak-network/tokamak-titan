@@ -17,6 +17,8 @@
 package core
 
 import (
+	"math/big"
+
 	"github.com/ethereum-optimism/optimism/l2geth/common"
 	"github.com/ethereum-optimism/optimism/l2geth/consensus"
 	"github.com/ethereum-optimism/optimism/l2geth/consensus/misc"
@@ -88,6 +90,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, error) {
+	// convert msg from transaction
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
 		return nil, err
@@ -102,15 +105,27 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Compute the fee related information that is to be included
 	// on the receipt. This must happen before the state transition
 	// to ensure that the correct information is used.
+
+	// l1Fee = l1GasUsed * l1GasPrice * scalar
 	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
 	if err != nil {
 		return nil, err
 	}
+	// Determine the L2 Tokamak fee
+	feeTokenSelection := statedb.GetFeeTokenSelection(msg.From())
 
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
 		return nil, err
+	}
+
+	// Calculate the L2 Tokamak fee
+	L2TokamakFee := new(big.Int)
+	if feeTokenSelection.Cmp(common.Big1) == 0 {
+		tokamakPriceRatio := statedb.GetTokamakPriceRatio()
+		// L2TokamakFee = gas * msg.GasPrice() * tokamakPriceRatio
+		L2TokamakFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tokamakPriceRatio))
 	}
 
 	// Update the state with pending changes
@@ -152,6 +167,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.BlockHash = statedb.BlockHash()
 	receipt.BlockNumber = header.Number
 	receipt.TransactionIndex = uint(statedb.TxIndex())
+	receipt.L2TokamakFee = L2TokamakFee
 
 	return receipt, err
 }

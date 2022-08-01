@@ -120,6 +120,7 @@ func CalculateTotalMsgFee(msg Message, state StateDB, gasUsed *big.Int, gpo *com
 // a Message and a StateDB
 func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.Int, error) {
 	tx := asTransaction(msg)
+	// tx raw data
 	raw, err := rlpEncode(tx)
 	if err != nil {
 		return nil, err
@@ -128,7 +129,7 @@ func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.In
 	if gpo == nil {
 		gpo = &rcfg.L2GasPriceOracleAddress
 	}
-
+	// get l1GasPrice, overhead, scalar
 	l1GasPrice, overhead, scalar := readGPOStorageSlots(*gpo, state)
 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
 	return l1Fee, nil
@@ -136,8 +137,10 @@ func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.In
 
 // CalculateL1Fee computes the L1 fee
 func CalculateL1Fee(data []byte, overhead, l1GasPrice *big.Int, scalar *big.Float) *big.Int {
+	// used gas for data + overhead
 	l1GasUsed := CalculateL1GasUsed(data, overhead)
 	l1Fee := new(big.Int).Mul(l1GasUsed, l1GasPrice)
+	// l1Fee = l1GasUsed * l1GasPrice * scalar
 	return mulByFloat(l1Fee, scalar)
 }
 
@@ -156,12 +159,14 @@ func CalculateL1GasUsed(data []byte, overhead *big.Int) *big.Int {
 // DeriveL1GasInfo reads L1 gas related information to be included
 // on the receipt
 func DeriveL1GasInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
+	// generate raw tx
 	tx := asTransaction(msg)
 	raw, err := rlpEncode(tx)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 
+	// get l1GasPrice, overhead, scalar from state
 	l1GasPrice, overhead, scalar := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
 	l1GasUsed := CalculateL1GasUsed(raw, overhead)
 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)

@@ -8,8 +8,13 @@ import (
 )
 
 // UsingOVM is used to enable or disable functionality necessary for the OVM.
-var UsingOVM bool
-
+var (
+	UsingOVM bool
+	// OvmTokamakGasPricOracle is tokamak gas price oracle
+	OvmTokamakGasPricOracle common.Address
+	// OvmL2TokamakToken is tokamak token address
+	OvmL2TokamakToken common.Address
+)
 var (
 	// L2GasPriceSlot refers to the storage slot that the L2 gas price is stored
 	// in in the OVM_GasPriceOracle predeploy
@@ -38,4 +43,7 @@ var (
 
 func init() {
 	UsingOVM = os.Getenv("USING_OVM") == "true"
+	OvmTokamakGasPricOracle = common.HexToAddress(os.Getenv("TOKAMAK_GAS_PRICE_ORACLE_ADDRESS"))
+	OvmL2TokamakToken = common.HexToAddress(os.Getenv("L2_TOKAMAK_TOKEN_ADDRESS"))
+
 }

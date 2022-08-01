@@ -227,6 +227,7 @@ var (
 	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 	TestRules       = TestChainConfig.Rules(new(big.Int))
 
+	// TODO: determine chainID for Tokamak Network
 	// OpMainnetChainID is the ID of Optimism's mainnet chain.
 	OpMainnetChainID = big.NewInt(10)
 
@@ -546,6 +547,7 @@ func isForkIncompatible(s1, s2, head *big.Int) bool {
 }
 
 // isForked returns whether a fork scheduled at block s is active at the given head block.
+// if head is higher than forked block height, return true
 func isForked(s, head *big.Int) bool {
 	if s == nil || head == nil {
 		return false
