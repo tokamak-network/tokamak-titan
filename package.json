@@ -7,6 +7,7 @@
     "packages": [
       "packages/*",
       "packages/tokamak/*",
+      "!packages/contracts-*",
       "batch-submitter",
       "bss-core",
       "gas-oracle",
@@ -23,10 +24,7 @@
     ],
     "nohoist": [
       "**/typechain/*",
-      "**/@typechain/*",
-      "@eth-optimism/contracts-bedrock/ds-test",
-      "@eth-optimism/contracts-bedrock/forge-std",
-      "@eth-optimism/contracts-bedrock/@rari-capital/solmate"
+      "**/@typechain/*"
     ]
   },
   "private": true,
