@@ -947,30 +947,44 @@ func (s *SyncService) applyBatchedTransaction(tx *types.Transaction) error {
 
 // verifyFee will verify that a valid fee is being paid.
 func (s *SyncService) verifyFee(tx *types.Transaction) error {
+	// calculate the total fee from tx
 	fee, err := fees.CalculateTotalFee(tx, s.RollupGpo)
 	if err != nil {
 		return fmt.Errorf("invalid transaction: %w", err)
 	}
 
-	// Prevent transactions without enough balance from
-	// being accepted by the chain but allow through 0
-	// gas price transactions
-	cost := tx.Value()
-	if tx.GasPrice().Cmp(common.Big0) != 0 {
-		cost = cost.Add(cost, fee)
-	}
+	// get state of HEAD block
 	state, err := s.bc.State()
 	if err != nil {
 		return err
 	}
+	// return the address derived from the tx.signature
 	from, err := types.Sender(s.signer, tx)
 	if err != nil {
 		return fmt.Errorf("invalid transaction: %w", core.ErrInvalidSender)
 	}
+	// check is the wallet address picks TOKAMAK as the fee token
+	isTokamakFeeTokenSelect := false
+	feeTokenSelection := state.GetFeeTokenSelection(from)
+	if feeTokenSelection.Cmp(common.Big1) == 0 {
+		isTokamakFeeTokenSelect = true
+	}
+
+	cost := tx.Value()
+	// Prevent transactions without enough balance from
+	// being accepted by the chain but allow through 0
+	// gas price transactions
+	// if gasprice is not equal to 0
+	if !isTokamakFeeTokenSelect && tx.GasPrice().Cmp(common.Big0) != 0 {
+		cost = cost.Add(cost, fee)
+	}
+
+	// from balance must be more than cost
 	if state.GetBalance(from).Cmp(cost) < 0 {
 		return fmt.Errorf("invalid transaction: %w", core.ErrInsufficientFunds)
 	}
 
+	// if tx.GasPrice is 0
 	if tx.GasPrice().Cmp(common.Big0) == 0 {
 		// Allow 0 gas price transactions only if it is the owner of the gas
 		// price oracle
@@ -994,6 +1008,15 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 		return err
 	}
 
+	// Ensure that TOKAMAK balance is enough for the gas fee
+	if isTokamakFeeTokenSelect {
+		tokamakPriceRatio := state.GetTokamakPriceRatio()
+		ethCost := new(big.Int).Mul(new(big.Int).SetUint64(tx.Gas()), tx.GasPrice())
+		tokamakCost := new(big.Int).Mul(ethCost, tokamakPriceRatio)
+		if state.GetTokamakBalance(from).Cmp(tokamakCost) < 0 {
+			return fmt.Errorf("invalid transaction: %w", core.ErrInsufficientTokamakFunds)
+		}
+	}
 	// Reject user transactions that do not have large enough of a gas price.
 	// Allow for a buffer in case the gas price changes in between the user
 	// calling `eth_gasPrice` and submitting the transaction.
