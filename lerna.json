@@ -3,7 +3,8 @@
   "useWorkspaces": true,
   "packages": [
     "packages/*",
-    "packages/tokamak/*"
+    "packages/tokamak/*",
+    "!packages/contracts-*"
   ],
   "version": "independent"
 }
