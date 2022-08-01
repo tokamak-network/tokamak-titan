@@ -147,7 +147,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 		// if TOKAMAK is fee token, the gas price is 0
 		if feeTokenSelection.Cmp(common.Big1) == 0 {
 			isTokamakFeeTokenSelect = true
-			// TODO: Is the gas price 0 when the fee token is TOKAMAK?
+			// set ETH gasprice is 0
 			gasPrice = big.NewInt(0)
 			tokamakPriceRatio = evm.StateDB.GetTokamakPriceRatio()
 		}

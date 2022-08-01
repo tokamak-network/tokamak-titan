@@ -90,6 +90,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, error) {
+	// convert msg from transaction
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
 		return nil, err
@@ -105,6 +106,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// on the receipt. This must happen before the state transition
 	// to ensure that the correct information is used.
 
+	// l1Fee = l1GasUsed * l1GasPrice * scalar
 	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
 	if err != nil {
 		return nil, err
