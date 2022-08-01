@@ -2,9 +2,17 @@
   "npmClient": "yarn",
   "useWorkspaces": true,
   "packages": [
-    "packages/*",
-    "packages/tokamak/*",
-    "!packages/contracts-*"
+    "packages/common-ts",
+    "packages/contracts",
+    "packages/core-utils",
+    "packages/data-transport-layer",
+    "packages/drippie-mon",
+    "packages/fault-detector",
+    "packages/hardhat-deploy-config",
+    "packages/message-relayer",
+    "packages/replica-healthcheck",
+    "packages/sdk",
+    "packages/tokamak/*"
   ],
   "version": "independent"
 }
