@@ -950,8 +950,9 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 	// calculate the total fee from tx
 	fee, err := fees.CalculateTotalFee(tx, s.RollupGpo)
 	if err != nil {
-		return fmt.Errorf("invalid transaction: %w", err)
+		return fmt.Errorf("Invalid transaction: %w", err)
 	}
+	nextBlockNumber := new(big.Int).Add(s.bc.CurrentBlock().Number(), big.NewInt(1))
 
 	// get state of HEAD block
 	state, err := s.bc.State()
@@ -961,7 +962,7 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 	// return the address derived from the tx.signature
 	from, err := types.Sender(s.signer, tx)
 	if err != nil {
-		return fmt.Errorf("invalid transaction: %w", core.ErrInvalidSender)
+		return fmt.Errorf("Invalid transaction: %w", core.ErrInvalidSender)
 	}
 	// check is the wallet address picks TOKAMAK as the fee token
 	isTokamakFeeTokenSelect := false
@@ -981,7 +982,7 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 
 	// from balance must be more than cost
 	if state.GetBalance(from).Cmp(cost) < 0 {
-		return fmt.Errorf("invalid transaction: %w", core.ErrInsufficientFunds)
+		return fmt.Errorf("Invalid transaction: %w", core.ErrInsufficientFunds)
 	}
 
 	// if tx.GasPrice is 0
@@ -1008,13 +1009,20 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 		return err
 	}
 
+	// Ensure that the user approved enough gas to do the transaction
+	estimateGas, err := s.validateGasLimit(tx, l2GasPrice, s.RollupGpo, nextBlockNumber)
+	if err != nil {
+		return fmt.Errorf("invalid transaction: %w", err)
+	}
+
 	// Ensure that TOKAMAK balance is enough for the gas fee
 	if isTokamakFeeTokenSelect {
 		tokamakPriceRatio := state.GetTokamakPriceRatio()
-		ethCost := new(big.Int).Mul(new(big.Int).SetUint64(tx.Gas()), tx.GasPrice())
-		tokamakCost := new(big.Int).Mul(ethCost, tokamakPriceRatio)
+		// Calcuate estimated tokamak cost
+		// tokamakCost := new(big.Int).Mul(ethCost, tokamakPriceRatio)
+		tokamakCost := new(big.Int) .Mul(tokamakPriceRatio, estimateGas.Mul(estimateGas, tx.GasPrice()))
 		if state.GetTokamakBalance(from).Cmp(tokamakCost) < 0 {
-			return fmt.Errorf("invalid transaction: %w", core.ErrInsufficientTokamakFunds)
+			return fmt.Errorf("Invalid transaction: %w", core.ErrInsufficientTokamakFunds)
 		}
 	}
 	// Reject user transactions that do not have large enough of a gas price.
@@ -1040,6 +1048,28 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 		return err
 	}
 	return nil
+}
+
+// Validate that gas limit approved by the user is larger than the actual usage
+func (s *SyncService) validateGasLimit(tx *types.Transaction, l2GasPrice *big.Int, gpo *gasprice.RollupOracle, nextBlockNumber *big.Int) (*big.Int, error) {
+	// calculate the gas from tx.Data()
+	intrGas, err := core.IntrinsicGas(tx.Data(), tx.To() == nil, true, s.bc.Config().IsIstanbul(nextBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+	// Ensure that tx.Gas() is larger than l1SecurityFee / l2GasPrice + intrGas
+	// return l1Gas = l1fee / l2GasPrice
+	l1Gas, err := fees.CalculateL1GasFromGPO(tx.Data(), l2GasPrice, gpo)
+	if err != nil {
+		return nil, err
+	}
+	// estimateGas = l1Gas + intrGas
+	estimateGas := new(big.Int).Add(l1Gas, big.NewInt(int64(intrGas)))
+	log.Debug("Validate gas limit", "estimateGas", estimateGas, "l2GasPrice", l2GasPrice, "gasLimit", tx.Gas(), "intrGas", intrGas, "l1Gas", l1Gas)
+	if big.NewInt(int64(tx.Gas())).Cmp(estimateGas) < 0 {
+		return nil, core.ErrIntrinsicGas
+	}
+	return estimateGas, nil
 }
 
 // Higher level API for applying transactions. Should only be called for
