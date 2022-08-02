@@ -95,6 +95,32 @@ func CalculateTotalFee(tx *types.Transaction, gpo RollupOracle) (*big.Int, error
 	return fee, nil
 }
 
+// CalculateL1GasFromGPO will calculate the l1 fee given a tx.data.
+// This function is used at the RPC layer to ensure that users
+// have enough ETH to cover their fee
+func CalculateL1GasFromGPO(txData []byte, l2GasPrice *big.Int, gpo RollupOracle) (*big.Int, error) {
+	// Read the variables from the cache
+	l1GasPrice, err := gpo.SuggestL1GasPrice(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	overhead, err := gpo.SuggestOverhead(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	scalar, err := gpo.SuggestScalar(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	l1Fee := CalculateL1Fee(txData, overhead, l1GasPrice, scalar)
+	if l2GasPrice.BitLen() == 0 {
+		return new(big.Int), nil
+	} else {
+		return new(big.Int).Div(l1Fee, l2GasPrice), nil
+	}
+}
+
 // CalculateMsgFee will calculate the total fee given a Message.
 // This function is used during the state transition to transfer
 // value to the sequencer. Since Messages do not have a signature
