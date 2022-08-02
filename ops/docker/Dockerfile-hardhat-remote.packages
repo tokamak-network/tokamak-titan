@@ -1,0 +1,91 @@
+# This Dockerfile builds all the dependencies needed by the monorepo, and should
+# be used to build any of the follow-on services
+#
+# ### BASE: Install deps
+FROM ghcr.io/foundry-rs/foundry:latest as foundry
+FROM node:16-alpine3.14 as base
+
+RUN apk --no-cache add curl jq python3 ca-certificates git make gcc musl-dev linux-headers bash build-base
+
+COPY --from=foundry /usr/local/bin/forge /usr/local/bin/forge
+COPY --from=foundry /usr/local/bin/cast /usr/local/bin/cast
+
+
+# copy over the needed configs to run the dep installation
+# note: this approach can be a bit unhandy to maintain, but it allows
+# us to cache the installation steps
+WORKDIR /opt/optimism
+COPY *.json yarn.lock ./
+COPY packages/sdk/package.json ./packages/sdk/package.json
+COPY packages/core-utils/package.json ./packages/core-utils/package.json
+COPY packages/common-ts/package.json ./packages/common-ts/package.json
+COPY packages/contracts/package.json ./packages/contracts/package.json
+COPY packages/contracts-bedrock/package.json ./packages/contracts-bedrock/package.json
+COPY packages/contracts-periphery/package.json ./packages/contracts-periphery/package.json
+COPY packages/contracts-governance/package.json ./packages/contracts-governance/package.json
+COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/package.json
+COPY packages/hardhat-deploy-config/package.json ./packages/hardhat-deploy-config/package.json
+COPY packages/tokamak/message-relayer/package.json ./packages/tokamak/message-relayer/package.json
+COPY packages/fault-detector/package.json ./packages/fault-detector/package.json
+COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/package.json
+COPY packages/drippie-mon/package.json ./packages/drippie-mon/package.json
+COPY integration-tests/package.json ./integration-tests/package.json
+
+RUN yarn install --frozen-lockfile && yarn cache clean
+
+COPY ./packages ./packages
+COPY ./integration-tests ./integration-tests
+
+# build it!
+RUN yarn build
+
+
+FROM base as deployer
+WORKDIR /opt/optimism/packages/contracts
+# COPY ./ops/scripts/deployer.sh .
+# CMD ["yarn", "run", "deploy"]
+COPY ./ops/scripts/deployer-hardhat-remote.sh .
+COPY ./packages/contracts/genesis/hardhat-remote-addresses.latest.json ./genesis/addresses.json
+COPY ./packages/contracts/genesis/hardhat-remote-state-dump.latest.json ./genesis/state-dump.latest.json
+
+FROM base as deployer-bedrock
+WORKDIR /opt/optimism/packages/contracts-bedrock
+CMD ["yarn", "run", "deploy"]
+
+FROM base as data-transport-layer
+WORKDIR /opt/optimism/packages/data-transport-layer
+COPY ./ops/scripts/dtl.sh .
+CMD ["node", "dist/src/services/run.js"]
+
+
+FROM base as integration-tests
+WORKDIR /opt/optimism/integration-tests
+COPY ./ops/scripts/integration-tests.sh ./
+CMD ["yarn", "test:integration"]
+
+
+FROM base as message-relayer
+WORKDIR /opt/optimism/packages/message-relayer
+COPY ./ops/scripts/relayer.sh .
+CMD ["npm", "run", "start"]
+
+
+FROM base as tokamak-message-relayer
+WORKDIR /opt/optimism/packages/tokamak/message-relayer
+COPY ./ops/scripts/relayer.sh .
+CMD ["npm", "run", "start"]
+
+
+FROM base as fault-detector
+WORKDIR /opt/optimism/packages/fault-detector
+COPY ./ops/scripts/detector.sh .
+CMD ["npm", "run", "start"]
+
+
+FROM base as replica-healthcheck
+WORKDIR /opt/optimism/packages/replica-healthcheck
+ENTRYPOINT ["npm", "run", "start"]
+
+FROM base as drippie-mon
+WORKDIR /opt/optimism/packages/drippie-mon
+ENTRYPOINT ["npm", "run", "start"]
