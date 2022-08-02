@@ -268,7 +268,10 @@ describe('ERC721 Bridge', () => {
       // - Returns the address of the legitimate L1 token from its l1Token() getter.
       // - Allows the L2 bridge to call its burn() function.
       const FakeOptimismMintableERC721 = await (
-        await ethers.getContractFactory('FakeOptimismMintableERC721', bobWalletL2)
+        await ethers.getContractFactory(
+          'FakeOptimismMintableERC721',
+          bobWalletL2
+        )
       ).deploy(L1ERC721.address, L2ERC721Bridge.address)
       await FakeOptimismMintableERC721.deployed()
 

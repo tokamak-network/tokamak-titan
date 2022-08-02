@@ -1,0 +1,52 @@
+name: batch-submitter tests
+
+on:
+  push:
+    paths:
+      - 'batch-submitter/**'
+  pull_request:
+    paths:
+      - 'batch-submitter/**'
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: './batch-submitter'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - uses: actions/checkout@v3
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: batch-submitter
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: make
+
+      - name: Unit Test
+        run: go test -v ./...

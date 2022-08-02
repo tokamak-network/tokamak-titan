@@ -19,7 +19,7 @@
     "build": "hardhat compile && tsc && hardhat typechain",
     "build:ts": "tsc",
     "deploy": "hardhat deploy",
-    "test": "forge test",
+    "test-disabled": "forge test",
     "gas-snapshot": "forge snapshot",
     "storage-snapshot": "./scripts/storage-snapshot.sh",
     "slither": "slither .",
