@@ -23,8 +23,8 @@ curl \
 
 echo "Connected to L1."
 
-cp ./genesis/hardhat-remote-addresses.latest.json ./genesis/addresses.json
-cp ./genesis/hardhat-remote-state-dump.latest.json ./genesis/state-dump.latest.json
+cp ./genesis/local-addresses.latest.json ./genesis/addresses.json
+cp ./genesis/local-state-dump.latest.json ./genesis/state-dump.latest.json
 
 # service the addresses and dumps
 echo "Starting server."
