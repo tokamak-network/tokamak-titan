@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'packages/**'
+      - '!packages/contracts/genesis'
     branches:
       - 'main'
   pull_request:
     paths:
       - 'packages/**'
+      - '!packages/contracts/genesis'
     branches:
       - 'main'
   workflow_dispatch:
