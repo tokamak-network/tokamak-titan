@@ -3,7 +3,8 @@ name: Tokamak Optimism Publish (Nightly Version)
 on:
   push:
     paths:
-      - '!packages/contracts/genesis'
+      - '!packages/contracts/genesis/**'
+      - '!packages/contracts/deployments/**'
     branches:
       - "main"
 
