@@ -1,4 +1,10 @@
-const { Contract, providers, Wallet, utils } = require('ethers')
+const {
+  Contract,
+  ContractFactory,
+  providers,
+  Wallet,
+  utils,
+} = require('ethers')
 require('dotenv').config()
 
 const main = async () => {
@@ -10,13 +16,13 @@ const main = async () => {
 
   const FEE_TOKEN = env.FEE_TOKEN
 
-  // provider
+  // get provider
   const l1Provider = new providers.JsonRpcProvider(L1_NODE_WEB3_URL)
   const l2Provider = new providers.JsonRpcProvider(L2_NODE_WEB3_URL)
   const l1Wallet = new Wallet(PRIV_KEY).connect(l1Provider)
   const l2Wallet = new Wallet(PRIV_KEY).connect(l2Provider)
 
-  // load contract
+  // load addressManager contract
   const addressManagerInterface = new utils.Interface([
     'function getAddress(string _name) view returns (address address)',
   ])
@@ -26,27 +32,36 @@ const main = async () => {
     l1Wallet
   )
 
-  // get address
+  // load Tokamak_GasPriceOracle contract
   const TokamakGasPriceOracleAddress = await addressManager.getAddress(
     'Tokamak_GasPriceOracle'
   )
-
-  const TokamakGasPriceOracleInterface = new utils.Interface([
-    'function useTokamakAsFeeToken()',
-    'function useETHAsFeeToken()',
-    'function tokamakFeeTokenUsers(address) view returns (bool)',
-  ])
-  const Tokamak_GasPriceOracle = new Contract(
-    TokamakGasPriceOracleAddress,
-    TokamakGasPriceOracleInterface,
-    l2Wallet
+  const TokamakGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Tokamak_GasPriceOracle.sol/Tokamak_GasPriceOracle.json')
+  const factory__TokamakGasPriceOracle = new ContractFactory(
+    TokamakGasPriceOracleArtifact.abi,
+    TokamakGasPriceOracleArtifact.bytecode
   )
+  const Tokamak_GasPriceOracle = factory__TokamakGasPriceOracle
+    .attach(TokamakGasPriceOracleAddress)
+    .connect(l2Wallet)
+
+  // load L2Tokamak contract
+  const L2TokamakAddress = await addressManager.getAddress('L2TokamakToken')
+  const l2StandardERC20 = require('../../packages/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json')
+  const factory__L2StandardERC20 = new ContractFactory(
+    l2StandardERC20.abi,
+    l2StandardERC20.bytecode
+  )
+  const L2Tokamak = factory__L2StandardERC20
+    .attach(L2TokamakAddress)
+    .connect(l2Wallet)
 
   if (typeof FEE_TOKEN === 'undefined') {
     console.error(`FEE_TOKEN: ${FEE_TOKEN} is not supported`)
     return null
   }
 
+  // 1. Register ETH as fee token
   if (FEE_TOKEN.toLocaleUpperCase() === 'ETH') {
     // use eth as fee token
     const setEthAsFeeTokenTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
@@ -55,7 +70,9 @@ const main = async () => {
     // verify it
     const isTokamakAsFeeToken =
       await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(l2Wallet.address)
-    console.log(`isEthAsFeeToken: ${!isTokamakAsFeeToken}`)
+    console.log(`isEthAsFeeToken: ${isTokamakAsFeeToken}`)
+
+    // 2. Register TOKAMAK as fee token
   } else if (FEE_TOKEN.toLocaleUpperCase() === 'TOKAMAK') {
     // use tokamak as fee token
     const setTokamakAsFeeTokenTx =
@@ -66,6 +83,58 @@ const main = async () => {
     const isTokamakAsFeeToken =
       await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(l2Wallet.address)
     console.log(`isTokamakAsFeeToken: ${isTokamakAsFeeToken}`)
+
+    const amount = utils.parseEther('0.01')
+    const other = '0x1234123412341234123412341234123412341234'
+    const ETHBalanceBefore = await l2Wallet.getBalance()
+    const TokamakBalanceBefore = await L2Tokamak.balanceOf(l2Wallet.address)
+    console.log(
+      `Balance ETH Before: ${utils.formatEther(ETHBalanceBefore)} ETH`
+    )
+    console.log(
+      `Balance TOKAMAK Before: ${utils.formatEther(
+        TokamakBalanceBefore
+      )} TOKAMAK`
+    )
+
+    const unsigned = await l2Wallet.populateTransaction({
+      to: other,
+      value: amount,
+      gasLimit: 500000,
+    })
+
+    const tx = await l2Wallet.sendTransaction(unsigned)
+    console.log('txHash: ', tx.hash)
+    const receipt = await tx.wait()
+    if (receipt.status === 1) {
+      const ETHBalanceAfter = await l2Wallet.getBalance()
+      const TokamakBalanceAfter = await L2Tokamak.balanceOf(l2Wallet.address)
+
+      console.log(
+        `Balance ETH After: ${utils.formatEther(ETHBalanceAfter)} ETH`
+      )
+      console.log(
+        `Balance TOKAMAK After: ${utils.formatEther(
+          TokamakBalanceAfter
+        )} TOKAMAK`
+      )
+
+      const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
+      const usedTOKAMAK = TokamakBalanceBefore.sub(TokamakBalanceAfter)
+      console.log(
+        'ETHBalanceAfter - ETHBalanceBefore: ',
+        utils.formatEther(usedETH)
+      )
+      console.log(
+        'TokamakBalanceAfter - TokamakBalanceBefore: ',
+        utils.formatEther(usedTOKAMAK)
+      )
+      const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
+      console.log('priceRatio: ', priceRatio)
+      // tokamakFee = receipt.gasUsed * tx.gasPrice * priceRatio
+      const txTokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+      console.log('txTokamakFee: ', utils.formatEther(txTokamakFee))
+    }
   } else {
     console.error(`FEE_TOKEN: ${FEE_TOKEN} is not supported`)
   }
