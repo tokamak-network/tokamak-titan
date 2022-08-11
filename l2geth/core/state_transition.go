@@ -143,6 +143,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 			// l1Fee = l1GasUsed * l1GasPrice * scalar
 			l1Fee, _ = fees.CalculateL1MsgFee(msg, evm.StateDB, nil)
 		}
+		// If feeTokenSelection is 1, from use TOKAMAK as fee token
 		feeTokenSelection := evm.StateDB.GetFeeTokenSelection(msg.From())
 		// if TOKAMAK is fee token, the gas price is 0
 		if feeTokenSelection.Cmp(common.Big1) == 0 {
@@ -232,6 +233,7 @@ func (st *StateTransition) buyGas() error {
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
+	// st.gas = msg.gasLimit
 	st.gas += st.msg.Gas()
 
 	st.initialGas = st.msg.Gas()
@@ -240,6 +242,7 @@ func (st *StateTransition) buyGas() error {
 	if st.isTokamakFeeTokenSelect {
 		st.state.SubTokamakBalance(st.msg.From(), tokamakval)
 	}
+	// subtract L1 fee from ETH balance of from account
 	st.state.SubBalance(st.msg.From(), mgval)
 	return nil
 }
@@ -247,6 +250,7 @@ func (st *StateTransition) buyGas() error {
 func (st *StateTransition) preCheck() error {
 	// Make sure this transaction's nonce is correct.
 	if st.msg.CheckNonce() {
+		// if tx is L2 sequencer transaction, passed
 		if rcfg.UsingOVM {
 			if st.msg.QueueOrigin() == types.QueueOriginL1ToL2 {
 				return st.buyGas()
@@ -287,7 +291,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if err != nil {
 		return nil, 0, false, err
 	}
-	// st.gas - intrnsic gas
+	// st.gas = st.gas - intrnsic gas
 	if err = st.useGas(gas); err != nil {
 		return nil, 0, false, err
 	}
@@ -327,12 +331,14 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	// st.gas = st.gas + refund(st.gasUsed() / 2)
 	st.refundGas()
 
-	// TOKMAK is used to pay for the gas fee
+	// TOKAMAK is used to pay for the gas fee
+	// add L2 fee amount to OvmTokamakGasPricOracle (fee vault)
 	if st.isTokamakFeeTokenSelect {
 		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
 		tokamakval := new(big.Int).Mul(ethval, st.tokamakPriceRatio)
 		st.state.AddTokamakBalance(rcfg.OvmTokamakGasPricOracle, tokamakval)
 	}
+	// coinbase reward
 	if rcfg.UsingOVM {
 		// The L2 Fee is the same as the fee that is charged in the normal geth
 		// codepath. Add the L1 fee to the L2 fee for the total fee that is sent
@@ -356,7 +362,7 @@ func (st *StateTransition) refundGas() {
 	if refund > st.state.GetRefund() {
 		refund = st.state.GetRefund()
 	}
-	// st.gas + refund
+	// st.gas = st.gas + refund
 	st.gas += refund
 
 	if st.isTokamakFeeTokenSelect {

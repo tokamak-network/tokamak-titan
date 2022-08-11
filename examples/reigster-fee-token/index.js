@@ -25,7 +25,6 @@ const main = async () => {
     addressManagerInterface,
     l1Wallet
   )
-
   // get address
   const TokamakGasPriceOracleAddress = await addressManager.getAddress(
     'Tokamak_GasPriceOracle'
@@ -36,6 +35,7 @@ const main = async () => {
     'function useETHAsFeeToken()',
     'function tokamakFeeTokenUsers(address) view returns (bool)',
   ])
+
   const Tokamak_GasPriceOracle = new Contract(
     TokamakGasPriceOracleAddress,
     TokamakGasPriceOracleInterface,
@@ -60,7 +60,7 @@ const main = async () => {
     const validateFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
       l2Wallet.address
     )
-    console.log(`isEthAsFeeToken: ${validateFeeToken}`)
+    console.log(`isTokamakAsFeeToken: ${validateFeeToken}`)
   } else if (FEE_TOKEN.toLocaleUpperCase() === 'TOKAMAK') {
     if (isTokamakAsFeeToken === false) {
       // use Tokamak as fee token

@@ -115,10 +115,6 @@ const main = async () => {
           'TokamakBalanceAfter - TokamakBalanceBefore: ',
           utils.formatEther(usedTOKAMAK)
         )
-        const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-        // tokamakFee = receipt.gasUsed * tx.gasPrice * priceRatio
-        const txTokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-        console.log('txTokamakFee: ', utils.formatEther(txTokamakFee))
       }
     } else {
       console.log(
@@ -171,7 +167,6 @@ const main = async () => {
             TokamakBalanceAfter
           )} TOKAMAK`
         )
-
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTOKAMAK = TokamakBalanceBefore.sub(TokamakBalanceAfter)
         console.log(
@@ -182,11 +177,11 @@ const main = async () => {
           'TokamakBalanceAfter - TokamakBalanceBefore: ',
           utils.formatEther(usedTOKAMAK)
         )
-        const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-        // tokamakFee = receipt.gasUsed * tx.gasPrice * priceRatio
-        const txTokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-        console.log('txTokamakFee: ', utils.formatEther(txTokamakFee))
       }
+
+      const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
+      const txTokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+      console.log('L2TokamakFee: ', utils.formatEther(txTokamakFee))
     } else {
       console.log(
         `The address ${l2Wallet.address} is not registered ${FEE_TOKEN} as fee token`
