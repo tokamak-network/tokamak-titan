@@ -970,6 +970,7 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 		isTokamakFeeTokenSelect = true
 	}
 
+	// cost = tx.data.amount
 	cost := tx.Value()
 	// Prevent transactions without enough balance from
 	// being accepted by the chain but allow through 0
@@ -1010,10 +1011,9 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 
 	// Ensure that TOKAMAK balance is enough for the gas fee
 	if isTokamakFeeTokenSelect {
-		// Calcuate estimated tokamak cost
 		tokamakPriceRatio := state.GetTokamakPriceRatio()
-		ethCost := new(big.Int).Mul(new(big.Int).SetUint64(tx.Gas()), tx.GasPrice())
-		tokamakCost := new(big.Int).Mul(ethCost, tokamakPriceRatio)
+		// Total Tokamak fee
+		tokamakCost := new(big.Int).Mul(tokamakPriceRatio, fee)
 		if state.GetTokamakBalance(from).Cmp(tokamakCost) < 0 {
 			return fmt.Errorf("Invalid transaction: %w", core.ErrInsufficientTokamakFunds)
 		}
