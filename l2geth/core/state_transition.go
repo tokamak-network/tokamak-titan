@@ -201,49 +201,47 @@ func (st *StateTransition) useGas(amount uint64) error {
 }
 
 func (st *StateTransition) buyGas() error {
-	// msg.gas * st.gasPrice
-	mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
+
+	// calculate L2 fee
+	ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 	tokamakval := new(big.Int)
+
 	if rcfg.UsingOVM {
-		// Only charge the L1 fee for QueueOrigin sequencer transactions
+		// charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			mgval = mgval.Add(mgval, st.l1Fee)
+			ethval = ethval.Add(ethval, st.l1Fee)
 			if st.msg.CheckNonce() {
 				log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
 			}
 		}
 	}
-	// ETH balance check
-	if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
-		return errInsufficientBalanceForGas
-	}
-
+	// fee token is TOKAMAK
 	if st.isTokamakFeeTokenSelect {
 		// note that in this case, st.gasPrice = 0 but st.msg.GasPrice() is NOT zero
-		// st.msg.Gas() = st.msg.gasLimit
-		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 		// msg.Gas * msg.GasPrice * tokamakPriceRatio
 		tokamakval = new(big.Int).Mul(ethval, st.tokamakPriceRatio)
 		// TOKAMAK balance check
 		if st.state.GetTokamakBalance(st.msg.From()).Cmp(tokamakval) < 0 {
 			return errInsufficientTokamakBalanceForGas
 		}
+		st.state.SubTokamakBalance(st.msg.From(), tokamakval)
+		// fee token is ETH
+	} else {
+		if st.state.GetBalance(st.msg.From()).Cmp(ethval) < 0 {
+			return errInsufficientBalanceForGas
+		}
+		st.state.SubBalance(st.msg.From(), ethval)
 	}
-	// deduct st.msg.Gas in the gaspool
+
+	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
-	// st.gas = msg.gasLimit
+	// st.gas = st.msg.gasLimit
 	st.gas += st.msg.Gas()
-
+	// st.initialGas = st.msg.gasLimit
 	st.initialGas = st.msg.Gas()
-	// Charge TOKAMAK first so contracts can revert if TOKAMAK balance is insufficient
-	// from TOKAMAK balance - tokamakval
-	if st.isTokamakFeeTokenSelect {
-		st.state.SubTokamakBalance(st.msg.From(), tokamakval)
-	}
-	// subtract L1 fee from ETH balance of from account
-	st.state.SubBalance(st.msg.From(), mgval)
+
 	return nil
 }
 
