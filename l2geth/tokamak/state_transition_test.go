@@ -77,6 +77,7 @@ func TestNewStateTransaction(t *testing.T) {
 	st := core.NewStateTransition(evm, msg, new(core.GasPool).AddGas(tx.Gas()))
 
 	// Insufficient Tokamak token
+	// it should be occurred error
 	if _, _, _, err := st.TransitionDb(); err == nil {
 		t.Fatalf("shoul not execute transaction")
 	}
@@ -84,6 +85,8 @@ func TestNewStateTransaction(t *testing.T) {
 	// Add suffficient funds for the test account
 	addTokamakBalance := big.NewInt(500000000000000)
 	statedb.AddTokamakBalance(msg.From(), addTokamakBalance)
+
+	// only l2 fee
 	_, gasUsed, _, err := st.TransitionDb()
 	if err != nil {
 		t.Fatalf("failed to execute transaction: %v", err)
@@ -91,7 +94,7 @@ func TestNewStateTransaction(t *testing.T) {
 
 	// Check the Tokamak balance of from account
 	userTokamakBalance := statedb.GetTokamakBalance(msg.From())
-	// Check the Tokamak balance of OvmTokamakGasPricOracle
+	//  Tokamak balance of OvmTokamakGasPricOracle is equal to gasUsed
 	vaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
 	// gasUsed * msg.GasPrice = vaultBalance
 	if new(big.Int).Mul(big.NewInt(int64(gasUsed)), msg.GasPrice()).Cmp(vaultBalance) != 0 {
@@ -103,6 +106,7 @@ func TestNewStateTransaction(t *testing.T) {
 		t.Fatal("failed to calculate tokamak fee")
 	}
 
+	// Add l1 security fee
 	preUserTokamakBalance := statedb.GetTokamakBalance(msg.From())
 	preVaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
 
@@ -110,7 +114,6 @@ func TestNewStateTransaction(t *testing.T) {
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.OverheadSlot, common.BigToHash(big.NewInt(2750)))
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.ScalarSlot, common.BigToHash(big.NewInt(1)))
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.L2GasPriceSlot, common.BigToHash(big.NewInt(1)))
-	statedb.SetTokamakPriceRatio(big.NewInt(2000))
 
 	unsignedTx = types.NewTransaction(2, common.HexToAddress("0x00000000000000000000000000000000deadbeef"), new(big.Int), 5000000, big.NewInt(1), []byte{})
 	tx, err = types.SignTx(unsignedTx, signer, privateKeyECDSA)
@@ -123,22 +126,28 @@ func TestNewStateTransaction(t *testing.T) {
 	}
 	st = core.NewStateTransition(evm, msg, new(core.GasPool).AddGas(tx.Gas()))
 
-	// Insufficient Tokamak blalance of from account
 	_, gasUsed, _, err = st.TransitionDb()
-	if err == nil {
+	if err != nil {
 		t.Fatalf("failed to execute transaction: %v", err)
 	}
 
 	afterUserTokamakBalance := statedb.GetTokamakBalance(msg.From())
 	afterVaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
 
+	// user pay L1 fee + L2 fee
 	userPaidTokamakFee := new(big.Int).Sub(preUserTokamakBalance, afterUserTokamakBalance)
+	// Tokamak_GasPriceOracle vault is associated with L2 fee
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
+	l1FeeTokamak := new(big.Int).Mul(big.NewInt(4126), big.NewInt(1))
 
-	if userPaidTokamakFee.Cmp(vaultReceivedFee) != 0 {
+	// userPaidTokamakFee = vaultReceivedFee + l1FeeTokamak
+	// userPaidTokamakFee must be greater than vaultReceivedFee
+	if userPaidTokamakFee.Cmp(vaultReceivedFee) != 1 {
 		t.Fatal("failed to charge tokamak fee")
 	}
-	estimatedCost := new(big.Int).Mul(new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1), big.NewInt(2000))
+	// estimated cost = l1 fee + l2 fee = st.l1Fee + (gasUsed * l2 gasprice * tokamakPriceRatio)
+	estimatedL2fee := new(big.Int).Mul(new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1), big.NewInt(1))
+	estimatedCost := new(big.Int).Add(l1FeeTokamak, estimatedL2fee)
 	if userPaidTokamakFee.Cmp(estimatedCost) != 0 {
 		t.Fatal("failed to charge l1 security fee")
 	}
