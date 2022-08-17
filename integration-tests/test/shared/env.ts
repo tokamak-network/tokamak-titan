@@ -57,6 +57,7 @@ export class OptimismEnv {
     this.verifierProvider = args.verifierProvider
   }
 
+  // set env and return OptimismEnv object
   static async new(): Promise<OptimismEnv> {
     let bridgeOverrides: BridgeAdapterData
     if (envConfig.L1_STANDARD_BRIDGE) {

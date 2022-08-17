@@ -39,13 +39,14 @@ const deployFn: DeployFunction = async (hre) => {
     )
 
     for (const account of accounts) {
+
       const wallet = new hre.ethers.Wallet(
         account.privateKey,
         hre.ethers.provider
       )
-      // const balance = await wallet.getBalance()
-      // const depositAmount = balance.div(2) // Deposit half of the wallet's balance into L2.
+
       const depositAmount = hre.ethers.utils.parseEther('10')
+      // to address is l1 standard bridge address
       const fundETHTx = await L1StandardBridge.connect(wallet).depositETH(
         8_000_000,
         '0x',
@@ -66,12 +67,14 @@ const deployFn: DeployFunction = async (hre) => {
       const depositTokamakAmount = hre.ethers.utils.parseEther('5000')
       const L2TokamakAddress = predeploys.L2StandardERC20
       // ERC20 approve
+      // to address is l1token address
       const approveTx = await L1TokamakToken.connect(TokamakHolder).approve(
         L1StandardBridge.address,
         depositTokamakAmount
       )
       await approveTx.wait()
       // deposit TOKAMAK
+      // to address is l1 standard bridge address
       const fundTokamakTx = await L1StandardBridge.connect(
         TokamakHolder
       ).depositERC20To(
@@ -84,7 +87,11 @@ const deployFn: DeployFunction = async (hre) => {
         { gasLimit: 2_000_000 } // Idk, gas estimation was broken and this fixes it.
       )
       await fundTokamakTx.wait()
-      console.log(`✓ Funded ${wallet.address} on L2 with 5000.0 TOKAMAK`)
+      console.log(
+        `✓ Funded ${wallet.address} on L2 with ${hre.ethers.utils.formatEther(
+          depositTokamakAmount
+        )} TOKAMAK`
+      )
     }
   }
 }

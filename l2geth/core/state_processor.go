@@ -124,7 +124,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	L2TokamakFee := new(big.Int)
 	if feeTokenSelection.Cmp(common.Big1) == 0 {
 		tokamakPriceRatio := statedb.GetTokamakPriceRatio()
-		// L2TokamakFee = gas * msg.GasPrice() * tokamakPriceRatio
+		// L2TokamakFee = gasUsed * msg.GasPrice() * tokamakPriceRatio
 		L2TokamakFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tokamakPriceRatio))
 	}
 

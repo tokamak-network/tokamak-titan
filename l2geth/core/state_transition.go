@@ -143,6 +143,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 			// l1Fee = l1GasUsed * l1GasPrice * scalar
 			l1Fee, _ = fees.CalculateL1MsgFee(msg, evm.StateDB, nil)
 		}
+		// If feeTokenSelection is 1, from use TOKAMAK as fee token
 		feeTokenSelection := evm.StateDB.GetFeeTokenSelection(msg.From())
 		// if TOKAMAK is fee token, the gas price is 0
 		if feeTokenSelection.Cmp(common.Big1) == 0 {
@@ -200,53 +201,54 @@ func (st *StateTransition) useGas(amount uint64) error {
 }
 
 func (st *StateTransition) buyGas() error {
-	// msg.gas * st.gasPrice
-	mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
+
+	// calculate L2 fee
+	ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 	tokamakval := new(big.Int)
+
 	if rcfg.UsingOVM {
-		// Only charge the L1 fee for QueueOrigin sequencer transactions
+		// charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			mgval = mgval.Add(mgval, st.l1Fee)
+			ethval = ethval.Add(ethval, st.l1Fee)
 			if st.msg.CheckNonce() {
 				log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
 			}
 		}
 	}
-	// ETH balance check
-	if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
-		return errInsufficientBalanceForGas
-	}
-
+	// fee token is TOKAMAK
 	if st.isTokamakFeeTokenSelect {
 		// note that in this case, st.gasPrice = 0 but st.msg.GasPrice() is NOT zero
-		// st.msg.Gas() = st.msg.gasLimit
-		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 		// msg.Gas * msg.GasPrice * tokamakPriceRatio
 		tokamakval = new(big.Int).Mul(ethval, st.tokamakPriceRatio)
 		// TOKAMAK balance check
 		if st.state.GetTokamakBalance(st.msg.From()).Cmp(tokamakval) < 0 {
 			return errInsufficientTokamakBalanceForGas
 		}
+		st.state.SubTokamakBalance(st.msg.From(), tokamakval)
+		// fee token is ETH
+	} else {
+		if st.state.GetBalance(st.msg.From()).Cmp(ethval) < 0 {
+			return errInsufficientBalanceForGas
+		}
+		st.state.SubBalance(st.msg.From(), ethval)
 	}
-	// deduct st.msg.Gas in the gaspool
+
+	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
+	// st.gas = st.msg.gasLimit
 	st.gas += st.msg.Gas()
-
+	// st.initialGas = st.msg.gasLimit
 	st.initialGas = st.msg.Gas()
-	// Charge TOKAMAK first so contracts can revert if TOKAMAK balance is insufficient
-	// from TOKAMAK balance - tokamakval
-	if st.isTokamakFeeTokenSelect {
-		st.state.SubTokamakBalance(st.msg.From(), tokamakval)
-	}
-	st.state.SubBalance(st.msg.From(), mgval)
+
 	return nil
 }
 
 func (st *StateTransition) preCheck() error {
 	// Make sure this transaction's nonce is correct.
 	if st.msg.CheckNonce() {
+		// if tx is L2 sequencer transaction, passed
 		if rcfg.UsingOVM {
 			if st.msg.QueueOrigin() == types.QueueOriginL1ToL2 {
 				return st.buyGas()
@@ -287,7 +289,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if err != nil {
 		return nil, 0, false, err
 	}
-	// st.gas - intrnsic gas
+	// st.gas = st.gas - intrnsic gas
 	if err = st.useGas(gas); err != nil {
 		return nil, 0, false, err
 	}
@@ -327,12 +329,14 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	// st.gas = st.gas + refund(st.gasUsed() / 2)
 	st.refundGas()
 
-	// TOKMAK is used to pay for the gas fee
+	// TOKAMAK is used to pay for the gas fee
+	// add L2 fee amount to OvmTokamakGasPricOracle (fee vault)
 	if st.isTokamakFeeTokenSelect {
 		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
 		tokamakval := new(big.Int).Mul(ethval, st.tokamakPriceRatio)
 		st.state.AddTokamakBalance(rcfg.OvmTokamakGasPricOracle, tokamakval)
 	}
+	// coinbase reward
 	if rcfg.UsingOVM {
 		// The L2 Fee is the same as the fee that is charged in the normal geth
 		// codepath. Add the L1 fee to the L2 fee for the total fee that is sent
@@ -356,7 +360,7 @@ func (st *StateTransition) refundGas() {
 	if refund > st.state.GetRefund() {
 		refund = st.state.GetRefund()
 	}
-	// st.gas + refund
+	// st.gas = st.gas + refund
 	st.gas += refund
 
 	if st.isTokamakFeeTokenSelect {
