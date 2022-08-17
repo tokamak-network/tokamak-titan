@@ -18,7 +18,7 @@ import (
 	"github.com/ethereum-optimism/optimism/l2geth/tests"
 )
 
-func TestNewStateTransaction(t *testing.T) {
+func TestNewStateTransactionForEth(t *testing.T) {
 
 	// generates unsigned transactions
 	unsignedTx := types.NewTransaction(1, common.HexToAddress("0x00000000000000000000000000000000deadbeef"), new(big.Int), 5000000, big.NewInt(1), []byte{})
@@ -62,7 +62,6 @@ func TestNewStateTransaction(t *testing.T) {
 	}
 	statedb := tests.MakePreState(rawdb.NewMemoryDatabase(), alloc)
 	rcfg.UsingOVM = true
-	rcfg.OvmTokamakGasPricOracle = common.HexToAddress("0x4200000000000000000000000000000000000024")
 
 	evm := vm.NewEVM(context, statedb, params.MainnetChainConfig, vm.Config{})
 	msg, err := tx.AsMessage(signer)
@@ -70,45 +69,42 @@ func TestNewStateTransaction(t *testing.T) {
 		t.Fatalf("failed to prepare transaction for tracing: %v", err)
 	}
 
-	// Set Tokamak as the fee token
-	statedb.SetTokamakAsFeeToken(msg.From())
-	statedb.SetTokamakPriceRatio(big.NewInt(1))
-
+	// TEST 1: Eth balance is 0
 	st := core.NewStateTransition(evm, msg, new(core.GasPool).AddGas(tx.Gas()))
 
-	// Insufficient Tokamak token
-	// it should be occurred error
+	// Insufficient Eth balance
+	// it should be occurred error in buyGas()
 	if _, _, _, err := st.TransitionDb(); err == nil {
 		t.Fatalf("shoul not execute transaction")
 	}
 
 	// Add suffficient funds for the test account
-	addTokamakBalance := big.NewInt(500000000000000)
-	statedb.AddTokamakBalance(msg.From(), addTokamakBalance)
+	addEthBalance := big.NewInt(500000000000000)
+	statedb.AddBalance(msg.From(), addEthBalance)
 
-	// only l2 fee
+	// TEST 2: Only l2 fee
 	_, gasUsed, _, err := st.TransitionDb()
 	if err != nil {
 		t.Fatalf("failed to execute transaction: %v", err)
 	}
 
-	// Check the Tokamak balance of from account
-	userTokamakBalance := statedb.GetTokamakBalance(msg.From())
-	//  Tokamak balance of OvmTokamakGasPricOracle is equal to gasUsed
-	vaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
-	// gasUsed * msg.GasPrice = vaultBalance
+	// Check the Eth balance of from account
+	userEthBalance := statedb.GetBalance(msg.From())
+	//  Eth balance of evm.Coinbase is equal to gasUsed * gasPrice
+	vaultBalance := statedb.GetBalance(evm.Coinbase)
+	// vaultBalance = gasUsed * msg.GasPrice
 	if new(big.Int).Mul(big.NewInt(int64(gasUsed)), msg.GasPrice()).Cmp(vaultBalance) != 0 {
-		t.Fatal("failed to calculate tokamak fee")
+		t.Fatal("failed to calculate eth fee")
 	}
 
-	// addTokamakBalance - userTokamakBalance = vaultBalance
-	if new(big.Int).Sub(addTokamakBalance, userTokamakBalance).Cmp(vaultBalance) != 0 {
-		t.Fatal("failed to calculate tokamak fee")
+	// addEthBalance - userEthBalance = vaultBalance
+	if new(big.Int).Sub(addEthBalance, userEthBalance).Cmp(vaultBalance) != 0 {
+		t.Fatal("failed to calculate eth fee")
 	}
 
-	// Add l1 security fee
-	preUserTokamakBalance := statedb.GetTokamakBalance(msg.From())
-	preVaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
+	// TEST 3: Add l1 security fee
+	preUserEthBalance := statedb.GetBalance(msg.From())
+	preVaultBalance := statedb.GetBalance(evm.Coinbase)
 
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.L1GasPriceSlot, common.BigToHash(common.Big1))
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.OverheadSlot, common.BigToHash(big.NewInt(2750)))
@@ -131,24 +127,24 @@ func TestNewStateTransaction(t *testing.T) {
 		t.Fatalf("failed to execute transaction: %v", err)
 	}
 
-	afterUserTokamakBalance := statedb.GetTokamakBalance(msg.From())
-	afterVaultBalance := statedb.GetTokamakBalance(rcfg.OvmTokamakGasPricOracle)
+	afterUserEthBalance := statedb.GetBalance(msg.From())
+	afterVaultBalance := statedb.GetBalance(evm.Coinbase)
 
 	// user pay L1 fee + L2 fee
-	userPaidTokamakFee := new(big.Int).Sub(preUserTokamakBalance, afterUserTokamakBalance)
-	// Tokamak_GasPriceOracle vault is associated with L2 fee
+	userPaidEthFee := new(big.Int).Sub(preUserEthBalance, afterUserEthBalance)
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
-	l1FeeTokamak := new(big.Int).Mul(big.NewInt(4126), big.NewInt(1))
+	// calculated l1 fee is 4126
+	l1FeeEth := big.NewInt(4126)
 
-	// userPaidTokamakFee = vaultReceivedFee + l1FeeTokamak
-	// userPaidTokamakFee must be greater than vaultReceivedFee
-	if userPaidTokamakFee.Cmp(vaultReceivedFee) != 1 {
-		t.Fatal("failed to charge tokamak fee")
+	// userPaidEthFee = vaultReceivedFee + l1FeeEth
+	// userPaidEthFee must be equal to vaultReceivedFee
+	if userPaidEthFee.Cmp(vaultReceivedFee) != 0 {
+		t.Fatal("failed to charge Eth fee")
 	}
-	// estimated cost = l1 fee + l2 fee = st.l1Fee + (gasUsed * l2 gasprice * tokamakPriceRatio)
-	estimatedL2fee := new(big.Int).Mul(new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1), big.NewInt(1))
-	estimatedCost := new(big.Int).Add(l1FeeTokamak, estimatedL2fee)
-	if userPaidTokamakFee.Cmp(estimatedCost) != 0 {
+	// estimated cost = l1 fee + l2 fee = st.l1Fee + (gasUsed * l2 gasprice)
+	estimatedL2fee := new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1)
+	estimatedCost := new(big.Int).Add(l1FeeEth, estimatedL2fee)
+	if userPaidEthFee.Cmp(estimatedCost) != 0 {
 		t.Fatal("failed to charge l1 security fee")
 	}
 
