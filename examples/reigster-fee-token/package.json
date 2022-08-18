@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "clean": "rm -rf node_modules && rm yarn.lock",
-    "use:tokamak": "FEE_TOKEN=TOKAMAK ADDRESS_MANAGER_ADDRESS=0xCf8355dF541e43bBB8E2a4c442942Eecd0aA1810 node ./index.js",
-    "use:eth": "ADDRESS_MANAGER_ADDRESS=0xCf8355dF541e43bBB8E2a4c442942Eecd0aA1810 FEE_TOKEN=ETH node ./index.js"
+    "use:tokamak": "FEE_TOKEN=TOKAMAK node ./index.js",
+    "use:eth": "FEE_TOKEN=ETH node ./index.js"
   },
   "license": "MIT",
   "dependencies": {

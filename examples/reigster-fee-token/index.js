@@ -1,14 +1,22 @@
-const { Contract, providers, Wallet, utils } = require('ethers')
+const {
+  Contract,
+  providers,
+  Wallet,
+  utils,
+  ContractFactory,
+} = require('ethers')
 require('dotenv').config()
 
 const main = async () => {
   const env = process.env
   const L1_NODE_WEB3_URL = env.L1_NODE_WEB3_URL
   const L2_NODE_WEB3_URL = env.L2_NODE_WEB3_URL
-  const ADDRESS_MANAGER_ADDRESS = env.ADDRESS_MANAGER_ADDRESS
   const PRIV_KEY = env.PRIV_KEY
 
   const FEE_TOKEN = env.FEE_TOKEN
+
+  const TOKAMAK_GAS_PRICE_ORACLE_ADDRESS =
+    '0x4200000000000000000000000000000000000025'
 
   // provider
   const l1Provider = new providers.JsonRpcProvider(L1_NODE_WEB3_URL)
@@ -16,31 +24,18 @@ const main = async () => {
   const l1Wallet = new Wallet(PRIV_KEY).connect(l1Provider)
   const l2Wallet = new Wallet(PRIV_KEY).connect(l2Provider)
 
-  // load contract
-  const addressManagerInterface = new utils.Interface([
-    'function getAddress(string _name) view returns (address address)',
-  ])
-  const addressManager = new Contract(
-    ADDRESS_MANAGER_ADDRESS,
-    addressManagerInterface,
-    l1Wallet
-  )
-  // get address
-  const TokamakGasPriceOracleAddress = await addressManager.getAddress(
-    'Tokamak_GasPriceOracle'
-  )
+  const sleep = (ms) => {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
 
-  const TokamakGasPriceOracleInterface = new utils.Interface([
-    'function useTokamakAsFeeToken()',
-    'function useETHAsFeeToken()',
-    'function tokamakFeeTokenUsers(address) view returns (bool)',
-  ])
-
-  const Tokamak_GasPriceOracle = new Contract(
-    TokamakGasPriceOracleAddress,
-    TokamakGasPriceOracleInterface,
-    l2Wallet
+  const TokamakGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Tokamak_GasPriceOracle.sol/Tokamak_GasPriceOracle.json')
+  const factory__TokamakGasPriceOracle = new ContractFactory(
+    TokamakGasPriceOracleArtifact.abi,
+    TokamakGasPriceOracleArtifact.bytecode
   )
+  const Tokamak_GasPriceOracle = factory__TokamakGasPriceOracle
+    .attach(TOKAMAK_GAS_PRICE_ORACLE_ADDRESS)
+    .connect(l2Wallet)
 
   const isTokamakAsFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
     l2Wallet.address
@@ -57,10 +52,13 @@ const main = async () => {
       const setEthAsFeeTokenTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
       await setEthAsFeeTokenTx.wait()
     }
+    await sleep(2000)
     const validateFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
       l2Wallet.address
     )
-    console.log(`isTokamakAsFeeToken: ${validateFeeToken}`)
+    if (validateFeeToken === false) {
+      console.log(`Now ${l2Wallet.address} is using ${FEE_TOKEN} as fee token`)
+    }
   } else if (FEE_TOKEN.toLocaleUpperCase() === 'TOKAMAK') {
     if (isTokamakAsFeeToken === false) {
       // use Tokamak as fee token
@@ -68,10 +66,13 @@ const main = async () => {
         await Tokamak_GasPriceOracle.useTokamakAsFeeToken()
       await setTokamakAsFeeTokenTx.wait()
     }
+    await sleep(2000)
     const validateFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
       l2Wallet.address
     )
-    console.log(`isTokamakAsFeeToken: ${validateFeeToken}`)
+    if (validateFeeToken === true) {
+      console.log(`Now ${l2Wallet.address} is using ${FEE_TOKEN} as fee token`)
+    }
   } else {
     console.error(`FEE_TOKEN: ${FEE_TOKEN} is not supported`)
   }
