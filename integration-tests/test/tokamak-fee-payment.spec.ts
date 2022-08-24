@@ -34,9 +34,9 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   before(async () => {
     env = await OptimismEnv.new()
 
-    L1Tokamak = getContractFactory('TOKAMAK')
-    .attach(process.env.L1_TOKEN_ADDRESS)
-    .connect(env.l1Wallet)
+    // L1Tokamak = getContractFactory('TOKAMAK')
+    // .attach(process.env.L1_TOKEN_ADDRESS)
+    // .connect(env.l1Wallet)
 
     L2Tokamak = getContractFactory('L2StandardERC20')
       .attach(predeploys.L2StandardERC20)
@@ -514,48 +514,6 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await expect(Tokamak_GasPriceOracle.withdrawTOKAMAK()).to.be.rejected
   })
 
-  // it('{tag:tokamak} should be able to withdraw fees back to L1 once the minimum is met', async function () {
-  //   const feeWallet = await Tokamak_GasPriceOracle.feeWallet()
-  //   const balanceBefore = await L1Tokamak.balanceOf(feeWallet)
-  //   const withdrawalAmount = await Tokamak_GasPriceOracle.MIN_WITHDRAWAL_AMOUNT()
-
-  //   const l2WalletBalance = await L2Tokamak.balanceOf(env.l2Wallet.address)
-  //   if (l2WalletBalance.lt(withdrawalAmount)) {
-  //     console.log(
-  //       `NOTICE: must have at least ${ethers.utils.formatEther(
-  //         withdrawalAmount
-  //       )} TOKAMAK on L2 to execute this test, skipping`
-  //     )
-  //     this.skip()
-  //   }
-
-  //   // Transfer the minimum required to withdraw.
-  //   const tx = await L2Tokamak.transfer(
-  //     Tokamak_GasPriceOracle.address,
-  //     withdrawalAmount
-  //   )
-  //   await tx.wait()
-
-  //   const vaultBalance = await L2Tokamak.balanceOf(Tokamak_GasPriceOracle.address)
-
-  //   // Submit the withdrawal.
-  //   const withdrawTx = await Tokamak_GasPriceOracle.withdrawTOKAMAK({
-  //     gasPrice: 0,
-  //   })
-
-  //   // Wait for the withdrawal to be relayed to L1.
-  //   await withdrawTx.wait()
-  //   // call exception
-  //   await env.relayXDomainMessages(withdrawTx)
-  //   await env.waitForXDomainTransaction(withdrawTx)
-
-  //   // Balance difference should be equal to old L2 balance.
-  //   const balanceAfter = await L1Tokamak.balanceOf(feeWallet)
-  //   expect(balanceAfter.sub(balanceBefore)).to.deep.equal(
-  //     BigNumber.from(vaultBalance)
-  //   )
-  // })
-
   // Tokamak Ethereum special fields on the receipt
   it('{tag:tokamak} includes L2 Tokamak fee', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
@@ -591,7 +549,6 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   })
 
   // Tokamak Ethereum special fields on the receipt
-  // gasprice가 4 wei 이상이면 eth_sendRawTransaction 에서 에러가 나서 4까지만 for 문 돌림
   it('{tag:tokamak} includes L2 Tokamak fee with different gas price', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
@@ -635,8 +592,6 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   it('{tag:tokamak} should pay TOKAMAK to deploy contracts', async () => {
     await setPrices(env, 1000)
 
-    // const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee('0x')
-
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
     const TokamakBalanceBefore = await L2Tokamak.balanceOf(env.l2Wallet.address)
     const ETHFeeVaultBalanceBefore = await env.l2Wallet.provider.getBalance(
@@ -672,142 +627,126 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     )
     const ETHFeeVaultBalanceDiff = ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)
 
-    // expect(l1Fee).to.deep.equal(BigNumber.from(json.l1Fee))
-    // expect(TokamakL1Fee).to.deep.equal(l1Fee.mul(priceRatio))
     expect(tokamakBalanceDiff).to.deep.equal(TokamakL1Fee.add(TokamakL2Fee))
-    // expect(tokamakBalanceDiff).to.deep.equal(TokamakL1Fee)
-    // There is no inflation
+
     expect(tokamakFeeReceived).to.deep.equal(TokamakL2Fee)
 
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-    // good
+
     expect(ETHFeeVaultBalanceDiff).to.deep.equal(BigNumber.from(json.l1Fee))
 
     await setPrices(env, 1)
   })
 
-  // it('{tag:tokamak} should pay tokamak fee with 0 ETH in the wallet', async () => {
-  //   const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
+  it('{tag:tokamak} should pay tokamak fee with 0 ETH in the wallet', async () => {
+    const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
 
-  //   const fundTx = await env.l2Wallet.sendTransaction({
-  //     to: wallet.address,
-  //     value: ethers.utils.parseEther('1'),
+    const fundTx = await env.l2Wallet.sendTransaction({
+      to: wallet.address,
+      value: ethers.utils.parseEther('1'),
+    })
+    await fundTx.wait()
+
+    const fundTokamakTx = await L2Tokamak.transfer(
+      wallet.address,
+      ethers.utils.parseEther('10')
+    )
+    await fundTokamakTx.wait()
+
+    // Register the fee token
+    const registerTx = await Tokamak_GasPriceOracle.connect(
+      wallet
+    ).useTokamakAsFeeToken()
+    await registerTx.wait()
+
+    const addTokamakTx = await L2Tokamak.connect(env.l2Wallet).transfer(
+      wallet.address,
+      ethers.utils.parseEther('200')
+    )
+    await addTokamakTx.wait()
+
+    // Transfer all eth to the original owner
+    const ETHBalance = await wallet.getBalance()
+    const dropETHTx = await wallet.sendTransaction({
+      to: env.l2Wallet.address,
+      value: ETHBalance,
+    })
+    await dropETHTx.wait()
+
+    const ETHBalanceAfter = await wallet.getBalance()
+
+    expect(ETHBalanceAfter).to.deep.eq(BigNumber.from('0'))
+  })
+
+  it('{tag:tokamak} should return the correct receipt', async () => {
+    const randomWallet = ethers.Wallet.createRandom().connect(
+      env.l2Wallet.provider
+    )
+
+    const transferTx = await env.l2Wallet.sendTransaction({
+      to: randomWallet.address,
+      value: ethers.utils.parseEther('0.01'),
+    })
+    await transferTx.wait()
+
+    const fundTokamakTx = await L2Tokamak.transfer(
+      randomWallet.address,
+      ethers.utils.parseEther('10')
+    )
+    await fundTokamakTx.wait()
+
+    const registerTx = await Tokamak_GasPriceOracle.connect(
+      randomWallet
+    ).useTokamakAsFeeToken()
+    await registerTx.wait()
+
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      registerTx.hash,
+    ])
+    expect(json.l2TokamakFee).to.deep.equal(BigNumber.from(0))
+  })
+
+
+  // it('{tag:tokamak} should be able to withdraw fees back to L1 once the minimum is met', async function () {
+  //   const feeWallet = await Tokamak_GasPriceOracle.feeWallet()
+  //   const balanceBefore = await L1Tokamak.balanceOf(feeWallet)
+  //   const withdrawalAmount = await Tokamak_GasPriceOracle.MIN_WITHDRAWAL_AMOUNT()
+
+  //   const l2WalletBalance = await L2Tokamak.balanceOf(env.l2Wallet.address)
+  //   if (l2WalletBalance.lt(withdrawalAmount)) {
+  //     console.log(
+  //       `NOTICE: must have at least ${ethers.utils.formatEther(
+  //         withdrawalAmount
+  //       )} TOKAMAK on L2 to execute this test, skipping`
+  //     )
+  //     this.skip()
+  //   }
+
+  //   // Transfer the minimum required to withdraw.
+  //   const tx = await L2Tokamak.transfer(
+  //     Tokamak_GasPriceOracle.address,
+  //     withdrawalAmount
+  //   )
+  //   await tx.wait()
+
+  //   const vaultBalance = await L2Tokamak.balanceOf(Tokamak_GasPriceOracle.address)
+
+  //   // Submit the withdrawal.
+  //   const withdrawTx = await Tokamak_GasPriceOracle.withdrawTOKAMAK({
+  //     gasPrice: 0,
   //   })
-  //   await fundTx.wait()
 
-  //   const fundTokamakTx = await L2Tokamak.transfer(
-  //     wallet.address,
-  //     ethers.utils.parseEther('10')
+  //   // Wait for the withdrawal to be relayed to L1.
+  //   await withdrawTx.wait()
+  //   // call exception
+  //   await env.relayXDomainMessages(withdrawTx)
+  //   await env.waitForXDomainTransaction(withdrawTx)
+
+  //   // Balance difference should be equal to old L2 balance.
+  //   const balanceAfter = await L1Tokamak.balanceOf(feeWallet)
+  //   expect(balanceAfter.sub(balanceBefore)).to.deep.equal(
+  //     BigNumber.from(vaultBalance)
   //   )
-  //   await fundTokamakTx.wait()
-
-  //   // Register the fee token
-  //   const registerTx = await Tokamak_GasPriceOracle.connect(
-  //     wallet
-  //   ).useTokamakAsFeeToken()
-  //   await registerTx.wait()
-
-  //   // Transfer Tokamak token
-  //   // The l2 gas price and l1 base price should be calculated carefully.
-  //   // If we go with the l2GasPrice=1GWEI, the minimum Tokamak amount for using
-  //   // the Tokamak as the fee token is around 11 Tokamak. This is caused by how the
-  //   // gas limit is estimated. In api.go, it estimates the gas from the middle
-  //   // of the block gas limit and uses the binary search to find the good gas limit.
-  //   // The Tokamak for the block.GasLimit / 2 is gasLimit * gasPrice * priceRatio =
-  //   // 11_000_000 / 2 * 10^9 * 2000 / 10^18 = 11 TOKAMAK.
-  //   // The ideal l2 gas price should be 0.1 GWEI, so the minimum Tokamak for users
-  //   // to use the Tokamak as the fee token is 1.1 tokamak
-  //   const addTokamakTx = await L2Tokamak.connect(env.l2Wallet).transfer(
-  //     wallet.address,
-  //     ethers.utils.parseEther('200')
-  //   )
-  //   await addTokamakTx.wait()
-
-  //   // Transfer all eth to the original owner
-  //   const ETHBalance = await wallet.getBalance()
-  //   const dropETHTx = await wallet.sendTransaction({
-  //     to: env.l2Wallet.address,
-  //     value: ETHBalance,
-  //   })
-  //   await dropETHTx.wait()
-
-  //   const ETHBalanceAfter = await wallet.getBalance()
-
-  //   expect(ETHBalanceAfter).to.deep.eq(BigNumber.from('0'))
-  // })
-
-  // it("{tag:tokamak} should revert tx if users don't have enough Tokamak", async () => {
-
-  //   // create random wallet
-  //   const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
-
-  //   // fund 1 ETH
-  //   const fundTx = await env.l2Wallet.sendTransaction({
-  //     to: wallet.address,
-  //     value: ethers.utils.parseEther('0.001'),
-  //   })
-  //   await fundTx.wait()
-
-  //   // fund 10 TOKAMAK
-  //   const fundTokamakTx = await L2Tokamak.transfer(
-  //     wallet.address,
-  //     ethers.utils.parseEther('10')
-  //   )
-  //   await fundTokamakTx.wait()
-
-  //   // Register the fee token
-  //   const registerTx = await Tokamak_GasPriceOracle.connect(
-  //     wallet
-  //   ).useTokamakAsFeeToken()
-  //   await registerTx.wait()
-
-  //   const TokamakBalance = await L2Tokamak.balanceOf(wallet.address)
-  //   const estimateGas = await L2Tokamak.connect(wallet).estimateGas.transfer(
-  //     env.l2Wallet.address,
-  //     TokamakBalance
-  //   )
-  //   const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-  //   const returnTokamakTx = await L2Tokamak.connect(wallet).transfer(
-  //     env.l2Wallet.address,
-  //     TokamakBalance.sub(estimateGas.mul(priceRatio)),
-  //     { gasLimit: estimateGas }
-  //   )
-  //   await returnTokamakTx.wait()
-
-  //   await expect(
-  //     wallet.sendTransaction({
-  //       to: env.l2Wallet.address,
-  //       value: ethers.utils.parseEther('0.5'),
-  //     })
-  //   ).to.be.rejectedWith('insufficient tokamak balance to pay for gas')
-  // })
-
-  // it('{tag:tokamak} should return the correct receipt', async () => {
-  //   const randomWallet = ethers.Wallet.createRandom().connect(
-  //     env.l2Wallet.provider
-  //   )
-
-  //   const transferTx = await env.l2Wallet.sendTransaction({
-  //     to: randomWallet.address,
-  //     value: ethers.utils.parseEther('1'),
-  //   })
-  //   await transferTx.wait()
-
-  //   const fundTokamakTx = await L2Tokamak.transfer(
-  //     randomWallet.address,
-  //     ethers.utils.parseEther('10')
-  //   )
-  //   await fundTokamakTx.wait()
-
-  //   const registerTx = await Tokamak_GasPriceOracle.connect(
-  //     randomWallet
-  //   ).useTokamakAsFeeToken()
-  //   await registerTx.wait()
-
-  //   const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-  //     registerTx.hash,
-  //   ])
-  //   expect(json.l2TokamakFee).to.deep.equal(BigNumber.from(0))
   // })
 
   // it('{tag:tokamak} should register to use ETH as the fee token', async () => {
