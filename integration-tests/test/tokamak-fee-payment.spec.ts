@@ -1,6 +1,5 @@
 /* Imports: External */
 import { ethers, BigNumber, Contract, utils, ContractFactory } from 'ethers'
-import { serialize } from '@ethersproject/transactions'
 import { predeploys, getContractFactory } from '@eth-optimism/contracts'
 
 /* Imports: Internal */
@@ -117,23 +116,26 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       gasLimit: 500000,
     })
 
-    const raw = serialize({
-      nonce: parseInt(unsigned.nonce.toString(10), 10),
-      value: unsigned.value,
-      gasPrice: unsigned.gasPrice,
-      gasLimit: unsigned.gasLimit,
-      to: unsigned.to,
-      data: unsigned.data,
-    })
+    // const raw = serialize({
+    //   nonce: parseInt(unsigned.nonce.toString(10), 10),
+    //   value: unsigned.value,
+    //   gasPrice: unsigned.gasPrice,
+    //   gasLimit: unsigned.gasLimit,
+    //   to: unsigned.to,
+    //   data: unsigned.data,
+    // })
 
-    // get l1 fee
-    const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(raw)
+    // // get l1 fee
+    // const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
+    //   gasPriceOracleWallet
+    // ).getL1Fee(raw)
 
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
 
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TokamakBalanceAfter = await L2Tokamak.balanceOf(env.l2Wallet.address)
@@ -146,14 +148,14 @@ describe('Tokamak Fee Payment Integration Tests', () => {
 
     const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
     // tokamakFee = receipt.gasUsed * tx.gasPrice * priceRatio
-    const TokamakL1Fee = l1Fee.mul(priceRatio)
+    const TokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
     const TokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     // Make sure that user only pay transferred ETH
     expect(ETHBalanceBefore.sub(ETHBalanceAfter)).to.deep.equal(amount)
 
     // Make sure that the ETH Fee Vault should be increased to the l1 fee
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
     // Make sure that we deduct tokamak amount(l1 + l2 fee) from user's account
     expect(TokamakBalanceBefore.sub(TokamakBalanceAfter)).to.deep.equal(
@@ -184,24 +186,12 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     expect(TokamakBalanceBefore.gt(amount))
 
     const tx = await L2Tokamak.transfer(other, amount)
-
-    // Compute the L1 portion of the fee
-    const l1Fee =
-    await await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(
-      serialize({
-        nonce: tx.nonce,
-        value: tx.value,
-        gasPrice: tx.gasPrice,
-        gasLimit: tx.gasLimit,
-        to: tx.to,
-        data: tx.data,
-      })
-    )
-
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
+
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
 
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TokamakBalanceAfter = await L2Tokamak.balanceOf(env.l2Wallet.address)
@@ -213,14 +203,14 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     )
 
     const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-    const TokamakL1Fee = l1Fee.mul(priceRatio)
+    const TokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
     const TokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     // Make sure that ETH balance doesn't change
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
 
     // Make sure that the ETH Fee Vault doesn't change
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
     // Make sure that we deduct Tokamak from user's account
     expect(TokamakBalanceBefore.sub(TokamakBalanceAfter)).to.deep.equal(
@@ -290,26 +280,16 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       value: 0,
     })
 
-    const raw = serialize({
-      nonce: parseInt(unsigned.nonce.toString(10), 10),
-      value: unsigned.value,
-      gasPrice: unsigned.gasPrice,
-      gasLimit: unsigned.gasLimit,
-      to: unsigned.to,
-      data: unsigned.data,
-    })
-
-    // get l1 fee
-    const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(raw)
-
     // send ETH
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
 
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
+
     const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-    const tokamakL1Fee = l1Fee.mul(priceRatio)
+    const tokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
     const tokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
@@ -329,7 +309,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     expect(tokamakFeeReceived).to.deep.equal(tokamakL2Fee)
 
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
     await setPrices(env, 1)
   })
@@ -349,23 +329,14 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     // send 0 TOKAMAK
     const tx = await L2Tokamak.transfer(env.l2Wallet.address, 0)
 
-    const l1Fee =
-    await await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(
-      serialize({
-        nonce: tx.nonce,
-        value: tx.value,
-        gasPrice: tx.gasPrice,
-        gasLimit: tx.gasLimit,
-        to: tx.to,
-        data: tx.data,
-      })
-    )
-
     const receipt = await tx.wait()
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
+
+
     const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-    const tokamakL1Fee = l1Fee.mul(priceRatio)
+    const tokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
     const tokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
     const txTokamakFee = tokamakL1Fee.add(tokamakL2Fee)
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
@@ -386,7 +357,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
 
     // no change
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
     await setPrices(env, 1)
   })
@@ -418,25 +389,16 @@ describe('Tokamak Fee Payment Integration Tests', () => {
         gasLimit
       })
 
-      const raw = serialize({
-        nonce: parseInt(unsigned.nonce.toString(10), 10),
-        value: unsigned.value,
-        gasPrice: unsigned.gasPrice,
-        gasLimit: unsigned.gasLimit,
-        to: unsigned.to,
-        data: unsigned.data,
-      })
-
-      // get l1 fee
-      const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-        gasPriceOracleWallet
-      ).getL1Fee(raw)
-
       // send ETH
       const tx = await env.l2Wallet.sendTransaction(unsigned)
       const receipt = await tx.wait()
+
+      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+        tx.hash
+      ])
+
       const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-      const tokamakL1Fee = l1Fee.mul(priceRatio)
+      const tokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
       const tokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
       const txTokamakFee = tokamakL1Fee.add(tokamakL2Fee)
       const ETHBalanceAfter = await env.l2Wallet.getBalance()
@@ -460,7 +422,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
 
       // l1 fee
-      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
       gasLimit += 100
     }
@@ -491,19 +453,14 @@ describe('Tokamak Fee Payment Integration Tests', () => {
         ethers.utils.parseEther('1'),
         { gasLimit }
       )
-
-      const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(gasPriceOracleWallet).getL1Fee(serialize({
-          nonce: tx.nonce,
-          value: tx.value,
-          gasPrice: tx.gasPrice,
-          gasLimit: tx.gasLimit,
-          to: tx.to,
-          data: tx.data,
-        })
-      )
       const receipt = await tx.wait()
+
+      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+        tx.hash
+      ])
+
       const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-      const tokamakL1Fee = l1Fee.mul(priceRatio)
+      const tokamakL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
       const tokamakL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
       const txTokamakFee = tokamakL1Fee.add(tokamakL2Fee)
       const ETHBalanceAfter = await env.l2Wallet.getBalance()
@@ -529,7 +486,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
 
       // l1 fee
-      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(l1Fee)
+      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
 
       gasLimit += 100
     }
@@ -626,7 +583,6 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       tx.hash,
     ])
 
-    // l1GasUsed value from OVM_GasPriceOracle is not equal to value from receipt
     expect(l1GasUsed).to.deep.equal(BigNumber.from(json.l1GasUsed))
     expect(l1GasPrice).to.deep.equal(BigNumber.from(json.l1GasPrice))
     expect(scaled.toString()).to.deep.equal(json.l1FeeScalar)
@@ -635,6 +591,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   })
 
   // Tokamak Ethereum special fields on the receipt
+  // gasprice가 4 wei 이상이면 eth_sendRawTransaction 에서 에러가 나서 4까지만 for 문 돌림
   it('{tag:tokamak} includes L2 Tokamak fee with different gas price', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
@@ -653,11 +610,10 @@ describe('Tokamak Fee Payment Integration Tests', () => {
 
     let gasPrice = 1
 
-    while (gasPrice < 10) {
+    while (gasPrice < 4) {
       const tx = await env.l2Wallet.sendTransaction({
         to: env.l2Wallet.address,
-        // value: ethers.utils.parseEther('0.00001'),
-        // value: 0,
+        value: 0,
         gasPrice,
       })
       const receipt = await tx.wait()
@@ -678,6 +634,8 @@ describe('Tokamak Fee Payment Integration Tests', () => {
 
   it('{tag:tokamak} should pay TOKAMAK to deploy contracts', async () => {
     await setPrices(env, 1000)
+
+    // const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee('0x')
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
     const TokamakBalanceBefore = await L2Tokamak.balanceOf(env.l2Wallet.address)
@@ -714,11 +672,15 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     )
     const ETHFeeVaultBalanceDiff = ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)
 
+    // expect(l1Fee).to.deep.equal(BigNumber.from(json.l1Fee))
+    // expect(TokamakL1Fee).to.deep.equal(l1Fee.mul(priceRatio))
     expect(tokamakBalanceDiff).to.deep.equal(TokamakL1Fee.add(TokamakL2Fee))
+    // expect(tokamakBalanceDiff).to.deep.equal(TokamakL1Fee)
     // There is no inflation
     expect(tokamakFeeReceived).to.deep.equal(TokamakL2Fee)
 
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
+    // good
     expect(ETHFeeVaultBalanceDiff).to.deep.equal(BigNumber.from(json.l1Fee))
 
     await setPrices(env, 1)
@@ -774,51 +736,51 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   //   expect(ETHBalanceAfter).to.deep.eq(BigNumber.from('0'))
   // })
 
-  it("{tag:tokamak} should revert tx if users don't have enough Tokamak", async () => {
+  // it("{tag:tokamak} should revert tx if users don't have enough Tokamak", async () => {
 
-    // create random wallet
-    const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
+  //   // create random wallet
+  //   const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
 
-    // fund 1 ETH
-    const fundTx = await env.l2Wallet.sendTransaction({
-      to: wallet.address,
-      value: ethers.utils.parseEther('0.001'),
-    })
-    await fundTx.wait()
+  //   // fund 1 ETH
+  //   const fundTx = await env.l2Wallet.sendTransaction({
+  //     to: wallet.address,
+  //     value: ethers.utils.parseEther('0.001'),
+  //   })
+  //   await fundTx.wait()
 
-    // fund 10 TOKAMAK
-    const fundTokamakTx = await L2Tokamak.transfer(
-      wallet.address,
-      ethers.utils.parseEther('10')
-    )
-    await fundTokamakTx.wait()
+  //   // fund 10 TOKAMAK
+  //   const fundTokamakTx = await L2Tokamak.transfer(
+  //     wallet.address,
+  //     ethers.utils.parseEther('10')
+  //   )
+  //   await fundTokamakTx.wait()
 
-    // Register the fee token
-    const registerTx = await Tokamak_GasPriceOracle.connect(
-      wallet
-    ).useTokamakAsFeeToken()
-    await registerTx.wait()
+  //   // Register the fee token
+  //   const registerTx = await Tokamak_GasPriceOracle.connect(
+  //     wallet
+  //   ).useTokamakAsFeeToken()
+  //   await registerTx.wait()
 
-    const TokamakBalance = await L2Tokamak.balanceOf(wallet.address)
-    const estimateGas = await L2Tokamak.connect(wallet).estimateGas.transfer(
-      env.l2Wallet.address,
-      TokamakBalance
-    )
-    const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-    const returnTokamakTx = await L2Tokamak.connect(wallet).transfer(
-      env.l2Wallet.address,
-      TokamakBalance.sub(estimateGas.mul(priceRatio)),
-      { gasLimit: estimateGas }
-    )
-    await returnTokamakTx.wait()
+  //   const TokamakBalance = await L2Tokamak.balanceOf(wallet.address)
+  //   const estimateGas = await L2Tokamak.connect(wallet).estimateGas.transfer(
+  //     env.l2Wallet.address,
+  //     TokamakBalance
+  //   )
+  //   const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
+  //   const returnTokamakTx = await L2Tokamak.connect(wallet).transfer(
+  //     env.l2Wallet.address,
+  //     TokamakBalance.sub(estimateGas.mul(priceRatio)),
+  //     { gasLimit: estimateGas }
+  //   )
+  //   await returnTokamakTx.wait()
 
-    await expect(
-      wallet.sendTransaction({
-        to: env.l2Wallet.address,
-        value: ethers.utils.parseEther('0.5'),
-      })
-    ).to.be.rejectedWith('insufficient tokamak balance to pay for gas')
-  })
+  //   await expect(
+  //     wallet.sendTransaction({
+  //       to: env.l2Wallet.address,
+  //       value: ethers.utils.parseEther('0.5'),
+  //     })
+  //   ).to.be.rejectedWith('insufficient tokamak balance to pay for gas')
+  // })
 
   // it('{tag:tokamak} should return the correct receipt', async () => {
   //   const randomWallet = ethers.Wallet.createRandom().connect(

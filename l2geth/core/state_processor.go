@@ -107,7 +107,8 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// to ensure that the correct information is used.
 
 	// l1Fee = l1GasUsed * l1GasPrice * scalar
-	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
+	// get l1GasUsed derived from msg.Data()
+	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasDataInfo(msg, statedb)
 	if err != nil {
 		return nil, err
 	}

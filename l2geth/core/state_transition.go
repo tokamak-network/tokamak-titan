@@ -138,10 +138,9 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 	if rcfg.UsingOVM {
 		// msg.GasPrice is not 0
 		if msg.GasPrice().Cmp(common.Big0) != 0 {
-			// Compute the L1 fee before the state transition
-			// so it only has to be read from state one time.
 			// l1Fee = l1GasUsed * l1GasPrice * scalar
-			l1Fee, _ = fees.CalculateL1MsgFee(msg, evm.StateDB, nil)
+			// computes the L1 portion of the fee given a tx.Data and a StateDB
+			l1Fee, _ = fees.CalculateL1DataFee(msg.Data(), evm.StateDB, nil)
 		}
 		// If feeTokenSelection is 1, from use TOKAMAK as fee token
 		feeTokenSelection := evm.StateDB.GetFeeTokenSelection(msg.From())
