@@ -1,6 +1,5 @@
 /* Imports: External */
 import { BigNumber, utils } from 'ethers'
-import { serialize } from '@ethersproject/transactions'
 import { predeploys, getContractFactory } from '@eth-optimism/contracts'
 
 /* Imports: Internal */
@@ -66,28 +65,33 @@ describe('Fee Payment Integration Tests', async () => {
       gasLimit: 500000,
     })
 
-    const raw = serialize({
-      nonce: parseInt(unsigned.nonce.toString(10), 10),
-      value: unsigned.value,
-      gasPrice: unsigned.gasPrice,
-      gasLimit: unsigned.gasLimit,
-      to: unsigned.to,
-      data: unsigned.data,
-    })
+    // const raw = serialize({
+    //   nonce: parseInt(unsigned.nonce.toString(10), 10),
+    //   value: unsigned.value,
+    //   gasPrice: unsigned.gasPrice,
+    //   gasLimit: unsigned.gasLimit,
+    //   to: unsigned.to,
+    //   data: unsigned.data,
+    // })
 
-    const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(raw)
+    // const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
+    //   gasPriceOracleWallet
+    // ).getL1Fee(raw)
 
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
+
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
 
     const balanceAfter = await env.l2Wallet.getBalance()
     const feeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
       env.messenger.contracts.l2.OVM_SequencerFeeVault.address
     )
 
+    const l1Fee = BigNumber.from(json.l1Fee)
     const l2Fee = receipt.gasUsed.mul(tx.gasPrice)
 
     const expectedFeePaid = l1Fee.add(l2Fee)
@@ -109,9 +113,9 @@ describe('Fee Payment Integration Tests', async () => {
 
     const preBalance = await env.l2Wallet.getBalance()
 
-    const OVM_GasPriceOracle = getContractFactory('OVM_GasPriceOracle')
-      .attach(predeploys.OVM_GasPriceOracle)
-      .connect(env.l2Wallet)
+    // const OVM_GasPriceOracle = getContractFactory('OVM_GasPriceOracle')
+    //   .attach(predeploys.OVM_GasPriceOracle)
+    //   .connect(env.l2Wallet)
 
     const WETH = getContractFactory('OVM_ETH')
       .attach(predeploys.OVM_ETH)
@@ -126,21 +130,12 @@ describe('Fee Payment Integration Tests', async () => {
       value: 0,
     })
 
-    const raw = serialize({
-      nonce: parseInt(unsigned.nonce.toString(10), 10),
-      value: unsigned.value,
-      gasPrice: unsigned.gasPrice,
-      gasLimit: unsigned.gasLimit,
-      to: unsigned.to,
-      data: unsigned.data,
-    })
-
-    const l1Fee = await OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(raw)
-
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      tx.hash
+    ])
+    const l1Fee = BigNumber.from(json.l1Fee)
     const l2Fee = receipt.gasUsed.mul(tx.gasPrice)
     const postBalance = await env.l2Wallet.getBalance()
     const feeVaultAfter = await WETH.balanceOf(predeploys.OVM_SequencerFeeVault)

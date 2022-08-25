@@ -134,7 +134,7 @@ func TestNewStateTransactionForEth(t *testing.T) {
 	userPaidEthFee := new(big.Int).Sub(preUserEthBalance, afterUserEthBalance)
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
 	// calculated l1 fee is 4126
-	l1FeeEth := big.NewInt(4126)
+	l1FeeEth := big.NewInt(3838)
 
 	// userPaidEthFee = vaultReceivedFee + l1FeeEth
 	// userPaidEthFee must be equal to vaultReceivedFee

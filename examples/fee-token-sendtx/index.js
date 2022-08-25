@@ -1,9 +1,9 @@
 const {
-  Contract,
   ContractFactory,
   providers,
   Wallet,
   utils,
+  BigNumber,
 } = require('ethers')
 const { serialize } = require('@ethersproject/transactions')
 require('dotenv').config()
@@ -17,8 +17,8 @@ const main = async () => {
   // get provider
   const l2Provider = new providers.JsonRpcProvider(L2_NODE_WEB3_URL)
   const l2Wallet = new Wallet(PRIV_KEY).connect(l2Provider)
-  const TOKAMAK_GAS_PRICE_ORACLE_ADDRESS =
-    '0x4200000000000000000000000000000000000025'
+  const PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS =
+    '0x4200000000000000000000000000000000000024'
   const L2_TOKAMAK_ADDRESS = '0x4200000000000000000000000000000000000023'
   const OVM_GAS_PRICE_ORACLE_ADDRESS =
     '0x420000000000000000000000000000000000000F'
@@ -42,7 +42,7 @@ const main = async () => {
     TokamakGasPriceOracleArtifact.bytecode
   )
   const Tokamak_GasPriceOracle = factory__TokamakGasPriceOracle
-    .attach(TOKAMAK_GAS_PRICE_ORACLE_ADDRESS)
+    .attach(PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS)
     .connect(l2Wallet)
 
   // load L2Tokamak contract
@@ -63,13 +63,12 @@ const main = async () => {
   const isTokamakAsFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
     l2Wallet.address
   )
-  console.log(isTokamakAsFeeToken)
 
   // 1. ETH as fee token
   if (FEE_TOKEN.toLocaleUpperCase() === 'ETH') {
     // send tx (transfer TOKAMAK)
     if (isTokamakAsFeeToken === false) {
-      const amount = utils.parseEther('10')
+      const amount = utils.parseEther('1')
       const other = '0x1234123412341234123412341234123412341234'
       const ETHBalanceBefore = await l2Wallet.getBalance()
       const TokamakBalanceBefore = await L2Tokamak.balanceOf(l2Wallet.address)
@@ -84,23 +83,13 @@ const main = async () => {
 
       const tx = await L2Tokamak.transfer(other, amount)
       console.log('txHash: ', tx.hash)
-
-      // Compute the L1 portion of the fee
-      const l1Fee = await await Ovm_GasPriceOracle.getL1Fee(
-        serialize({
-          nonce: tx.nonce,
-          value: tx.value,
-          gasPrice: tx.gasPrice,
-          gasLimit: tx.gasLimit,
-          to: tx.to,
-          data: tx.data,
-        })
-      )
-
       const receipt = await tx.wait()
       await sleep(3000)
 
       if (receipt.status === 1) {
+        const json = await l2Provider.send('eth_getTransactionReceipt', [
+          tx.hash,
+        ])
         const ETHBalanceAfter = await l2Wallet.getBalance()
         const TokamakBalanceAfter = await L2Tokamak.balanceOf(l2Wallet.address)
 
@@ -112,7 +101,6 @@ const main = async () => {
             TokamakBalanceAfter
           )} TOKAMAK`
         )
-
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTOKAMAK = TokamakBalanceBefore.sub(TokamakBalanceAfter)
         console.log(
@@ -124,7 +112,7 @@ const main = async () => {
           utils.formatEther(usedTOKAMAK)
         )
         l2Fee = receipt.gasUsed.mul(tx.gasPrice)
-        console.log('L1Fee: ', utils.formatEther(l1Fee))
+        console.log('L1Fee: ', utils.formatEther(BigNumber.from(json.l1Fee)))
         console.log('L2Fee: ', utils.formatEther(l2Fee))
       }
     } else {
@@ -168,7 +156,6 @@ const main = async () => {
 
       // get l1 fee
       const l1Fee = await Ovm_GasPriceOracle.connect(l2Wallet).getL1Fee(raw)
-
       const tx = await l2Wallet.sendTransaction(unsigned)
       console.log('txHash: ', tx.hash)
       const receipt = await tx.wait()

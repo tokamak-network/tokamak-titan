@@ -116,20 +116,6 @@ describe('Tokamak Fee Payment Integration Tests', () => {
       gasLimit: 500000,
     })
 
-    // const raw = serialize({
-    //   nonce: parseInt(unsigned.nonce.toString(10), 10),
-    //   value: unsigned.value,
-    //   gasPrice: unsigned.gasPrice,
-    //   gasLimit: unsigned.gasLimit,
-    //   to: unsigned.to,
-    //   data: unsigned.data,
-    // })
-
-    // // get l1 fee
-    // const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-    //   gasPriceOracleWallet
-    // ).getL1Fee(raw)
-
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
@@ -749,14 +735,12 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   //   )
   // })
 
-  // it('{tag:tokamak} should register to use ETH as the fee token', async () => {
-  //   // Register l1wallet for using ETH as the fee token
-  //   const registerTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
-  //   await registerTx.wait()
-
-  //   expect(
-  //     await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(env.l2Wallet.address)
-  //   ).to.be.deep.eq(false)
-  // })
-
+  it('{tag:tokamak} should register to use ETH as the fee token', async () => {
+    // Register l1wallet for using ETH as the fee token
+    const registerTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
+    await registerTx.wait()
+    expect(
+      await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(env.l2Wallet.address)
+    ).to.be.deep.eq(false)
+  })
 })
