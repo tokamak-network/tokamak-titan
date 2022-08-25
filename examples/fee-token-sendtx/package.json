@@ -2,7 +2,7 @@
   "name": "fee-token-sendtx",
   "version": "1.0.0",
   "scripts": {
-    "clean": "rm -rf node_modules && rm yarn.lock",
+    "clean": "rm -rf node_modules && rm yarn.lock && rm package-lock.json",
     "use:tokamak": "FEE_TOKEN=TOKAMAK node ./index.js",
     "use:eth": "FEE_TOKEN=ETH node ./index.js"
   },
