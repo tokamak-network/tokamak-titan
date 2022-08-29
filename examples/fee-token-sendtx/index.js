@@ -5,7 +5,7 @@ const {
   utils,
   BigNumber,
 } = require('ethers')
-const { serialize } = require('@ethersproject/transactions')
+// const { serialize } = require('@ethersproject/transactions')
 require('dotenv').config()
 
 const main = async () => {
@@ -111,8 +111,9 @@ const main = async () => {
           'TokamakBalanceAfter - TokamakBalanceBefore: ',
           utils.formatEther(usedTOKAMAK)
         )
+        l1Fee = BigNumber.from(json.l1Fee)
         l2Fee = receipt.gasUsed.mul(tx.gasPrice)
-        console.log('L1Fee: ', utils.formatEther(BigNumber.from(json.l1Fee)))
+        console.log('L1Fee: ', utils.formatEther(l1Fee))
         console.log('L2Fee: ', utils.formatEther(l2Fee))
       }
     } else {
@@ -145,22 +146,26 @@ const main = async () => {
         gasLimit: 500000,
       })
 
-      const raw = serialize({
-        nonce: parseInt(unsigned.nonce.toString(10), 10),
-        value: unsigned.value,
-        gasPrice: unsigned.gasPrice,
-        gasLimit: unsigned.gasLimit,
-        to: unsigned.to,
-        data: unsigned.data,
-      })
+      // const raw = serialize({
+      //   nonce: parseInt(unsigned.nonce.toString(10), 10),
+      //   value: unsigned.value,
+      //   gasPrice: unsigned.gasPrice,
+      //   gasLimit: unsigned.gasLimit,
+      //   to: unsigned.to,
+      //   data: unsigned.data,
+      // })
 
-      // get l1 fee
-      const l1Fee = await Ovm_GasPriceOracle.connect(l2Wallet).getL1Fee(raw)
+      // // get l1 fee
+      // const l1Fee = await Ovm_GasPriceOracle.connect(l2Wallet).getL1Fee(raw)
+
       const tx = await l2Wallet.sendTransaction(unsigned)
       console.log('txHash: ', tx.hash)
       const receipt = await tx.wait()
       await sleep(3000)
       if (receipt.status === 1) {
+        const json = await l2Provider.send('eth_getTransactionReceipt', [
+          tx.hash,
+        ])
         const ETHBalanceAfter = await l2Wallet.getBalance()
         const TokamakBalanceAfter = await L2Tokamak.balanceOf(l2Wallet.address)
 
@@ -182,14 +187,13 @@ const main = async () => {
           'TokamakBalanceAfter - TokamakBalanceBefore: ',
           utils.formatEther(usedTOKAMAK)
         )
+        const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
+        const L1TokamakFee = BigNumber.from(json.l1Fee).mul(priceRatio)
+        const L2TokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+
+        console.log('L1TokamakFee: ', utils.formatEther(L1TokamakFee))
+        console.log('L2TokamakFee: ', utils.formatEther(L2TokamakFee))
       }
-
-      const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-      const L1TokamakFee = l1Fee.mul(priceRatio)
-      const L2TokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-
-      console.log('L1TokamakFee: ', utils.formatEther(L1TokamakFee))
-      console.log('L2TokamakFee: ', utils.formatEther(L2TokamakFee))
     } else {
       console.log(
         `The address ${l2Wallet.address} is not registered ${FEE_TOKEN} as fee token`
