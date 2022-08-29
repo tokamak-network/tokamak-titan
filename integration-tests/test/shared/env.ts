@@ -154,6 +154,7 @@ export class OptimismEnv {
     tx = await tx
     await tx.wait()
 
+    // this.messenger: packages/sdk/src/cross-chain-messenger.ts
     const messages = await this.messenger.getMessagesByTransaction(tx)
     if (messages.length === 0) {
       return

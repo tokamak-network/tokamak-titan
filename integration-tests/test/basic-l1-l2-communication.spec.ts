@@ -58,7 +58,8 @@ describe('Basic L1<>L2 Communication', async () => {
       async () => {
         const value = `0x${'77'.repeat(32)}`
 
-        // Send L2 -> L1 message.
+        // Send L2 -> L1 message. (env.l2Wallet -> L1SimpleStorage.address)
+        // Sends a given cross chain message. Where the message is sent depends on the direction attached to the message itself.
         const transaction = await env.messenger.sendMessage(
           {
             direction: MessageDirection.L2_TO_L1,
@@ -73,13 +74,14 @@ describe('Basic L1<>L2 Communication', async () => {
             },
           }
         )
-
+        // Waits until the status of a given message changes to the expected status
         await env.messenger.waitForMessageStatus(
           transaction,
           MessageStatus.READY_FOR_RELAY
         )
 
         await env.messenger.finalizeMessage(transaction)
+
         await env.messenger.waitForMessageReceipt(transaction)
 
         expect(await L1SimpleStorage.msgSender()).to.equal(
