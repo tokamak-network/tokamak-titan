@@ -68,6 +68,8 @@ const procEnv = cleanEnv(process.env, {
 
   HEALTHCHECK_URL: str({ default: 'http://localhost:7300/metrics' }),
 
+  L1_TOKEN_ADDRESS: str({ default: '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1' }),
+
   PRIVATE_KEY: str({
     default:
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',

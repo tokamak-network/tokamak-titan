@@ -21,7 +21,7 @@ const setPrices = async (env: OptimismEnv, value: number | BigNumber) => {
 
 describe('Tokamak Fee Payment Integration Tests', () => {
   let env: OptimismEnv
-  // let L1Tokamak: Contract
+  let L1Tokamak: Contract
   let L2Tokamak: Contract
   let Tokamak_GasPriceOracle: Contract
   let Proxy__Tokamak_GasPriceOracle: Contract
@@ -34,9 +34,9 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   before(async () => {
     env = await OptimismEnv.new()
 
-    // L1Tokamak = getContractFactory('TOKAMAK')
-    // .attach(process.env.L1_TOKEN_ADDRESS)
-    // .connect(env.l1Wallet)
+    L1Tokamak = getContractFactory('TOKAMAK')
+    .attach(process.env.L1_TOKEN_ADDRESS)
+    .connect(env.l1Wallet)
 
     L2Tokamak = getContractFactory('L2StandardERC20')
       .attach(predeploys.L2StandardERC20)
@@ -66,7 +66,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await Tokamak_GasPriceOracleProxyCall.deployTransaction.wait()
   })
 
-  it('{tag:tokamak} should have correct proxy target and proxy owner', async () => {
+  it('should have correct proxy target and proxy owner', async () => {
     expect(
       await Proxy__Tokamak_GasPriceOracle.addressManager('proxyOwner')
     ).to.be.eq(env.l1Wallet.address)
@@ -75,7 +75,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     ).to.be.eq(predeploys.Tokamak_GasPriceOracle)
   })
 
-  it('{tag:tokamak} should register to use tokamak as the fee token', async () => {
+  it('should register to use tokamak as the fee token', async () => {
     // Register l2wallet for using tokamak as the fee token
     const registerTx = await Tokamak_GasPriceOracle.useTokamakAsFeeToken()
     await registerTx.wait()
@@ -87,14 +87,14 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   })
 
   // Tokamak_GasPriceOracleProxyCall is non EOA
-  it('{tag:tokamak} should not register the fee tokens for non EOA accounts', async () => {
+  it('should not register the fee tokens for non EOA accounts', async () => {
     await expect(Tokamak_GasPriceOracleProxyCall.useTokamakAsFeeToken()).to.be
       .reverted
     await expect(Tokamak_GasPriceOracleProxyCall.useETHAsFeeToken()).to.be
       .reverted
   })
 
-  it('{tag:tokamak} Paying a nonzero but acceptable tokamak gasPrice fee for transferring ETH', async () => {
+  it('Paying a nonzero but acceptable tokamak gasPrice fee for transferring ETH', async () => {
     // set l1, l2 gasprice
     await setPrices(env, 1000)
 
@@ -157,7 +157,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} Paying a nonzero but acceptable tokamak gasPrice fee for transferring TOKAMAK', async () => {
+  it('Paying a nonzero but acceptable tokamak gasPrice fee for transferring TOKAMAK', async () => {
     await setPrices(env, 1000)
 
     const amount = utils.parseEther('0.0000001')
@@ -211,7 +211,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it("{tag:tokamak} Should revert if users don't have enough Tokamak tokens", async () => {
+  it("Should revert if users don't have enough Tokamak tokens", async () => {
     await setPrices(env, 1000)
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -250,7 +250,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should compute correct tokamak fee for transferring ETH', async () => {
+  it('should compute correct tokamak fee for transferring ETH', async () => {
     await setPrices(env, 1000)
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -300,7 +300,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should compute correct tokamak fee for transferring TOKAMAK', async () => {
+  it('should compute correct tokamak fee for transferring TOKAMAK', async () => {
     await setPrices(env, 1000)
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -348,7 +348,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should compute correct fee with different gas limit for transferring ETH', async () => {
+  it('should compute correct fee with different gas limit for transferring ETH', async () => {
     await setPrices(env, 1000)
 
     const amount = utils.parseEther('0.0000001')
@@ -416,7 +416,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should compute correct fee with different gas limit for transferring Tokamak', async () => {
+  it('should compute correct fee with different gas limit for transferring Tokamak', async () => {
     await setPrices(env, 1000)
 
     const estimatedGas = await L2Tokamak.estimateGas.transfer(
@@ -480,7 +480,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should reject a transaction with a too low gas limit', async () => {
+  it('should reject a transaction with a too low gas limit', async () => {
     const tx = {
       to: env.l2Wallet.address,
       value: ethers.utils.parseEther('0.000001'),
@@ -495,13 +495,13 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     )
   })
 
-  it('{tag:tokamak} should not be able to withdraw fees before the minimum is met', async () => {
+  it('should not be able to withdraw fees before the minimum is met', async () => {
 
     await expect(Tokamak_GasPriceOracle.withdrawTOKAMAK()).to.be.rejected
   })
 
   // Tokamak Ethereum special fields on the receipt
-  it('{tag:tokamak} includes L2 Tokamak fee', async () => {
+  it('includes L2 Tokamak fee', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
     )
@@ -535,7 +535,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   })
 
   // Tokamak Ethereum special fields on the receipt
-  it('{tag:tokamak} includes L2 Tokamak fee with different gas price', async () => {
+  it('includes L2 Tokamak fee with different gas price', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
     )
@@ -575,7 +575,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     }
   })
 
-  it('{tag:tokamak} should pay TOKAMAK to deploy contracts', async () => {
+  it('should pay TOKAMAK to deploy contracts', async () => {
     await setPrices(env, 1000)
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -624,7 +624,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('{tag:tokamak} should pay tokamak fee with 0 ETH in the wallet', async () => {
+  it('should pay tokamak fee with 0 ETH in the wallet', async () => {
     const wallet = ethers.Wallet.createRandom().connect(env.l2Provider)
 
     const fundTx = await env.l2Wallet.sendTransaction({
@@ -664,7 +664,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     expect(ETHBalanceAfter).to.deep.eq(BigNumber.from('0'))
   })
 
-  it('{tag:tokamak} should return the correct receipt', async () => {
+  it('should return the correct receipt', async () => {
     const randomWallet = ethers.Wallet.createRandom().connect(
       env.l2Wallet.provider
     )
@@ -693,49 +693,49 @@ describe('Tokamak Fee Payment Integration Tests', () => {
   })
 
 
-  // it('{tag:tokamak} should be able to withdraw fees back to L1 once the minimum is met', async function () {
-  //   const feeWallet = await Tokamak_GasPriceOracle.feeWallet()
-  //   const balanceBefore = await L1Tokamak.balanceOf(feeWallet)
-  //   const withdrawalAmount = await Tokamak_GasPriceOracle.MIN_WITHDRAWAL_AMOUNT()
+  it('should be able to withdraw fees back to L1 once the minimum is met', async function () {
+    const feeWallet = await Tokamak_GasPriceOracle.feeWallet()
+    const balanceBefore = await L1Tokamak.balanceOf(feeWallet)
+    const withdrawalAmount = await Tokamak_GasPriceOracle.MIN_WITHDRAWAL_AMOUNT()
 
-  //   const l2WalletBalance = await L2Tokamak.balanceOf(env.l2Wallet.address)
-  //   if (l2WalletBalance.lt(withdrawalAmount)) {
-  //     console.log(
-  //       `NOTICE: must have at least ${ethers.utils.formatEther(
-  //         withdrawalAmount
-  //       )} TOKAMAK on L2 to execute this test, skipping`
-  //     )
-  //     this.skip()
-  //   }
+    const l2WalletBalance = await L2Tokamak.balanceOf(env.l2Wallet.address)
+    if (l2WalletBalance.lt(withdrawalAmount)) {
+      console.log(
+        `NOTICE: must have at least ${ethers.utils.formatEther(
+          withdrawalAmount
+        )} TOKAMAK on L2 to execute this test, skipping`
+      )
+      this.skip()
+    }
 
-  //   // Transfer the minimum required to withdraw.
-  //   const tx = await L2Tokamak.transfer(
-  //     Tokamak_GasPriceOracle.address,
-  //     withdrawalAmount
-  //   )
-  //   await tx.wait()
+    // Transfer the minimum required to withdraw.
+    const tx = await L2Tokamak.transfer(
+      Tokamak_GasPriceOracle.address,
+      withdrawalAmount
+    )
+    await tx.wait()
 
-  //   const vaultBalance = await L2Tokamak.balanceOf(Tokamak_GasPriceOracle.address)
+    const vaultBalance = await L2Tokamak.balanceOf(Tokamak_GasPriceOracle.address)
 
-  //   // Submit the withdrawal.
-  //   const withdrawTx = await Tokamak_GasPriceOracle.withdrawTOKAMAK({
-  //     gasPrice: 0,
-  //   })
+    // Submit the withdrawal.
+    const withdrawTx = await Tokamak_GasPriceOracle.withdrawTOKAMAK({
+      gasPrice: 0,
+    })
 
-  //   // Wait for the withdrawal to be relayed to L1.
-  //   await withdrawTx.wait()
-  //   // call exception
-  //   await env.relayXDomainMessages(withdrawTx)
-  //   await env.waitForXDomainTransaction(withdrawTx)
+    // Wait for the withdrawal to be relayed to L1.
+    await withdrawTx.wait()
+    // call exception
+    await env.relayXDomainMessages(withdrawTx)
+    await env.waitForXDomainTransaction(withdrawTx)
 
-  //   // Balance difference should be equal to old L2 balance.
-  //   const balanceAfter = await L1Tokamak.balanceOf(feeWallet)
-  //   expect(balanceAfter.sub(balanceBefore)).to.deep.equal(
-  //     BigNumber.from(vaultBalance)
-  //   )
-  // })
+    // Balance difference should be equal to old L2 balance.
+    const balanceAfter = await L1Tokamak.balanceOf(feeWallet)
+    expect(balanceAfter.sub(balanceBefore)).to.deep.equal(
+      BigNumber.from(vaultBalance)
+    )
+  })
 
-  it('{tag:tokamak} should register to use ETH as the fee token', async () => {
+  it('should register to use ETH as the fee token', async () => {
     // Register l1wallet for using ETH as the fee token
     const registerTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
     await registerTx.wait()
