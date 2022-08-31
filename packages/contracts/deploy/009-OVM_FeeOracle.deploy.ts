@@ -1,0 +1,28 @@
+/* Imports: External */
+import { DeployFunction } from 'hardhat-deploy/dist/types'
+
+/* Imports: Internal */
+import {
+  deployAndVerifyAndThen,
+  getContractFromArtifact,
+} from '../src/deploy-utils'
+import { names } from '../src/address-names'
+
+const deployFn: DeployFunction = async (hre) => {
+  const { deployer } = await hre.getNamedAccounts()
+
+  const Lib_AddressManager = await getContractFromArtifact(
+    hre,
+    names.unmanaged.Lib_AddressManager
+  )
+
+  await deployAndVerifyAndThen({
+    hre,
+    name: names.managed.contracts.FeeOracle,
+    args: [Lib_AddressManager.address, deployer],
+  })
+}
+
+deployFn.tags = ['FeeOracle', 'upgrade']
+
+export default deployFn

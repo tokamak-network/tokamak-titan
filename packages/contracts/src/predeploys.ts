@@ -16,6 +16,7 @@ export const predeploys = {
   OVM_SequencerFeeVault: '0x4200000000000000000000000000000000000011',
   L2StandardTokenFactory: '0x4200000000000000000000000000000000000012',
   OVM_L1BlockNumber: '0x4200000000000000000000000000000000000013',
+  OVM_FeeOracle: '0x4200000000000000000000000000000000000101',
 
   // We're temporarily disabling OVM_ETH because the jury is still out on whether or not ETH as an
   // ERC20 is desirable.

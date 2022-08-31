@@ -63,6 +63,9 @@ task('take-dump').setAction(async (args, hre) => {
     OVM_SequencerFeeVault: {
       l1FeeWallet: hre.deployConfig.ovmFeeWalletAddress,
     },
+    OVM_FeeOracle: {
+      _owner: hre.deployConfig.ovmFeeOracleOwner,
+    },
     OVM_ETH: {
       l2Bridge: predeploys.L2StandardBridge,
       l1Token: ethers.constants.AddressZero,

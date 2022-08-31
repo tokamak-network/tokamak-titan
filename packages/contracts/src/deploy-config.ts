@@ -89,6 +89,8 @@ export interface DeployConfig {
    */
   ovmWhitelistOwner?: string
 
+  ovmFeeOracleOwner?: string
+
   /**
    * Optional initial overhead value for GPO (default: 2750).
    */
@@ -183,6 +185,9 @@ const configSpec: {
   ovmWhitelistOwner: {
     type: 'address',
     default: ethers.constants.AddressZero,
+  },
+  ovmFeeOracleOwner: {
+    type: 'address',
   },
   gasPriceOracleOverhead: {
     type: 'number',
