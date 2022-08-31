@@ -1,7 +1,6 @@
 /* Imports: External */
 import { expectApprox, getChainId, sleep } from '@eth-optimism/core-utils'
 import { Wallet, BigNumber, Contract, ContractFactory, constants } from 'ethers'
-import { serialize } from '@ethersproject/transactions'
 import { ethers } from 'hardhat'
 import {
   TransactionReceipt,
@@ -342,18 +341,9 @@ describe('Basic RPC tests', () => {
         gasPrice: await gasPriceForL2(),
       })
 
-      const raw = serialize({
-        nonce: parseInt(tx.nonce.toString(), 10),
-        to: tx.to,
-        gasLimit: tx.gasLimit,
-        gasPrice: tx.gasPrice,
-        type: tx.type,
-        data: tx.data,
-      })
-
       const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
         gasPriceOracleWallet
-      ).getL1Fee(raw)
+      ).getL1Fee('0x')
       const l1GasPrice =
         await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
           gasPriceOracleWallet
@@ -361,7 +351,7 @@ describe('Basic RPC tests', () => {
       const l1GasUsed =
         await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
           gasPriceOracleWallet
-        ).getL1GasUsed(raw)
+        ).getL1GasUsed('0x')
       const scalar =
         await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
           gasPriceOracleWallet

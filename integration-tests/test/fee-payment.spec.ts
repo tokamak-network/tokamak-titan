@@ -198,8 +198,8 @@ describe('Fee Payment Integration Tests', async () => {
 
       // Wait for the withdrawal to be relayed to L1.
       await withdrawTx.wait()
-      // await env.relayXDomainMessages(withdrawTx)
-      // await env.waitForXDomainTransaction(withdrawTx)
+      await env.relayXDomainMessages(withdrawTx)
+      await env.waitForXDomainTransaction(withdrawTx)
 
       // Balance difference should be equal to old L2 balance.
       const balanceAfter = await env.l1Wallet.provider.getBalance(l1FeeWallet)
