@@ -273,6 +273,7 @@ describe('Native ETH Integration Tests', async () => {
     )
 
     // post.l2UserBalance = pre.l2UserBalance - withdrawAmount + fee
+    // test only fee token is ETH
     expect(postBalances.l2UserBalance).to.deep.eq(
       preBalances.l2UserBalance.sub(withdrawAmount.add(fee)),
       'L2 User Balance Mismatch'

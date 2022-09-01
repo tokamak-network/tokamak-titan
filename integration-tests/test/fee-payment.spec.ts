@@ -18,6 +18,7 @@ const setPrices = async (env: OptimismEnv, value: number | BigNumber) => {
   await baseFee.wait()
 }
 
+// Note: Test only fee token is ETH
 describe('Fee Payment Integration Tests', async () => {
   let env: OptimismEnv
   const other = '0x1234123412341234123412341234123412341234'

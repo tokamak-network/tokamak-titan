@@ -5,7 +5,7 @@ import { predeploys, getContractFactory } from '@eth-optimism/contracts'
 /* Imports: Internal */
 import { expect } from './shared/setup'
 import { OptimismEnv } from './shared/env'
-import { gasPriceOracleWallet } from './shared/utils'
+import { L1_TOKEN_ADDRESS, gasPriceOracleWallet } from './shared/utils'
 import Tokamak_GasPriceOracleProxyCallJson from '../artifacts/contracts/Tokamak_GasPriceOracleProxyCall.sol/Tokamak_GasPriceOracleProxyCall.json'
 
 const setPrices = async (env: OptimismEnv, value: number | BigNumber) => {
@@ -19,6 +19,7 @@ const setPrices = async (env: OptimismEnv, value: number | BigNumber) => {
   await baseFee.wait()
 }
 
+// Note: Test only fee token is TOKAMAK
 describe('Tokamak Fee Payment Integration Tests', () => {
   let env: OptimismEnv
   let L1Tokamak: Contract
@@ -35,7 +36,7 @@ describe('Tokamak Fee Payment Integration Tests', () => {
     env = await OptimismEnv.new()
 
     L1Tokamak = getContractFactory('TOKAMAK')
-    .attach(process.env.L1_TOKEN_ADDRESS)
+    .attach(L1_TOKEN_ADDRESS)
     .connect(env.l1Wallet)
 
     L2Tokamak = getContractFactory('L2StandardERC20')

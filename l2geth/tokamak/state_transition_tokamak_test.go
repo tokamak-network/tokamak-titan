@@ -140,8 +140,8 @@ func TestNewStateTransactionForTokamak(t *testing.T) {
 	userPaidTokamakFee := new(big.Int).Sub(preUserTokamakBalance, afterUserTokamakBalance)
 	// Tokamak_GasPriceOracle vault is associated with L2 fee
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
-	// calculated l1 fee is 4126
-	l1FeeTokamak := new(big.Int).Mul(big.NewInt(4126), big.NewInt(1))
+	// calculated l1 fee is 3838
+	l1FeeTokamak := new(big.Int).Mul(big.NewInt(3838), big.NewInt(1))
 
 	// userPaidTokamakFee = vaultReceivedFee + l1FeeTokamak
 	// userPaidTokamakFee must be greater than vaultReceivedFee
