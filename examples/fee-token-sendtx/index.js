@@ -146,18 +146,6 @@ const main = async () => {
         gasLimit: 500000,
       })
 
-      // const raw = serialize({
-      //   nonce: parseInt(unsigned.nonce.toString(10), 10),
-      //   value: unsigned.value,
-      //   gasPrice: unsigned.gasPrice,
-      //   gasLimit: unsigned.gasLimit,
-      //   to: unsigned.to,
-      //   data: unsigned.data,
-      // })
-
-      // // get l1 fee
-      // const l1Fee = await Ovm_GasPriceOracle.connect(l2Wallet).getL1Fee(raw)
-
       const tx = await l2Wallet.sendTransaction(unsigned)
       console.log('txHash: ', tx.hash)
       const receipt = await tx.wait()

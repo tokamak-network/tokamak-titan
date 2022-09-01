@@ -68,7 +68,7 @@ const procEnv = cleanEnv(process.env, {
 
   HEALTHCHECK_URL: str({ default: 'http://localhost:7300/metrics' }),
 
-  L1_TOKEN_ADDRESS: str({ default: '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1' }),
+  L1_TOKEN_ADDRESS: str({ default: '0xc6e7DF5E7b4f2A278906862b61205850344D4e7d' }),
 
   PRIVATE_KEY: str({
     default:
@@ -171,6 +171,8 @@ export const gasPriceOracleWallet = new Wallet(
   procEnv.GAS_PRICE_ORACLE_PRIVATE_KEY,
   l2Provider
 )
+// l1 token
+export const L1_TOKEN_ADDRESS = procEnv.L1_TOKEN_ADDRESS
 
 // Predeploys
 export const OVM_ETH_ADDRESS = predeploys.OVM_ETH
