@@ -83,7 +83,7 @@ describe('Basic RPC tests', () => {
 
       await expect(
         env.l2Provider.sendTransaction(await wallet.signTransaction(tx))
-      ).to.be.rejectedWith('invalid transaction: invalid sender')
+      ).to.be.rejectedWith('invalid sender')
     })
 
     it('should accept a transaction without a chain ID', async () => {
@@ -133,7 +133,7 @@ describe('Basic RPC tests', () => {
       }
 
       await expect(env.l2Wallet.sendTransaction(tx)).to.be.rejectedWith(
-        'invalid transaction: insufficient funds for gas * price + value'
+        'insufficient funds for gas * price + value'
       )
     })
 
