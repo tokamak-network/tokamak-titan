@@ -7,12 +7,12 @@ import { deployAndRegister } from '../src/deploy-utils'
 const deployFn: DeployFunction = async (hre) => {
   await deployAndRegister({
     hre,
-    name: 'L1TokamakToken',
-    contract: 'TOKAMAK',
+    name: 'L1TonToken',
+    contract: 'TON',
     args: [],
   })
 }
 
-deployFn.tags = ['L1TokamakToken']
+deployFn.tags = ['L1TonToken']
 
 export default deployFn

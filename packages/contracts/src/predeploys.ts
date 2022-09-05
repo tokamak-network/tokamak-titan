@@ -24,11 +24,11 @@ export const predeploys = {
   // We're also putting WETH9 at the old OVM_ETH address.
   WETH9: '0x4200000000000000000000000000000000000006',
 
-  // L2 Tokamak Token Address
+  // L2 Ton Token Address
   L2StandardERC20: '0x4200000000000000000000000000000000000023',
-  // gas price oracle for Tokamak
-  Proxy__Tokamak_GasPriceOracle: '0x4200000000000000000000000000000000000024',
-  Tokamak_GasPriceOracle: '0x4200000000000000000000000000000000000025',
+  // gas price oracle for Ton
+  Proxy__Ton_GasPriceOracle: '0x4200000000000000000000000000000000000024',
+  Ton_GasPriceOracle: '0x4200000000000000000000000000000000000025',
 }
 
 export const futurePredeploys = {

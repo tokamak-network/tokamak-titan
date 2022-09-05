@@ -7,7 +7,7 @@ const main = async () => {
   const L2_NODE_WEB3_URL = env.L2_NODE_WEB3_URL
   const PRIV_KEY = env.PRIV_KEY
   const FEE_TOKEN = env.FEE_TOKEN
-  const PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS =
+  const PROXY__TON_GAS_PRICE_ORACLE_ADDRESS =
     '0x4200000000000000000000000000000000000024'
 
   // provider
@@ -18,14 +18,14 @@ const main = async () => {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
-  // console.log(Tokamak_GasPriceOracle)
-  const TokamakGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Tokamak_GasPriceOracle.sol/Tokamak_GasPriceOracle.json')
-  const factory__TokamakGasPriceOracle = new ContractFactory(
-    TokamakGasPriceOracleArtifact.abi,
-    TokamakGasPriceOracleArtifact.bytecode
+  // console.log(Ton_GasPriceOracle)
+  const TonGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Ton_GasPriceOracle.sol/Ton_GasPriceOracle.json')
+  const factory__TonGasPriceOracle = new ContractFactory(
+    TonGasPriceOracleArtifact.abi,
+    TonGasPriceOracleArtifact.bytecode
   )
-  const Tokamak_GasPriceOracle = factory__TokamakGasPriceOracle
-    .attach(PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS)
+  const Ton_GasPriceOracle = factory__TonGasPriceOracle
+    .attach(PROXY__TON_GAS_PRICE_ORACLE_ADDRESS)
     .connect(l2Wallet)
 
   if (typeof FEE_TOKEN === 'undefined') {
@@ -35,22 +35,21 @@ const main = async () => {
 
   if (FEE_TOKEN.toLocaleUpperCase() === 'ETH') {
     // use eth as fee token
-    const setEthAsFeeTokenTx = await Tokamak_GasPriceOracle.useETHAsFeeToken()
+    const setEthAsFeeTokenTx = await Ton_GasPriceOracle.useETHAsFeeToken()
     await setEthAsFeeTokenTx.wait()
     await sleep(2000)
-    const validateFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
+    const validateFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
       l2Wallet.address
     )
     if (validateFeeToken === false) {
       console.log(`Now ${l2Wallet.address} is using ${FEE_TOKEN} as fee token`)
     }
-  } else if (FEE_TOKEN.toLocaleUpperCase() === 'TOKAMAK') {
-    // use Tokamak as fee token
-    const setTokamakAsFeeTokenTx =
-      await Tokamak_GasPriceOracle.useTokamakAsFeeToken()
-    await setTokamakAsFeeTokenTx.wait()
+  } else if (FEE_TOKEN.toLocaleUpperCase() === 'TON') {
+    // use Ton as fee token
+    const setTonAsFeeTokenTx = await Ton_GasPriceOracle.useTonAsFeeToken()
+    await setTonAsFeeTokenTx.wait()
     await sleep(2000)
-    const validateFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
+    const validateFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
       l2Wallet.address
     )
     if (validateFeeToken === true) {

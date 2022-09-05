@@ -615,8 +615,8 @@ func (s *SyncService) GasPriceOracleOwnerAddress() *common.Address {
 	return &s.gasPriceOracleOwnerAddress
 }
 
-/// Update the execution context's timestamp and blocknumber
-/// over time. This is only necessary for the sequencer.
+// / Update the execution context's timestamp and blocknumber
+// / over time. This is only necessary for the sequencer.
 func (s *SyncService) updateL1BlockNumber() error {
 	context, err := s.client.GetLatestEthContext()
 	if err != nil {
@@ -963,11 +963,11 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 	if err != nil {
 		return fmt.Errorf("Invalid transaction: %w", core.ErrInvalidSender)
 	}
-	// check is the wallet address picks TOKAMAK as the fee token
-	isTokamakFeeTokenSelect := false
+	// check is the wallet address picks TON as the fee token
+	isTonFeeTokenSelect := false
 	feeTokenSelection := state.GetFeeTokenSelection(from)
 	if feeTokenSelection.Cmp(common.Big1) == 0 {
-		isTokamakFeeTokenSelect = true
+		isTonFeeTokenSelect = true
 	}
 
 	// cost = tx.data.amount
@@ -976,7 +976,7 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 	// being accepted by the chain but allow through 0
 	// gas price transactions
 	// if gasprice is not equal to 0
-	if !isTokamakFeeTokenSelect && tx.GasPrice().Cmp(common.Big0) != 0 {
+	if !isTonFeeTokenSelect && tx.GasPrice().Cmp(common.Big0) != 0 {
 		cost = cost.Add(cost, fee)
 	}
 
@@ -1009,13 +1009,13 @@ func (s *SyncService) verifyFee(tx *types.Transaction) error {
 		return err
 	}
 
-	// Ensure that TOKAMAK balance is enough for the gas fee
-	if isTokamakFeeTokenSelect {
-		tokamakPriceRatio := state.GetTokamakPriceRatio()
-		// Total Tokamak fee
-		tokamakCost := new(big.Int).Mul(tokamakPriceRatio, fee)
-		if state.GetTokamakBalance(from).Cmp(tokamakCost) < 0 {
-			return fmt.Errorf("Invalid transaction: %w", core.ErrInsufficientTokamakFunds)
+	// Ensure that TON balance is enough for the gas fee
+	if isTonFeeTokenSelect {
+		tonPriceRatio := state.GetTonPriceRatio()
+		// Total Ton fee
+		tonCost := new(big.Int).Mul(tonPriceRatio, fee)
+		if state.GetTonBalance(from).Cmp(tonCost) < 0 {
+			return fmt.Errorf("Invalid transaction: %w", core.ErrInsufficientTonFunds)
 		}
 	}
 	// Reject user transactions that do not have large enough of a gas price.

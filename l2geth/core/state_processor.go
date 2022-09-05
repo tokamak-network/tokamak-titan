@@ -112,7 +112,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if err != nil {
 		return nil, err
 	}
-	// Determine the L2 Tokamak fee
+	// Determine the L2 Ton fee
 	feeTokenSelection := statedb.GetFeeTokenSelection(msg.From())
 
 	// Apply the transaction to the current state (included in the env)
@@ -121,12 +121,12 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		return nil, err
 	}
 
-	// Calculate the L2 Tokamak fee
-	L2TokamakFee := new(big.Int)
+	// Calculate the L2 Ton fee
+	L2TonFee := new(big.Int)
 	if feeTokenSelection.Cmp(common.Big1) == 0 {
-		tokamakPriceRatio := statedb.GetTokamakPriceRatio()
-		// L2TokamakFee = gasUsed * msg.GasPrice() * tokamakPriceRatio
-		L2TokamakFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tokamakPriceRatio))
+		tonPriceRatio := statedb.GetTonPriceRatio()
+		// L2TonFee = gasUsed * msg.GasPrice() * tonPriceRatio
+		L2TonFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tonPriceRatio))
 	}
 
 	// Update the state with pending changes
@@ -168,7 +168,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.BlockHash = statedb.BlockHash()
 	receipt.BlockNumber = header.Number
 	receipt.TransactionIndex = uint(statedb.TxIndex())
-	receipt.L2TokamakFee = L2TokamakFee
+	receipt.L2TonFee = L2TonFee
 
 	return receipt, err
 }

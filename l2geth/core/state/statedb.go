@@ -69,7 +69,7 @@ func GetOVMBalanceKey(addr common.Address) common.Hash {
 	return common.BytesToHash(digest)
 }
 
-func GetTokamakBalanceKey(addr common.Address) common.Hash {
+func GetTonBalanceKey(addr common.Address) common.Hash {
 	// slot 0
 	position := common.Big0
 	hasher := sha3.NewLegacyKeccak256()
@@ -276,10 +276,10 @@ func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 	}
 }
 
-// Get balance from the L2 Tokamak contract
-func (s *StateDB) GetTokamakBalance(addr common.Address) *big.Int {
-	key := GetTokamakBalanceKey(addr)
-	bal := s.GetState(rcfg.OvmL2TokamakToken, key)
+// Get balance from the L2 Ton contract
+func (s *StateDB) GetTonBalance(addr common.Address) *big.Int {
+	key := GetTonBalanceKey(addr)
+	bal := s.GetState(rcfg.OvmL2TonToken, key)
 	return bal.Big()
 }
 
@@ -296,15 +296,15 @@ func (s *StateDB) GetNonce(addr common.Address) uint64 {
 func (s *StateDB) GetFeeTokenSelection(addr common.Address) *big.Int {
 	// get key
 	key := GetFeeTokenSelectionKey(addr)
-	// get value corresponding to the key in OvmTokamakGasPricOracle
-	bal := s.GetState(rcfg.OvmTokamakGasPricOracle, key)
+	// get value corresponding to the key in OvmTonGasPricOracle
+	bal := s.GetState(rcfg.OvmTonGasPricOracle, key)
 	return bal.Big()
 }
 
-func (s *StateDB) GetTokamakPriceRatio() *big.Int {
-	// 5th slot of OvmTokamakGasPricOracle
+func (s *StateDB) GetTonPriceRatio() *big.Int {
+	// 5th slot of OvmTonGasPricOracle
 	keyPriceRatio := common.BigToHash(big.NewInt(5))
-	value := s.GetState(rcfg.OvmTokamakGasPricOracle, keyPriceRatio)
+	value := s.GetState(rcfg.OvmTonGasPricOracle, keyPriceRatio)
 	return value.Big()
 }
 
@@ -453,33 +453,33 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 	}
 }
 
-func (s *StateDB) AddTokamakBalance(addr common.Address, amount *big.Int) {
-	// Get balance from TOKAMAK contract
-	key := GetTokamakBalanceKey(addr)
-	value := s.GetState(rcfg.OvmL2TokamakToken, key)
+func (s *StateDB) AddTonBalance(addr common.Address, amount *big.Int) {
+	// Get balance from TON contract
+	key := GetTonBalanceKey(addr)
+	value := s.GetState(rcfg.OvmL2TonToken, key)
 	bal := value.Big()
 	bal = bal.Add(bal, amount)
-	s.SetState(rcfg.OvmL2TokamakToken, key, common.BigToHash(bal))
+	s.SetState(rcfg.OvmL2TonToken, key, common.BigToHash(bal))
 }
 
-func (s *StateDB) SubTokamakBalance(addr common.Address, amount *big.Int) {
-	key := GetTokamakBalanceKey(addr)
-	value := s.GetState(rcfg.OvmL2TokamakToken, key)
+func (s *StateDB) SubTonBalance(addr common.Address, amount *big.Int) {
+	key := GetTonBalanceKey(addr)
+	value := s.GetState(rcfg.OvmL2TonToken, key)
 	bal := value.Big()
 	bal = bal.Sub(bal, amount)
-	s.SetState(rcfg.OvmL2TokamakToken, key, common.BigToHash(bal))
+	s.SetState(rcfg.OvmL2TonToken, key, common.BigToHash(bal))
 }
 
 // for test
-func (s *StateDB) SetTokamakAsFeeToken(addr common.Address) {
+func (s *StateDB) SetTonAsFeeToken(addr common.Address) {
 	key := GetFeeTokenSelectionKey(addr)
-	s.SetState(rcfg.OvmTokamakGasPricOracle, key, common.BigToHash(common.Big1))
+	s.SetState(rcfg.OvmTonGasPricOracle, key, common.BigToHash(common.Big1))
 }
 
 // for test
-func (s *StateDB) SetTokamakPriceRatio(priceRation *big.Int) {
+func (s *StateDB) SetTonPriceRatio(priceRation *big.Int) {
 	keyPriceRatio := common.BigToHash(big.NewInt(5))
-	s.SetState(rcfg.OvmTokamakGasPricOracle, keyPriceRatio, common.BigToHash(priceRation))
+	s.SetState(rcfg.OvmTonGasPricOracle, keyPriceRatio, common.BigToHash(priceRation))
 }
 
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
@@ -652,8 +652,8 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 // CreateAccount is called during the EVM CREATE operation. The situation might arise that
 // a contract does the following:
 //
-//   1. sends funds to sha(account ++ (nonce + 1))
-//   2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
+//  1. sends funds to sha(account ++ (nonce + 1))
+//  2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
 //
 // Carrying over the balance ensures that Ether doesn't disappear.
 func (s *StateDB) CreateAccount(addr common.Address) {
