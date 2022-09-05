@@ -45,7 +45,7 @@ const deployFn: DeployFunction = async (hre) => {
         hre.ethers.provider
       )
 
-      const depositAmount = hre.ethers.utils.parseEther('10')
+      const depositAmount = hre.ethers.utils.parseEther('100')
       // to address is l1 standard bridge address
       const fundETHTx = await L1StandardBridge.connect(wallet).depositETH(
         8_000_000,

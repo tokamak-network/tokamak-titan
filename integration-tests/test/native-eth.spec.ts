@@ -1,6 +1,5 @@
 /* Imports: External */
 import { Wallet, utils, BigNumber } from 'ethers'
-import { serialize } from '@ethersproject/transactions'
 import { predeploys } from '@eth-optimism/contracts'
 import { expectApprox } from '@eth-optimism/core-utils'
 
@@ -11,7 +10,6 @@ import {
   DEFAULT_TEST_GAS_L2,
   envConfig,
   withdrawalTest,
-  gasPriceOracleWallet,
 } from './shared/utils'
 import { OptimismEnv } from './shared/env'
 
@@ -260,18 +258,11 @@ describe('Native ETH Integration Tests', async () => {
     const l2Fee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)
 
     // Calculate the L1 portion of the fee
-    const raw = serialize({
-      nonce: transaction.nonce,
-      value: transaction.value,
-      gasPrice: transaction.gasPrice,
-      gasLimit: transaction.gasLimit,
-      to: transaction.to,
-      data: transaction.data,
-    })
+    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+      transaction.hash,
+    ])
+    const l1Fee = BigNumber.from(json.l1Fee)
 
-    const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-      gasPriceOracleWallet
-    ).getL1Fee(raw)
     const fee = l2Fee.add(l1Fee)
 
     const postBalances = await getBalances(env)
@@ -281,6 +272,8 @@ describe('Native ETH Integration Tests', async () => {
       'L1 Bridge Balance Mismatch'
     )
 
+    // post.l2UserBalance = pre.l2UserBalance - withdrawAmount + fee
+    // test only fee token is ETH
     expect(postBalances.l2UserBalance).to.deep.eq(
       preBalances.l2UserBalance.sub(withdrawAmount.add(fee)),
       'L2 User Balance Mismatch'
@@ -336,19 +329,10 @@ describe('Native ETH Integration Tests', async () => {
       const receipts = await env.waitForXDomainTransaction(transaction)
 
       // Compute the L1 portion of the fee
-      const l1Fee =
-        await await env.messenger.contracts.l2.OVM_GasPriceOracle.connect(
-          gasPriceOracleWallet
-        ).getL1Fee(
-          serialize({
-            nonce: transaction.nonce,
-            value: transaction.value,
-            gasPrice: transaction.gasPrice,
-            gasLimit: transaction.gasLimit,
-            to: transaction.to,
-            data: transaction.data,
-          })
-        )
+      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
+        transaction.hash,
+      ])
+      const l1Fee = BigNumber.from(json.l1Fee)
 
       // check that correct amount was withdrawn and that fee was charged
       const l2Fee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)

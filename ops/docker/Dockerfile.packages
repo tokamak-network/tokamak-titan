@@ -39,18 +39,11 @@ COPY ./integration-tests ./integration-tests
 # build it!
 RUN yarn build
 
+
 FROM base as deployer
 WORKDIR /opt/optimism/packages/contracts
 COPY ./ops/scripts/deployer.sh .
 CMD ["yarn", "run", "deploy"]
-
-FROM base as deployer-local
-WORKDIR /opt/optimism/packages/contracts
-COPY ./ops/scripts/deployer-local.sh .
-
-FROM base as deployer-hardhat-remote
-WORKDIR /opt/optimism/packages/contracts
-COPY ./ops/scripts/deployer-hardhat-remote.sh .
 
 FROM base as deployer-bedrock
 WORKDIR /opt/optimism/packages/contracts-bedrock

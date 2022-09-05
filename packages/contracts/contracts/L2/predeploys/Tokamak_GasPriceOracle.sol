@@ -237,14 +237,4 @@ contract Tokamak_GasPriceOracle {
         );
         emit WithdrawTOKAMAK(owner(), feeWallet);
     }
-
-    /**
-     * withdraw ETH tokens to l2 fee wallet
-     */
-    function withdrawETH() public onlyOwner {
-        // transfer with call()
-        (bool sent, ) = feeWallet.call{ value: address(this).balance }("");
-        require(sent, "Failed to send ETH to fee wallet");
-        emit WithdrawETH(owner(), feeWallet);
-    }
 }

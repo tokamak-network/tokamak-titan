@@ -135,6 +135,18 @@ func CalculateL1MsgFee(msg Message, state StateDB, gpo *common.Address) (*big.In
 	return l1Fee, nil
 }
 
+// CalculateL1MsgFee computes the L1 portion of the fee given
+// a tx.Data and a StateDB
+func CalculateL1DataFee(txData []byte, state StateDB, gpo *common.Address) (*big.Int, error) {
+	if gpo == nil {
+		gpo = &rcfg.L2GasPriceOracleAddress
+	}
+
+	l1GasPrice, overhead, scalar := readGPOStorageSlots(*gpo, state)
+	l1Fee := CalculateL1Fee(txData, overhead, l1GasPrice, scalar)
+	return l1Fee, nil
+}
+
 // CalculateL1Fee computes the L1 fee
 func CalculateL1Fee(data []byte, overhead, l1GasPrice *big.Int, scalar *big.Float) *big.Int {
 	// used gas for data + overhead
@@ -158,18 +170,27 @@ func CalculateL1GasUsed(data []byte, overhead *big.Int) *big.Int {
 
 // DeriveL1GasInfo reads L1 gas related information to be included
 // on the receipt
-func DeriveL1GasInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
-	// generate raw tx
-	tx := asTransaction(msg)
-	raw, err := rlpEncode(tx)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// func DeriveL1GasInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
+// 	// generate raw tx
+// 	tx := asTransaction(msg)
+// 	raw, err := rlpEncode(tx)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	// get l1GasPrice, overhead, scalar from state
+// 	// get l1GasPrice, overhead, scalar from state
+// 	l1GasPrice, overhead, scalar, _ := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
+// 	l1GasUsed := CalculateL1GasUsed(raw, overhead)
+// 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
+// 	return l1Fee, l1GasPrice, l1GasUsed, scalar, nil
+// }
+
+// DeriveL1GasDataInfo reads L1 gas related information to be included
+// on the receipt
+func DeriveL1GasDataInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
 	l1GasPrice, overhead, scalar := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
-	l1GasUsed := CalculateL1GasUsed(raw, overhead)
-	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
+	l1GasUsed := CalculateL1GasUsed(msg.Data(), overhead)
+	l1Fee := CalculateL1Fee(msg.Data(), overhead, l1GasPrice, scalar)
 	return l1Fee, l1GasPrice, l1GasUsed, scalar, nil
 }
 
