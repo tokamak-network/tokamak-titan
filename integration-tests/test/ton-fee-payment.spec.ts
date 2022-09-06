@@ -532,7 +532,7 @@ describe('Ton Fee Payment Integration Tests', () => {
     expect(l1GasPrice).to.deep.equal(BigNumber.from(json.l1GasPrice))
     expect(scaled.toString()).to.deep.equal(json.l1FeeScalar)
     expect(l1Fee).to.deep.equal(BigNumber.from(json.l1Fee))
-    expect(json.l2TonFee).to.deep.equal(txTonFee)
+    expect(json.erc20L2Fee).to.deep.equal(txTonFee)
   })
 
   // Ton Ethereum special fields on the receipt
@@ -570,7 +570,7 @@ describe('Ton Fee Payment Integration Tests', () => {
       expect(l1GasPrice).to.deep.equal(BigNumber.from(json.l1GasPrice))
       expect(scaled.toString()).to.deep.equal(json.l1FeeScalar)
       expect(l1Fee).to.deep.equal(BigNumber.from(json.l1Fee))
-      expect(json.l2TonFee).to.deep.equal(txTonFee)
+      expect(json.erc20L2Fee).to.deep.equal(txTonFee)
 
       gasPrice += 1
     }
@@ -690,7 +690,7 @@ describe('Ton Fee Payment Integration Tests', () => {
     const json = await env.l2Provider.send('eth_getTransactionReceipt', [
       registerTx.hash,
     ])
-    expect(json.l2TonFee).to.deep.equal(BigNumber.from(0))
+    expect(json.erc20L2Fee).to.deep.equal(BigNumber.from(0))
   })
 
 

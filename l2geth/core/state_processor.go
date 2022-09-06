@@ -122,11 +122,11 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	}
 
 	// Calculate the L2 Ton fee
-	L2TonFee := new(big.Int)
+	ERC20L2Fee := new(big.Int)
 	if feeTokenSelection.Cmp(common.Big1) == 0 {
 		tonPriceRatio := statedb.GetTonPriceRatio()
-		// L2TonFee = gasUsed * msg.GasPrice() * tonPriceRatio
-		L2TonFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tonPriceRatio))
+		// ERC20L2Fee = gasUsed * msg.GasPrice() * tonPriceRatio
+		ERC20L2Fee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tonPriceRatio))
 	}
 
 	// Update the state with pending changes
@@ -168,7 +168,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.BlockHash = statedb.BlockHash()
 	receipt.BlockNumber = header.Number
 	receipt.TransactionIndex = uint(statedb.TxIndex())
-	receipt.L2TonFee = L2TonFee
+	receipt.ERC20L2Fee = ERC20L2Fee
 
 	return receipt, err
 }
