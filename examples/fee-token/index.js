@@ -5,7 +5,6 @@ const {
   utils,
   BigNumber,
 } = require('ethers')
-// const { serialize } = require('@ethersproject/transactions')
 require('dotenv').config()
 
 const main = async () => {
@@ -20,23 +19,13 @@ const main = async () => {
   const PROXY__TON_GAS_PRICE_ORACLE_ADDRESS =
     '0x4200000000000000000000000000000000000024'
   const L2_TON_ADDRESS = '0x4200000000000000000000000000000000000023'
-  const OVM_GAS_PRICE_ORACLE_ADDRESS =
-    '0x420000000000000000000000000000000000000F'
 
   const sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
-  const OvmGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/OVM_GasPriceOracle.sol/OVM_GasPriceOracle.json')
-  const factory__OvmGasPriceOracle = new ContractFactory(
-    OvmGasPriceOracleArtifact.abi,
-    OvmGasPriceOracleArtifact.bytecode
-  )
-  const Ovm_GasPriceOracle = factory__OvmGasPriceOracle
-    .attach(OVM_GAS_PRICE_ORACLE_ADDRESS)
-    .connect(l2Wallet)
-
-  const TonGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Ton_GasPriceOracle.sol/Ton_GasPriceOracle.json')
+  // load Ton_GasPriceOracle contract
+  const TonGasPriceOracleArtifact = require('./artifacts/Ton_GasPriceOracle.sol/Ton_GasPriceOracle.json')
   const factory__TonGasPriceOracle = new ContractFactory(
     TonGasPriceOracleArtifact.abi,
     TonGasPriceOracleArtifact.bytecode
@@ -46,7 +35,7 @@ const main = async () => {
     .connect(l2Wallet)
 
   // load L2Ton contract
-  const l2StandardERC20 = require('../../packages/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json')
+  const l2StandardERC20 = require('./artifacts/L2StandardERC20.sol/L2StandardERC20.json')
   const factory__L2StandardERC20 = new ContractFactory(
     l2StandardERC20.abi,
     l2StandardERC20.bytecode
@@ -55,29 +44,29 @@ const main = async () => {
     .attach(L2_TON_ADDRESS)
     .connect(l2Wallet)
 
+  // check typeof arguments
   if (typeof FEE_TOKEN === 'undefined') {
     console.error(`FEE_TOKEN: ${FEE_TOKEN} is not supported`)
     return null
   }
-  // check
-  const isTonAsFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
-    l2Wallet.address
-  )
 
-  // 1. ETH as fee token
+  // use ETH as fee token
   if (FEE_TOKEN.toLocaleUpperCase() === 'ETH') {
-    // send tx (transfer TON)
-    if (isTonAsFeeToken === false) {
+    const setEthAsFeeTokenTx = await Ton_GasPriceOracle.useETHAsFeeToken()
+    await setEthAsFeeTokenTx.wait()
+    await sleep(2000)
+    const validateFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
+      l2Wallet.address
+    )
+    if (validateFeeToken === false) {
+      console.log(`Now ${l2Wallet.address} is using ${FEE_TOKEN} as fee token`)
+      await sleep(3000)
+
+      // send 1 TON
       const amount = utils.parseEther('1')
       const other = '0x1234123412341234123412341234123412341234'
       const ETHBalanceBefore = await l2Wallet.getBalance()
       const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
-      console.log(
-        `Balance ETH Before: ${utils.formatEther(ETHBalanceBefore)} ETH`
-      )
-      console.log(
-        `Balance TON Before: ${utils.formatEther(TonBalanceBefore)} TON`
-      )
 
       const tx = await L2Ton.transfer(other, amount)
       console.log('txHash: ', tx.hash)
@@ -91,48 +80,34 @@ const main = async () => {
         const ETHBalanceAfter = await l2Wallet.getBalance()
         const TonBalanceAfter = await L2Ton.balanceOf(l2Wallet.address)
 
-        console.log(
-          `Balance ETH After: ${utils.formatEther(ETHBalanceAfter)} ETH`
-        )
-        console.log(
-          `Balance TON After: ${utils.formatEther(TonBalanceAfter)} TON`
-        )
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
-        console.log(
-          'ETHBalanceAfter - ETHBalanceBefore: ',
-          utils.formatEther(usedETH)
-        )
-        console.log(
-          'TonBalanceAfter - TonBalanceBefore: ',
-          utils.formatEther(usedTON)
-        )
-        l1Fee = BigNumber.from(json.l1Fee)
-        l2Fee = receipt.gasUsed.mul(tx.gasPrice)
-        console.log('L1Fee: ', utils.formatEther(l1Fee))
-        console.log('L2Fee: ', utils.formatEther(l2Fee))
+        console.log('Change in ETH balance: ', utils.formatEther(usedETH))
+        console.log('change in TON balance: ', utils.formatEther(usedTON))
+        ETHl1Fee = BigNumber.from(json.l1Fee)
+        ETHl2Fee = receipt.gasUsed.mul(tx.gasPrice)
+        console.log('ETHl1Fee: ', utils.formatEther(ETHl1Fee))
+        console.log('ETHl2Fee: ', utils.formatEther(ETHl2Fee))
       }
-    } else {
-      console.log(
-        `The address ${l2Wallet.address} is not registered ${FEE_TOKEN} as fee token`
-      )
     }
   }
-  // 2. TON as fee token
+  // use TON as fee token
   else if (FEE_TOKEN.toLocaleUpperCase() === 'TON') {
-    // send tx (transfer ETH)
-    if (isTonAsFeeToken === true) {
+    const setTonAsFeeTokenTx = await Ton_GasPriceOracle.useTonAsFeeToken()
+    await setTonAsFeeTokenTx.wait()
+    await sleep(2000)
+    const validateFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
+      l2Wallet.address
+    )
+    if (validateFeeToken === true) {
+      console.log(`Now ${l2Wallet.address} is using ${FEE_TOKEN} as fee token`)
+      await sleep(3000)
+
+      // send 0.01 ETH
       const amount = utils.parseEther('0.01')
       const other = '0x1234123412341234123412341234123412341234'
       const ETHBalanceBefore = await l2Wallet.getBalance()
       const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
-
-      console.log(
-        `Balance ETH Before: ${utils.formatEther(ETHBalanceBefore)} ETH`
-      )
-      console.log(
-        `Balance TON Before: ${utils.formatEther(TonBalanceBefore)} TON`
-      )
 
       const unsigned = await l2Wallet.populateTransaction({
         to: other,
@@ -151,33 +126,17 @@ const main = async () => {
         const ETHBalanceAfter = await l2Wallet.getBalance()
         const TonBalanceAfter = await L2Ton.balanceOf(l2Wallet.address)
 
-        console.log(
-          `Balance ETH After: ${utils.formatEther(ETHBalanceAfter)} ETH`
-        )
-        console.log(
-          `Balance TON After: ${utils.formatEther(TonBalanceAfter)} TON`
-        )
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
-        console.log(
-          'ETHBalanceAfter - ETHBalanceBefore: ',
-          utils.formatEther(usedETH)
-        )
-        console.log(
-          'TonBalanceAfter - TonBalanceBefore: ',
-          utils.formatEther(usedTON)
-        )
+        console.log('Change in ETH balance: ', utils.formatEther(usedETH))
+        console.log('Change in TON balance: ', utils.formatEther(usedTON))
         const priceRatio = await Ton_GasPriceOracle.priceRatio()
-        const L1TonFee = BigNumber.from(json.l1Fee).mul(priceRatio)
-        const ERC20L2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+        const TONL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
+        const TONL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
-        console.log('L1TonFee: ', utils.formatEther(L1TonFee))
-        console.log('ERC20L2Fee: ', utils.formatEther(ERC20L2Fee))
+        console.log('TONL1Fee: ', utils.formatEther(TONL1Fee))
+        console.log('TONL2Fee: ', utils.formatEther(TONL2Fee))
       }
-    } else {
-      console.log(
-        `The address ${l2Wallet.address} is not registered ${FEE_TOKEN} as fee token`
-      )
     }
   } else {
     console.error(`FEE_TOKEN: ${FEE_TOKEN} is not supported`)
