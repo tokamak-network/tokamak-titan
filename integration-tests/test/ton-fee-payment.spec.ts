@@ -120,9 +120,6 @@ describe('Ton Fee Payment Integration Tests', () => {
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
 
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
@@ -134,32 +131,28 @@ describe('Ton Fee Payment Integration Tests', () => {
     )
 
     const priceRatio = await Ton_GasPriceOracle.priceRatio()
-    // tonFee = receipt.gasUsed * tx.gasPrice * priceRatio
-    const TonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-    const TonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+    const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     // Make sure that user only pay transferred ETH
     expect(ETHBalanceBefore.sub(ETHBalanceAfter)).to.deep.equal(amount)
 
-    // Make sure that the ETH Fee Vault should be increased to the l1 fee
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+    // Make sure that the ETH Fee Vault doesn't change
+    expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
-    // Make sure that we deduct ton amount(l1 + l2 fee) from user's account
-    expect(TonBalanceBefore.sub(TonBalanceAfter)).to.deep.equal(
-      TonL2Fee.add(TonL1Fee)
-    )
+    // Make sure that we deduct ton (tx fee) from user's account
+    expect(TonBalanceBefore.sub(TonBalanceAfter)).to.deep.equal(tonFee)
 
     // the user pay tx fee as TON, the fee is going to be vault
     // Make sure that the ton fee vault receives the tx fee
     expect(
       TonFeeVaultBalanceAfter.sub(TonFeeVaultBalanceBefore)
-    ).to.deep.equal(TonL2Fee)
+    ).to.deep.equal(tonFee)
 
     await setPrices(env, 1)
   })
 
   it('Paying a nonzero but acceptable ton gasPrice fee for transferring TON', async () => {
-    await setPrices(env, 1000)
+    await setPrices(env, 0)
 
     const amount = utils.parseEther('0.0000001')
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -176,10 +169,6 @@ describe('Ton Fee Payment Integration Tests', () => {
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
 
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
-
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
     const ETHFeeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
@@ -190,29 +179,28 @@ describe('Ton Fee Payment Integration Tests', () => {
     )
 
     const priceRatio = await Ton_GasPriceOracle.priceRatio()
-    const TonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-    const TonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+    const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     // Make sure that ETH balance doesn't change
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
 
     // Make sure that the ETH Fee Vault doesn't change
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+    expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
     // Make sure that we deduct Ton from user's account
     expect(TonBalanceBefore.sub(TonBalanceAfter)).to.deep.equal(
-      TonL2Fee.add(amount).add(TonL1Fee)
+      tonFee.add(amount)
     )
 
     // Make sure that the Ton fee vault receives the tx fee
     expect(
       TonFeeVaultBalanceAfter.sub(TonFeeVaultBalanceBefore)
-    ).to.deep.equal(TonL2Fee)
+    ).to.deep.equal(tonFee)
 
     await setPrices(env, 1)
   })
 
-  it("Should revert if users don't have enough Ton tokens", async () => {
+  it("Should revert if users don't have enough TON tokens", async () => {
     await setPrices(env, 1000)
 
     const ETHBalanceBefore = await env.l2Wallet.getBalance()
@@ -270,14 +258,8 @@ describe('Ton Fee Payment Integration Tests', () => {
     // send ETH
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
-
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
-
     const priceRatio = await Ton_GasPriceOracle.priceRatio()
-    const tonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-    const tonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+    const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
@@ -291,12 +273,12 @@ describe('Ton Fee Payment Integration Tests', () => {
     const tonFeeReceived = TonFeeVaultBalanceAfter.sub(
       TonFeeVaultBalanceBefore
     )
-    expect(tonBalanceDiff).to.deep.equal(tonL2Fee.add(tonL1Fee))
+    expect(tonBalanceDiff).to.deep.equal(tonFee)
     // There is no inflation
-    expect(tonFeeReceived).to.deep.equal(tonL2Fee)
+    expect(tonFeeReceived).to.deep.equal(tonFee)
 
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+    expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
     await setPrices(env, 1)
   })
@@ -317,15 +299,9 @@ describe('Ton Fee Payment Integration Tests', () => {
     const tx = await L2Ton.transfer(env.l2Wallet.address, 0)
 
     const receipt = await tx.wait()
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
-
 
     const priceRatio = await Ton_GasPriceOracle.priceRatio()
-    const tonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-    const tonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-    const txTonFee = tonL1Fee.add(tonL2Fee)
+    const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
     const ETHFeeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
@@ -338,19 +314,19 @@ describe('Ton Fee Payment Integration Tests', () => {
     const tonFeeReceived = TonFeeVaultBalanceAfter.sub(
       TonFeeVaultBalanceBefore
     )
-    expect(tonBalanceDiff).to.deep.equal(txTonFee)
+    expect(tonBalanceDiff).to.deep.equal(tonFee)
     // There is no inflation
-    expect(tonFeeReceived).to.deep.equal(tonL2Fee)
+    expect(tonFeeReceived).to.deep.equal(tonFee)
 
     // no change
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-    expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+    expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
     await setPrices(env, 1)
   })
 
   it('should compute correct fee with different gas limit for transferring ETH', async () => {
-    await setPrices(env, 1000)
+    await setPrices(env, 0)
 
     const amount = utils.parseEther('0.0000001')
 
@@ -380,14 +356,8 @@ describe('Ton Fee Payment Integration Tests', () => {
       const tx = await env.l2Wallet.sendTransaction(unsigned)
       const receipt = await tx.wait()
 
-      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-        tx.hash
-      ])
-
       const priceRatio = await Ton_GasPriceOracle.priceRatio()
-      const tonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-      const tonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-      const txTonFee = tonL1Fee.add(tonL2Fee)
+      const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
       const ETHBalanceAfter = await env.l2Wallet.getBalance()
       const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
       const ETHFeeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
@@ -401,15 +371,12 @@ describe('Ton Fee Payment Integration Tests', () => {
         TonFeeVaultBalanceBefore
       )
 
-      expect(tonBalanceDiff).to.deep.equal(txTonFee)
-      expect(tonFeeReceived).to.deep.equal(tonL2Fee)
+      expect(tonBalanceDiff).to.deep.equal(tonFee)
+      expect(tonFeeReceived).to.deep.equal(tonFee)
 
-      // amount
-      // expect(ETHBalanceBefore.sub(ETHBalanceAfter)).to.deep.equal(amount)
+      // no change
       expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-
-      // l1 fee
-      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+      expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
       gasLimit += 100
     }
@@ -417,7 +384,7 @@ describe('Ton Fee Payment Integration Tests', () => {
     await setPrices(env, 1)
   })
 
-  it('should compute correct fee with different gas limit for transferring Ton', async () => {
+  it('should compute correct fee with different gas limit for transferring TON', async () => {
     await setPrices(env, 1000)
 
     const estimatedGas = await L2Ton.estimateGas.transfer(
@@ -438,18 +405,11 @@ describe('Ton Fee Payment Integration Tests', () => {
       const tx = await L2Ton.transfer(
         env.l2Wallet.address,
         ethers.utils.parseEther('1'),
-        { gasLimit }
       )
       const receipt = await tx.wait()
 
-      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-        tx.hash
-      ])
-
       const priceRatio = await Ton_GasPriceOracle.priceRatio()
-      const tonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-      const tonL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
-      const txTonFee = tonL1Fee.add(tonL2Fee)
+      const tonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
       const ETHBalanceAfter = await env.l2Wallet.getBalance()
       const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
       const ETHFeeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
@@ -463,17 +423,15 @@ describe('Ton Fee Payment Integration Tests', () => {
         TonFeeVaultBalanceBefore
       )
 
-      // tx fee + amount
-      expect(tokmakaBalanceDiff).to.deep.equal(txTonFee.add(tx.value))
+      // tx fee
+      expect(tokmakaBalanceDiff).to.deep.equal(tonFee)
 
       // l2 fee
-      expect(tonFeeReceived).to.deep.equal(tonL2Fee)
+      expect(tonFeeReceived).to.deep.equal(tonFee)
 
       // no change
       expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
-
-      // l1 fee
-      expect(ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)).to.deep.equal(BigNumber.from(json.l1Fee))
+      expect(ETHFeeVaultBalanceAfter).to.deep.equal(ETHFeeVaultBalanceBefore)
 
       gasLimit += 100
     }
@@ -484,7 +442,7 @@ describe('Ton Fee Payment Integration Tests', () => {
   it('should reject a transaction with a too low gas limit', async () => {
     const tx = {
       to: env.l2Wallet.address,
-      value: ethers.utils.parseEther('0.000001'),
+      value: ethers.utils.parseEther('0.001'),
       gasLimit: 1100000,
     }
 
@@ -502,7 +460,7 @@ describe('Ton Fee Payment Integration Tests', () => {
   })
 
   // Ton Ethereum special fields on the receipt
-  it('includes L2 Ton fee', async () => {
+  it('includes Ton fee', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
     )
@@ -536,7 +494,7 @@ describe('Ton Fee Payment Integration Tests', () => {
   })
 
   // Ton Ethereum special fields on the receipt
-  it('includes L2 Ton fee with different gas price', async () => {
+  it('includes Ton fee with different gas price', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
     )
@@ -592,14 +550,10 @@ describe('Ton Fee Payment Integration Tests', () => {
     const TestContract = await Factory__Ton_GasPriceOracleProxyCall.deploy(
       Ton_GasPriceOracle.address
     )
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      TestContract.deployTransaction.hash
-    ])
     const receipt = await TestContract.deployTransaction.wait()
     const priceRatio = await Ton_GasPriceOracle.priceRatio()
-    const TonL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
     // receipt.gasUsed * 1000 * priceRatio
-    const TonL2Fee = receipt.gasUsed.mul(BigNumber.from(1000)).mul(priceRatio)
+    const tonFee = receipt.gasUsed.mul(BigNumber.from(1000)).mul(priceRatio)
     const ETHBalanceAfter = await env.l2Wallet.getBalance()
     const TonBalanceAfter = await L2Ton.balanceOf(env.l2Wallet.address)
     const ETHFeeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
@@ -614,13 +568,13 @@ describe('Ton Fee Payment Integration Tests', () => {
     )
     const ETHFeeVaultBalanceDiff = ETHFeeVaultBalanceAfter.sub(ETHFeeVaultBalanceBefore)
 
-    expect(tonBalanceDiff).to.deep.equal(TonL1Fee.add(TonL2Fee))
+    expect(tonBalanceDiff).to.deep.equal(tonFee)
 
-    expect(tonFeeReceived).to.deep.equal(TonL2Fee)
+    expect(tonFeeReceived).to.deep.equal(tonFee)
 
     expect(ETHBalanceBefore).to.deep.equal(ETHBalanceAfter)
 
-    expect(ETHFeeVaultBalanceDiff).to.deep.equal(BigNumber.from(json.l1Fee))
+    expect(ETHFeeVaultBalanceDiff).to.deep.equal(BigNumber.from(0))
 
     await setPrices(env, 1)
   })
@@ -692,7 +646,6 @@ describe('Ton Fee Payment Integration Tests', () => {
     ])
     expect(json.erc20L2Fee).to.deep.equal(BigNumber.from(0))
   })
-
 
   it('should be able to withdraw fees back to L1 once the minimum is met', async function () {
     const feeWallet = await Ton_GasPriceOracle.feeWallet()

@@ -185,23 +185,6 @@ func CalculateL1GasUsed(data []byte, overhead *big.Int) *big.Int {
 	return new(big.Int).Add(l1Gas, overhead)
 }
 
-// DeriveL1GasInfo reads L1 gas related information to be included
-// on the receipt
-// func DeriveL1GasInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
-// 	// generate raw tx
-// 	tx := asTransaction(msg)
-// 	raw, err := rlpEncode(tx)
-// 	if err != nil {
-// 		return nil, nil, nil, nil, err
-// 	}
-
-// 	// get l1GasPrice, overhead, scalar from state
-// 	l1GasPrice, overhead, scalar, _ := readGPOStorageSlots(rcfg.L2GasPriceOracleAddress, state)
-// 	l1GasUsed := CalculateL1GasUsed(raw, overhead)
-// 	l1Fee := CalculateL1Fee(raw, overhead, l1GasPrice, scalar)
-// 	return l1Fee, l1GasPrice, l1GasUsed, scalar, nil
-// }
-
 // DeriveL1GasDataInfo reads L1 gas related information to be included
 // on the receipt
 func DeriveL1GasDataInfo(msg Message, state StateDB) (*big.Int, *big.Int, *big.Int, *big.Float, error) {
