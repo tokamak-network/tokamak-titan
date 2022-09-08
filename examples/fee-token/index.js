@@ -68,6 +68,9 @@ const main = async () => {
       const ETHBalanceBefore = await l2Wallet.getBalance()
       const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
 
+      console.log(`ETH balance: ${utils.formatEther(ETHBalanceBefore)} ETH`)
+      console.log(`TON balance: ${utils.formatEther(TonBalanceBefore)} TON`)
+
       const tx = await L2Ton.transfer(other, amount)
       console.log('txHash: ', tx.hash)
       const receipt = await tx.wait()
@@ -82,12 +85,10 @@ const main = async () => {
 
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
-        console.log('Change in ETH balance: ', utils.formatEther(usedETH))
-        console.log('change in TON balance: ', utils.formatEther(usedTON))
-        ETHl1Fee = BigNumber.from(json.l1Fee)
-        ETHl2Fee = receipt.gasUsed.mul(tx.gasPrice)
-        console.log('ETHl1Fee: ', utils.formatEther(ETHl1Fee))
-        console.log('ETHl2Fee: ', utils.formatEther(ETHl2Fee))
+        console.log(`Change in ETH balance: ${utils.formatEther(usedETH)} ETH`)
+        console.log(`Change in TON balance: ${utils.formatEther(usedTON)} TON`)
+        TxFee = receipt.gasUsed.mul(tx.gasPrice)
+        console.log(`TxFee: ${utils.formatEther(TxFee)} ${FEE_TOKEN}`)
       }
     }
   }
@@ -109,6 +110,9 @@ const main = async () => {
       const ETHBalanceBefore = await l2Wallet.getBalance()
       const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
 
+      console.log(`ETH balance: ${utils.formatEther(ETHBalanceBefore)} ETH`)
+      console.log(`TON balance: ${utils.formatEther(TonBalanceBefore)} TON`)
+
       const unsigned = await l2Wallet.populateTransaction({
         to: other,
         value: amount,
@@ -128,14 +132,12 @@ const main = async () => {
 
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
         const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
-        console.log('Change in ETH balance: ', utils.formatEther(usedETH))
-        console.log('Change in TON balance: ', utils.formatEther(usedTON))
+        console.log(`Change in ETH balance: ${utils.formatEther(usedETH)} ETH`)
+        console.log(`Change in TON balance: ${utils.formatEther(usedTON)} TON`)
         const priceRatio = await Ton_GasPriceOracle.priceRatio()
-        const TONL1Fee = BigNumber.from(json.l1Fee).mul(priceRatio)
-        const TONL2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+        const TxFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
-        console.log('TONL1Fee: ', utils.formatEther(TONL1Fee))
-        console.log('TONL2Fee: ', utils.formatEther(TONL2Fee))
+        console.log(`TxFee: ${utils.formatEther(TxFee)} ${FEE_TOKEN}`)
       }
     }
   } else {

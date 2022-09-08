@@ -133,19 +133,11 @@ func TestNewStateTransactionForEth(t *testing.T) {
 	// user pay L1 fee + L2 fee
 	userPaidEthFee := new(big.Int).Sub(preUserEthBalance, afterUserEthBalance)
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
-	// calculated l1 fee is 4126
-	l1FeeEth := big.NewInt(3838)
 
 	// userPaidEthFee = vaultReceivedFee + l1FeeEth
 	// userPaidEthFee must be equal to vaultReceivedFee
 	if userPaidEthFee.Cmp(vaultReceivedFee) != 0 {
 		t.Fatal("failed to charge Eth fee")
-	}
-	// estimated cost = l1 fee + l2 fee = st.l1Fee + (gasUsed * l2 gasprice)
-	estimatedL2fee := new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1)
-	estimatedCost := new(big.Int).Add(l1FeeEth, estimatedL2fee)
-	if userPaidEthFee.Cmp(estimatedCost) != 0 {
-		t.Fatal("failed to charge l1 security fee")
 	}
 
 	if gasUsed > 5000000 {

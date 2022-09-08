@@ -50,7 +50,7 @@ describe('Fee Payment Integration Tests', async () => {
     }
   )
 
-  hardhatTest('check L1 fee', async () => {
+  hardhatTest('receipt.l1Fee must equal to l1Fee derive from OVM_GasPriceOracle', async () => {
     const l1Fee = await env.messenger.contracts.l2.OVM_GasPriceOracle.getL1Fee(
       '0x'
     )
@@ -100,27 +100,20 @@ describe('Fee Payment Integration Tests', async () => {
     const receipt = await tx.wait()
     expect(receipt.status).to.eq(1)
 
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
-
     const balanceAfter = await env.l2Wallet.getBalance()
     const feeVaultBalanceAfter = await env.l2Wallet.provider.getBalance(
       env.messenger.contracts.l2.OVM_SequencerFeeVault.address
     )
 
-    const l1Fee = BigNumber.from(json.l1Fee)
-    const l2Fee = receipt.gasUsed.mul(tx.gasPrice)
-
-    const expectedFeePaid = l1Fee.add(l2Fee)
+    const Fee = receipt.gasUsed.mul(tx.gasPrice)
 
     expect(balanceBefore.sub(balanceAfter)).to.deep.equal(
-      expectedFeePaid.add(amount)
+      Fee.add(amount)
     )
 
     // Make sure the fee was transferred to the vault.
     expect(feeVaultBalanceAfter.sub(feeVaultBalanceBefore)).to.deep.equal(
-      expectedFeePaid
+      Fee
     )
 
     await setPrices(env, 1)
@@ -130,10 +123,6 @@ describe('Fee Payment Integration Tests', async () => {
     await setPrices(env, 1000)
 
     const preBalance = await env.l2Wallet.getBalance()
-
-    // const OVM_GasPriceOracle = getContractFactory('OVM_GasPriceOracle')
-    //   .attach(predeploys.OVM_GasPriceOracle)
-    //   .connect(env.l2Wallet)
 
     const WETH = getContractFactory('OVM_ETH')
       .attach(predeploys.OVM_ETH)
@@ -150,14 +139,9 @@ describe('Fee Payment Integration Tests', async () => {
 
     const tx = await env.l2Wallet.sendTransaction(unsigned)
     const receipt = await tx.wait()
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      tx.hash
-    ])
-    const l1Fee = BigNumber.from(json.l1Fee)
-    const l2Fee = receipt.gasUsed.mul(tx.gasPrice)
+    const fee = receipt.gasUsed.mul(tx.gasPrice)
     const postBalance = await env.l2Wallet.getBalance()
     const feeVaultAfter = await WETH.balanceOf(predeploys.OVM_SequencerFeeVault)
-    const fee = l1Fee.add(l2Fee)
     const balanceDiff = preBalance.sub(postBalance)
     const feeReceived = feeVaultAfter.sub(feeVaultBefore)
     expect(balanceDiff).to.deep.equal(fee)

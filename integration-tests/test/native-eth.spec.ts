@@ -255,15 +255,7 @@ describe('Native ETH Integration Tests', async () => {
     await env.relayXDomainMessages(transaction)
     const receipts = await env.waitForXDomainTransaction(transaction)
 
-    const l2Fee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)
-
-    // Calculate the L1 portion of the fee
-    const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-      transaction.hash,
-    ])
-    const l1Fee = BigNumber.from(json.l1Fee)
-
-    const fee = l2Fee.add(l1Fee)
+    const txFee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)
 
     const postBalances = await getBalances(env)
 
@@ -272,10 +264,9 @@ describe('Native ETH Integration Tests', async () => {
       'L1 Bridge Balance Mismatch'
     )
 
-    // post.l2UserBalance = pre.l2UserBalance - withdrawAmount + fee
-    // test only fee token is ETH
+    // post.l2UserBalance = pre.l2UserBalance - withdrawAmount - fee
     expect(postBalances.l2UserBalance).to.deep.eq(
-      preBalances.l2UserBalance.sub(withdrawAmount.add(fee)),
+      preBalances.l2UserBalance.sub(withdrawAmount).sub(txFee),
       'L2 User Balance Mismatch'
     )
 
@@ -328,22 +319,15 @@ describe('Native ETH Integration Tests', async () => {
       await env.relayXDomainMessages(transaction)
       const receipts = await env.waitForXDomainTransaction(transaction)
 
-      // Compute the L1 portion of the fee
-      const json = await env.l2Provider.send('eth_getTransactionReceipt', [
-        transaction.hash,
-      ])
-      const l1Fee = BigNumber.from(json.l1Fee)
-
       // check that correct amount was withdrawn and that fee was charged
-      const l2Fee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)
+      const txFee = receipts.tx.gasPrice.mul(receipts.receipt.gasUsed)
 
-      const fee = l1Fee.add(l2Fee)
       const l1BalanceAfter = await other
         .connect(env.l1Wallet.provider)
         .getBalance()
       const l2BalanceAfter = await other.getBalance()
       expect(l1BalanceAfter).to.deep.eq(l1BalanceBefore.add(withdrawnAmount))
-      expect(l2BalanceAfter).to.deep.eq(amount.sub(withdrawnAmount).sub(fee))
+      expect(l2BalanceAfter).to.deep.eq(amount.sub(withdrawnAmount).sub(txFee))
     },
     envConfig.MOCHA_TIMEOUT * 3
   )
