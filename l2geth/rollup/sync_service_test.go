@@ -801,7 +801,7 @@ func TestVerifyFee(t *testing.T) {
 	}
 }
 
-func TestZeroGasPriceTransactionsUsingTokamakAsFeeToken(t *testing.T) {
+func TestZeroGasPriceTransactionsUsingTonAsFeeToken(t *testing.T) {
 	service, _, _, err := newTestSyncService(false, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -835,14 +835,14 @@ func TestZeroGasPriceTransactionsUsingTokamakAsFeeToken(t *testing.T) {
 		t.Fatal("Cannot get state db")
 	}
 
-	// Pick Tokamak as the fee token
-	rcfg.OvmTokamakGasPricOracle = common.HexToAddress("0x4200000000000000000000000000000000000024")
+	// Pick Ton as the fee token
+	rcfg.OvmTonGasPricOracle = common.HexToAddress("0x4200000000000000000000000000000000000024")
 	isFeeTokenSelected := state.GetFeeTokenSelection(from)
 	if isFeeTokenSelected.Cmp(big.NewInt(0)) != 0 {
 		t.Fatal("Cannot get fee token selection")
 	}
 	// Calculate fee token selection key
-	state.SetTokamakAsFeeToken(from)
+	state.SetTonAsFeeToken(from)
 
 	// Check the token selection result
 	isFeeTokenSelected = state.GetFeeTokenSelection(from)

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.9;
 
 /**
- * @title Lib_ResolvedDelegateTokamakProxy
+ * @title Lib_ResolvedDelegateTonProxy
  */
-contract Lib_ResolvedDelegateTokamakProxy {
+contract Lib_ResolvedDelegateTonProxy {
     /*************
      * Variables *
      *************/
