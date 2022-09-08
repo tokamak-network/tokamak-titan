@@ -1,4 +1,4 @@
-package tokamak
+package ton
 
 import (
 	"crypto/ecdsa"

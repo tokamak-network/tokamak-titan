@@ -1,6 +1,6 @@
 # Example: Register fee token
 
-The user can use ETH or TOKAMAK as a transaction fee in L2. To do this, you can call the `Tokamak_GasPriceOracle` contract to change which token the account uses as a transaction fee. (This is called a "register")
+The user can use ETH or TON as a transaction fee in L2. To do this, you can call the `Ton_GasPriceOracle` contract to change which token the account uses as a transaction fee. (This is called a "register")
 
 ## Build
 
@@ -19,8 +19,8 @@ cp .env.example .env
 
 ## Run
 ```bash
-# use TOKAMAK as fee token
-yarn use:tokamak
+# use TON as fee token
+yarn use:ton
 
 # use ETH as fee token
 yarn use:eth

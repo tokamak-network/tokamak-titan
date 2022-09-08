@@ -12,8 +12,8 @@ import { predeploys } from '../src/predeploys'
 import { getContractFromArtifact } from '../src/deploy-utils'
 import { names } from '../src/address-names'
 
-// add storage slots for Proxy__Tokamak_GasPriceOracle
-const addSlotsForTokamakProxyContract = (
+// add storage slots for Proxy__Ton_GasPriceOracle
+const addSlotsForTonProxyContract = (
   dump: any,
   predeployAddress: string,
   variable: any
@@ -30,7 +30,7 @@ const addSlotsForTokamakProxyContract = (
 
 // hardhat command
 task('take-dump').setAction(async (args, hre) => {
-  const L1TokamakToken = await hre.deployments.get('L1TokamakToken')
+  const L1TonToken = await hre.deployments.get('L1TonToken')
 
   // deployer
   const { deployer } = await hre.getNamedAccounts()
@@ -112,19 +112,19 @@ task('take-dump').setAction(async (args, hre) => {
       decimals: 18,
     },
     L2StandardERC20: {
-      _name: 'Tokamak Test Token',
-      _symbol: 'TOKAMAK',
-      l1Token: L1TokamakToken.address,
+      _name: 'Ton Test Token',
+      _symbol: 'TON',
+      l1Token: L1TonToken.address,
       l2Bridge: predeploys.L2StandardBridge,
     },
-    Proxy__Tokamak_GasPriceOracle: {
+    Proxy__Ton_GasPriceOracle: {
       proxyOwner: deployer,
-      proxyTarget: predeploys.Tokamak_GasPriceOracle,
+      proxyTarget: predeploys.Ton_GasPriceOracle,
     },
-    Tokamak_GasPriceOracle: {
+    Ton_GasPriceOracle: {
       _owner: hre.deployConfig.ovmGasPriceOracleOwner,
       feeWallet: hre.deployConfig.ovmFeeWalletAddress,
-      l2TokamakAddress: predeploys.L2StandardERC20,
+      l2TonAddress: predeploys.L2StandardERC20,
       minPriceRatio: 500,
       maxPriceRatio: 5000,
       priceRatio: 2000,
@@ -150,8 +150,8 @@ task('take-dump').setAction(async (args, hre) => {
       // directly used in Solidity (yet). This bytecode string simply executes the 0x4B opcode
       // and returns the address given by that opcode.
       dump[predeployAddress].code = '0x4B60005260206000F3'
-    } else if (predeployName === 'Proxy__Tokamak_GasPriceOracle') {
-      const artifact = getContractArtifact('Lib_ResolvedDelegateTokamakProxy')
+    } else if (predeployName === 'Proxy__Ton_GasPriceOracle') {
+      const artifact = getContractArtifact('Lib_ResolvedDelegateTonProxy')
       dump[predeployAddress].code = artifact.deployedBytecode
     } else {
       const artifact = getContractArtifact(predeployName)
@@ -160,28 +160,28 @@ task('take-dump').setAction(async (args, hre) => {
 
     // Compute and set the required storage slots for each contract that needs it.
     if (predeployName in variables) {
-      if (predeployName === 'Proxy__Tokamak_GasPriceOracle') {
-        addSlotsForTokamakProxyContract(
+      if (predeployName === 'Proxy__Ton_GasPriceOracle') {
+        addSlotsForTonProxyContract(
           dump,
           predeployAddress,
           variables[predeployName]
         )
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const storageLayout = await getStorageLayout('Tokamak_GasPriceOracle')
+        const storageLayout = await getStorageLayout('Ton_GasPriceOracle')
         const slots = computeStorageSlots(
           storageLayout,
-          variables['Tokamak_GasPriceOracle']
+          variables['Ton_GasPriceOracle']
         )
         for (const slot of slots) {
-          dump[predeploys.Proxy__Tokamak_GasPriceOracle].storage[slot.key] =
+          dump[predeploys.Proxy__Ton_GasPriceOracle].storage[slot.key] =
             slot.val
         }
         continue
       }
       const storageLayout = await getStorageLayout(predeployName)
       // Calculate the mapping keys
-      if (predeployName === 'Lib_ResolvedDelegateTokamakProxy') {
-        addSlotsForTokamakProxyContract(
+      if (predeployName === 'Lib_ResolvedDelegateTonProxy') {
+        addSlotsForTonProxyContract(
           dump,
           predeployAddress,
           variables[predeployName]

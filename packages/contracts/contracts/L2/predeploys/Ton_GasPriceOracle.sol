@@ -14,9 +14,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @title Tokamak_GasPriceOracle
+ * @title Ton_GasPriceOracle
  */
-contract Tokamak_GasPriceOracle {
+contract Ton_GasPriceOracle {
     // TODO: define value of the constants
     using SafeERC20 for IERC20;
 
@@ -24,8 +24,8 @@ contract Tokamak_GasPriceOracle {
      * Constants *
      *************/
 
-    // Minimum TOKAMAK balance that can be withdrawn in a single withdrawal.
-    // 150 TOKAMAK
+    // Minimum TON balance that can be withdrawn in a single withdrawal.
+    // 150 TON
     uint256 public constant MIN_WITHDRAWAL_AMOUNT = 150e18;
 
     /*************
@@ -38,24 +38,24 @@ contract Tokamak_GasPriceOracle {
     // Address that will hold the fees once withdrawn. Dynamically initialized within l2geth.
     address public feeWallet;
 
-    // L2 Tokamak token address
-    address public l2TokamakAddress;
+    // L2 Ton token address
+    address public l2TonAddress;
 
-    // The maximum price ratio value of ETH and TOKAMAK
+    // The maximum price ratio value of ETH and TON
     uint256 public maxPriceRatio = 5000;
 
-    // The minimum price ratio value of ETH and TOKAMAK
+    // The minimum price ratio value of ETH and TON
     uint256 public minPriceRatio = 500;
 
-    // The price ratio of ETH and TOKAMAK
-    // This price ratio considers the saving percentage of using TOKAMAK as the fee token
+    // The price ratio of ETH and TON
+    // This price ratio considers the saving percentage of using TON as the fee token
     uint256 public priceRatio;
 
     // Gas price oracle address (OVM_GasPriceOracle)
     address public gasPriceOracleAddress = 0x420000000000000000000000000000000000000F;
 
-    // Record the wallet address that wants to use tokamak as fee token
-    mapping(address => bool) public tokamakFeeTokenUsers;
+    // Record the wallet address that wants to use ton as fee token
+    mapping(address => bool) public tonFeeTokenUsers;
 
     // Price ratio without discount
     uint256 public marketPriceRatio;
@@ -65,13 +65,13 @@ contract Tokamak_GasPriceOracle {
      *************/
 
     event TransferOwnership(address, address);
-    event UseTokamakAsFeeToken(address);
+    event UseTonAsFeeToken(address);
     event UseETHAsFeeToken(address);
     event UpdatePriceRatio(address, uint256, uint256);
     event UpdateMaxPriceRatio(address, uint256);
     event UpdateMinPriceRatio(address, uint256);
     event UpdateGasPriceOracleAddress(address, address);
-    event WithdrawTOKAMAK(address, address);
+    event WithdrawTON(address, address);
     event WithdrawETH(address, address);
 
     /**********************
@@ -120,15 +120,15 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Initialize feeWallet and l2TokamakAddress.
+     * Initialize feeWallet and l2TonAddress.
      */
-    function initialize(address payable _feeWallet, address _l2TokamakAddress)
+    function initialize(address payable _feeWallet, address _l2TonAddress)
         public
         onlyNotInitialized
     {
-        require(_feeWallet != address(0) && _l2TokamakAddress != address(0));
+        require(_feeWallet != address(0) && _l2TonAddress != address(0));
         feeWallet = _feeWallet;
-        l2TokamakAddress = _l2TokamakAddress;
+        l2TonAddress = _l2TonAddress;
 
         // Initialize the parameters
         _owner = msg.sender;
@@ -140,17 +140,17 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Add the users that want to use TOKAMAK as the fee token
+     * Add the users that want to use TON as the fee token
      */
-    function useTokamakAsFeeToken() public {
+    function useTonAsFeeToken() public {
         require(!Address.isContract(msg.sender), "Account not EOA");
-        // Users should have more than 3 TOKAMAK
+        // Users should have more than 3 TON
         require(
-            L2StandardERC20(l2TokamakAddress).balanceOf(msg.sender) >= 3e18,
-            "Insufficient Tokamak balance"
+            L2StandardERC20(l2TonAddress).balanceOf(msg.sender) >= 3e18,
+            "Insufficient Ton balance"
         );
-        tokamakFeeTokenUsers[msg.sender] = true;
-        emit UseTokamakAsFeeToken(msg.sender);
+        tonFeeTokenUsers[msg.sender] = true;
+        emit UseTonAsFeeToken(msg.sender);
     }
 
     /**
@@ -160,14 +160,14 @@ contract Tokamak_GasPriceOracle {
         require(!Address.isContract(msg.sender), "Account not EOA");
         // Users should have more than 0.002 ETH
         require(address(msg.sender).balance >= 2e15, "Insufficient ETH balance");
-        tokamakFeeTokenUsers[msg.sender] = false;
+        tonFeeTokenUsers[msg.sender] = false;
         emit UseETHAsFeeToken(msg.sender);
     }
 
     /**
-     * Update the price ratio of ETH and TOKAMAK
-     * @param _priceRatio the price ratio of ETH and TOKAMAK
-     * @param _marketPriceRatio tha market price ratio of ETH and TOKAMAK
+     * Update the price ratio of ETH and TON
+     * @param _priceRatio the price ratio of ETH and TON
+     * @param _marketPriceRatio tha market price ratio of ETH and TON
      */
     function updatePriceRatio(uint256 _priceRatio, uint256 _marketPriceRatio) public onlyOwner {
         require(_priceRatio <= maxPriceRatio && _priceRatio >= minPriceRatio);
@@ -178,8 +178,8 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Update the maximum price ratio of ETH and TOKAMAK
-     * @param _maxPriceRatio the maximum price ratio of ETH and TOKAMAK
+     * Update the maximum price ratio of ETH and TON
+     * @param _maxPriceRatio the maximum price ratio of ETH and TON
      */
     function updateMaxPriceRatio(uint256 _maxPriceRatio) public onlyOwner {
         require(_maxPriceRatio >= minPriceRatio && _maxPriceRatio > 0);
@@ -188,8 +188,8 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Update the minimum price ratio of ETH and TOKAMAK
-     * @param _minPriceRatio the minimum price ratio of ETH and TOKAMAK
+     * Update the minimum price ratio of ETH and TON
+     * @param _minPriceRatio the minimum price ratio of ETH and TON
      */
     function updateMinPriceRatio(uint256 _minPriceRatio) public onlyOwner {
         require(_minPriceRatio <= maxPriceRatio && _minPriceRatio > 0);
@@ -209,32 +209,32 @@ contract Tokamak_GasPriceOracle {
     }
 
     /**
-     * Get L1 Tokamak fee for fee estimation
+     * Get L1 Ton fee for fee estimation
      * @param _txData the data payload
      */
-    function getL1TokamakFee(bytes memory _txData) public view returns (uint256) {
+    function getL1TonFee(bytes memory _txData) public view returns (uint256) {
         OVM_GasPriceOracle gasPriceOracleContract = OVM_GasPriceOracle(gasPriceOracleAddress);
         return gasPriceOracleContract.getL1Fee(_txData) * priceRatio;
     }
 
     /**
-     * withdraw TOKAMAK tokens to l1 fee wallet
+     * withdraw TON tokens to l1 fee wallet
      */
-    function withdrawTOKAMAK() public {
+    function withdrawTON() public {
         // check L2 balance whether it is possible to withdraw
         require(
-            L2StandardERC20(l2TokamakAddress).balanceOf(address(this)) >= MIN_WITHDRAWAL_AMOUNT,
+            L2StandardERC20(l2TonAddress).balanceOf(address(this)) >= MIN_WITHDRAWAL_AMOUNT,
             // solhint-disable-next-line max-line-length
-            "Tokamak_GasPriceOracle: withdrawal amount must be greater than minimum withdrawal amount"
+            "Ton_GasPriceOracle: withdrawal amount must be greater than minimum withdrawal amount"
         );
-        // send amount of TOKAMAK balance to L1
+        // send amount of TON balance to L1
         L2StandardBridge(Lib_PredeployAddresses.L2_STANDARD_BRIDGE).withdrawTo(
-            l2TokamakAddress,
+            l2TonAddress,
             feeWallet,
-            L2StandardERC20(l2TokamakAddress).balanceOf(address(this)),
+            L2StandardERC20(l2TonAddress).balanceOf(address(this)),
             0,
             bytes("")
         );
-        emit WithdrawTOKAMAK(owner(), feeWallet);
+        emit WithdrawTON(owner(), feeWallet);
     }
 }

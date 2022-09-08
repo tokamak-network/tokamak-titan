@@ -17,9 +17,9 @@ const main = async () => {
   // get provider
   const l2Provider = new providers.JsonRpcProvider(L2_NODE_WEB3_URL)
   const l2Wallet = new Wallet(PRIV_KEY).connect(l2Provider)
-  const PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS =
+  const PROXY__TON_GAS_PRICE_ORACLE_ADDRESS =
     '0x4200000000000000000000000000000000000024'
-  const L2_TOKAMAK_ADDRESS = '0x4200000000000000000000000000000000000023'
+  const L2_TON_ADDRESS = '0x4200000000000000000000000000000000000023'
   const OVM_GAS_PRICE_ORACLE_ADDRESS =
     '0x420000000000000000000000000000000000000F'
 
@@ -36,23 +36,23 @@ const main = async () => {
     .attach(OVM_GAS_PRICE_ORACLE_ADDRESS)
     .connect(l2Wallet)
 
-  const TokamakGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Tokamak_GasPriceOracle.sol/Tokamak_GasPriceOracle.json')
-  const factory__TokamakGasPriceOracle = new ContractFactory(
-    TokamakGasPriceOracleArtifact.abi,
-    TokamakGasPriceOracleArtifact.bytecode
+  const TonGasPriceOracleArtifact = require('../../packages/contracts/artifacts/contracts/L2/predeploys/Ton_GasPriceOracle.sol/Ton_GasPriceOracle.json')
+  const factory__TonGasPriceOracle = new ContractFactory(
+    TonGasPriceOracleArtifact.abi,
+    TonGasPriceOracleArtifact.bytecode
   )
-  const Tokamak_GasPriceOracle = factory__TokamakGasPriceOracle
-    .attach(PROXY__TOKAMAK_GAS_PRICE_ORACLE_ADDRESS)
+  const Ton_GasPriceOracle = factory__TonGasPriceOracle
+    .attach(PROXY__TON_GAS_PRICE_ORACLE_ADDRESS)
     .connect(l2Wallet)
 
-  // load L2Tokamak contract
+  // load L2Ton contract
   const l2StandardERC20 = require('../../packages/contracts/artifacts/contracts/standards/L2StandardERC20.sol/L2StandardERC20.json')
   const factory__L2StandardERC20 = new ContractFactory(
     l2StandardERC20.abi,
     l2StandardERC20.bytecode
   )
-  const L2Tokamak = factory__L2StandardERC20
-    .attach(L2_TOKAMAK_ADDRESS)
+  const L2Ton = factory__L2StandardERC20
+    .attach(L2_TON_ADDRESS)
     .connect(l2Wallet)
 
   if (typeof FEE_TOKEN === 'undefined') {
@@ -60,28 +60,26 @@ const main = async () => {
     return null
   }
   // check
-  const isTokamakAsFeeToken = await Tokamak_GasPriceOracle.tokamakFeeTokenUsers(
+  const isTonAsFeeToken = await Ton_GasPriceOracle.tonFeeTokenUsers(
     l2Wallet.address
   )
 
   // 1. ETH as fee token
   if (FEE_TOKEN.toLocaleUpperCase() === 'ETH') {
-    // send tx (transfer TOKAMAK)
-    if (isTokamakAsFeeToken === false) {
+    // send tx (transfer TON)
+    if (isTonAsFeeToken === false) {
       const amount = utils.parseEther('1')
       const other = '0x1234123412341234123412341234123412341234'
       const ETHBalanceBefore = await l2Wallet.getBalance()
-      const TokamakBalanceBefore = await L2Tokamak.balanceOf(l2Wallet.address)
+      const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
       console.log(
         `Balance ETH Before: ${utils.formatEther(ETHBalanceBefore)} ETH`
       )
       console.log(
-        `Balance TOKAMAK Before: ${utils.formatEther(
-          TokamakBalanceBefore
-        )} TOKAMAK`
+        `Balance TON Before: ${utils.formatEther(TonBalanceBefore)} TON`
       )
 
-      const tx = await L2Tokamak.transfer(other, amount)
+      const tx = await L2Ton.transfer(other, amount)
       console.log('txHash: ', tx.hash)
       const receipt = await tx.wait()
       await sleep(3000)
@@ -91,25 +89,23 @@ const main = async () => {
           tx.hash,
         ])
         const ETHBalanceAfter = await l2Wallet.getBalance()
-        const TokamakBalanceAfter = await L2Tokamak.balanceOf(l2Wallet.address)
+        const TonBalanceAfter = await L2Ton.balanceOf(l2Wallet.address)
 
         console.log(
           `Balance ETH After: ${utils.formatEther(ETHBalanceAfter)} ETH`
         )
         console.log(
-          `Balance TOKAMAK After: ${utils.formatEther(
-            TokamakBalanceAfter
-          )} TOKAMAK`
+          `Balance TON After: ${utils.formatEther(TonBalanceAfter)} TON`
         )
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
-        const usedTOKAMAK = TokamakBalanceBefore.sub(TokamakBalanceAfter)
+        const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
         console.log(
           'ETHBalanceAfter - ETHBalanceBefore: ',
           utils.formatEther(usedETH)
         )
         console.log(
-          'TokamakBalanceAfter - TokamakBalanceBefore: ',
-          utils.formatEther(usedTOKAMAK)
+          'TonBalanceAfter - TonBalanceBefore: ',
+          utils.formatEther(usedTON)
         )
         l1Fee = BigNumber.from(json.l1Fee)
         l2Fee = receipt.gasUsed.mul(tx.gasPrice)
@@ -122,22 +118,20 @@ const main = async () => {
       )
     }
   }
-  // 2. TOKAMAK as fee token
-  else if (FEE_TOKEN.toLocaleUpperCase() === 'TOKAMAK') {
+  // 2. TON as fee token
+  else if (FEE_TOKEN.toLocaleUpperCase() === 'TON') {
     // send tx (transfer ETH)
-    if (isTokamakAsFeeToken === true) {
+    if (isTonAsFeeToken === true) {
       const amount = utils.parseEther('0.01')
       const other = '0x1234123412341234123412341234123412341234'
       const ETHBalanceBefore = await l2Wallet.getBalance()
-      const TokamakBalanceBefore = await L2Tokamak.balanceOf(l2Wallet.address)
+      const TonBalanceBefore = await L2Ton.balanceOf(l2Wallet.address)
 
       console.log(
         `Balance ETH Before: ${utils.formatEther(ETHBalanceBefore)} ETH`
       )
       console.log(
-        `Balance TOKAMAK Before: ${utils.formatEther(
-          TokamakBalanceBefore
-        )} TOKAMAK`
+        `Balance TON Before: ${utils.formatEther(TonBalanceBefore)} TON`
       )
 
       const unsigned = await l2Wallet.populateTransaction({
@@ -155,32 +149,30 @@ const main = async () => {
           tx.hash,
         ])
         const ETHBalanceAfter = await l2Wallet.getBalance()
-        const TokamakBalanceAfter = await L2Tokamak.balanceOf(l2Wallet.address)
+        const TonBalanceAfter = await L2Ton.balanceOf(l2Wallet.address)
 
         console.log(
           `Balance ETH After: ${utils.formatEther(ETHBalanceAfter)} ETH`
         )
         console.log(
-          `Balance TOKAMAK After: ${utils.formatEther(
-            TokamakBalanceAfter
-          )} TOKAMAK`
+          `Balance TON After: ${utils.formatEther(TonBalanceAfter)} TON`
         )
         const usedETH = ETHBalanceBefore.sub(ETHBalanceAfter)
-        const usedTOKAMAK = TokamakBalanceBefore.sub(TokamakBalanceAfter)
+        const usedTON = TonBalanceBefore.sub(TonBalanceAfter)
         console.log(
           'ETHBalanceAfter - ETHBalanceBefore: ',
           utils.formatEther(usedETH)
         )
         console.log(
-          'TokamakBalanceAfter - TokamakBalanceBefore: ',
-          utils.formatEther(usedTOKAMAK)
+          'TonBalanceAfter - TonBalanceBefore: ',
+          utils.formatEther(usedTON)
         )
-        const priceRatio = await Tokamak_GasPriceOracle.priceRatio()
-        const L1TokamakFee = BigNumber.from(json.l1Fee).mul(priceRatio)
-        const L2TokamakFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+        const priceRatio = await Ton_GasPriceOracle.priceRatio()
+        const L1TonFee = BigNumber.from(json.l1Fee).mul(priceRatio)
+        const L2TonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
-        console.log('L1TokamakFee: ', utils.formatEther(L1TokamakFee))
-        console.log('L2TokamakFee: ', utils.formatEther(L2TokamakFee))
+        console.log('L1TonFee: ', utils.formatEther(L1TonFee))
+        console.log('L2TonFee: ', utils.formatEther(L2TonFee))
       }
     } else {
       console.log(
