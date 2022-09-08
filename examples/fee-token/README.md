@@ -1,4 +1,6 @@
-# Example: Submit L2 Transaction
+# Example: Register fee token & Submit L2 Transaction
+
+The user can use ETH or TON as a transaction fee in L2. To do this, you can call the Ton_GasPriceOracle contract to change which token the account uses as a transaction fee. (This is called a "register")
 
 After the registering TON or ETH as fee token in L2, the transaction fee is applied according to the register fee token. In this example, we excute the L2 transaction and verify that the transaction fee has been properly calculated and deducted from the balance by using TON or ETH as a fee token.
 
