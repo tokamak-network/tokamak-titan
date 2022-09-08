@@ -169,10 +169,10 @@ const main = async () => {
         )
         const priceRatio = await Ton_GasPriceOracle.priceRatio()
         const L1TonFee = BigNumber.from(json.l1Fee).mul(priceRatio)
-        const L2TonFee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
+        const ERC20L2Fee = receipt.gasUsed.mul(tx.gasPrice).mul(priceRatio)
 
         console.log('L1TonFee: ', utils.formatEther(L1TonFee))
-        console.log('L2TonFee: ', utils.formatEther(L2TonFee))
+        console.log('ERC20L2Fee: ', utils.formatEther(ERC20L2Fee))
       }
     } else {
       console.log(
