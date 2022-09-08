@@ -74,7 +74,7 @@ type Receipt struct {
 	L1GasUsed  *big.Int   `json:"l1GasUsed" gencodec:"required"`
 	L1Fee      *big.Int   `json:"l1Fee" gencodec:"required"`
 	FeeScalar  *big.Float `json:"l1FeeScalar" gencodec:"required"`
-	L2TonFee   *big.Int   `json:"l2TonFee"`
+	ERC20L2Fee *big.Int   `json:"erc20L2Fee"`
 }
 
 type receiptMarshaling struct {
@@ -107,7 +107,7 @@ type storedReceiptRLP struct {
 	L1GasPrice *big.Int
 	L1Fee      *big.Int
 	FeeScalar  string
-	L2TonFee   *big.Int
+	ERC20L2Fee *big.Int
 }
 
 // v4StoredReceiptRLP is the storage encoding of a receipt used in database version 4.
@@ -218,7 +218,7 @@ func (r *ReceiptForStorage) EncodeRLP(w io.Writer) error {
 		L1GasPrice:        r.L1GasPrice,
 		L1Fee:             r.L1Fee,
 		FeeScalar:         feeScalar,
-		L2TonFee:          r.L2TonFee,
+		ERC20L2Fee:        r.ERC20L2Fee,
 	}
 	for i, log := range r.Logs {
 		enc.Logs[i] = (*LogForStorage)(log)
@@ -275,7 +275,7 @@ func decodeStoredReceiptRLP(r *ReceiptForStorage, blob []byte) error {
 	r.L1GasPrice = stored.L1GasPrice
 	r.L1Fee = stored.L1Fee
 	r.FeeScalar = scalar
-	r.L2TonFee = stored.L2TonFee
+	r.ERC20L2Fee = stored.ERC20L2Fee
 
 	return nil
 }
