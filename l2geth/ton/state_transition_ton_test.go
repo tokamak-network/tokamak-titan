@@ -110,6 +110,7 @@ func TestNewStateTransactionForTon(t *testing.T) {
 	// TEST 3: Add l1 security fee
 	preUserTonBalance := statedb.GetTonBalance(msg.From())
 	preVaultBalance := statedb.GetTonBalance(rcfg.OvmTonGasPricOracle)
+	ETHFeeVaultBalanceBefore := statedb.GetBalance(evm.Coinbase)
 
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.L1GasPriceSlot, common.BigToHash(common.Big1))
 	statedb.SetState(rcfg.L2GasPriceOracleAddress, rcfg.OverheadSlot, common.BigToHash(big.NewInt(2750)))
@@ -134,24 +135,20 @@ func TestNewStateTransactionForTon(t *testing.T) {
 
 	afterUserTonBalance := statedb.GetTonBalance(msg.From())
 	afterVaultBalance := statedb.GetTonBalance(rcfg.OvmTonGasPricOracle)
+	ETHFeeVaultBalanceAfter := statedb.GetBalance(evm.Coinbase)
 
+	if ETHFeeVaultBalanceAfter.Cmp(ETHFeeVaultBalanceBefore) != 0 {
+		t.Fatal("ETH fee vault balance is changed")
+	}
 	// user pay L1 fee + L2 fee
 	userPaidTonFee := new(big.Int).Sub(preUserTonBalance, afterUserTonBalance)
 	// Ton_GasPriceOracle vault is associated with L2 fee
 	vaultReceivedFee := new(big.Int).Sub(afterVaultBalance, preVaultBalance)
-	// calculated l1 fee is 3838
-	l1FeeTon := new(big.Int).Mul(big.NewInt(3838), big.NewInt(1))
 
 	// userPaidTonFee = vaultReceivedFee + l1FeeTon
-	// userPaidTonFee must be greater than vaultReceivedFee
-	if userPaidTonFee.Cmp(vaultReceivedFee) != 1 {
+	// userPaidTonFee must be equal to vaultReceivedFee
+	if userPaidTonFee.Cmp(vaultReceivedFee) != 0 {
 		t.Fatal("failed to charge ton fee")
-	}
-	// estimated cost = l1 fee + l2 fee = st.l1Fee + (gasUsed * l2 gasprice * tonPriceRatio)
-	estimatedL2fee := new(big.Int).Mul(new(big.Int).Mul(big.NewInt(int64(gasUsed)), common.Big1), big.NewInt(1))
-	estimatedCost := new(big.Int).Add(l1FeeTon, estimatedL2fee)
-	if userPaidTonFee.Cmp(estimatedCost) != 0 {
-		t.Fatal("failed to charge l1 security fee")
 	}
 
 	if gasUsed > 5000000 {

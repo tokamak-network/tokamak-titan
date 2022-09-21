@@ -66,7 +66,7 @@ type StateTransition struct {
 	state      vm.StateDB
 	evm        *vm.EVM
 	// UsingOVM
-	l1Fee *big.Int
+	l2ExtraGas *big.Int
 	// Ton fee token selection flag
 	isTonFeeTokenSelect bool
 	// Fee ratio between TON and ETH
@@ -132,7 +132,7 @@ func IntrinsicGas(data []byte, contractCreation, isHomestead bool, isEIP2028 boo
 
 // NewStateTransition initialises and returns a new state transition object.
 func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition {
-	l1Fee := new(big.Int)
+	l2ExtraGas := new(big.Int)
 	tonPriceRatio := new(big.Int)
 	gasPrice := msg.GasPrice()
 	// default is ETH
@@ -140,17 +140,16 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 	if rcfg.UsingOVM {
 		// msg.GasPrice is not 0
 		if msg.GasPrice().Cmp(common.Big0) != 0 {
-			// l1Fee = l1GasUsed * l1GasPrice * scalar
-			// computes the L1 portion of the fee given a tx.Data and a StateDB
-			l1Fee, _ = fees.CalculateL1DataFee(msg.Data(), evm.StateDB, nil)
+			// l2ExtraGas use only tx.types.QueueOriginSequencer
+			if msg.QueueOrigin() == types.QueueOriginSequencer {
+				l2ExtraGas, _ = fees.CalculateL1GasFromState(msg.Data(), evm.StateDB, nil)
+			}
 		}
 		// If feeTokenSelection is 1, from use TON as fee token
 		feeTokenSelection := evm.StateDB.GetFeeTokenSelection(msg.From())
 		// if TON is fee token, the gas price is 0
 		if feeTokenSelection.Cmp(common.Big1) == 0 {
 			isTonFeeTokenSelect = true
-			// set ETH gasprice is 0
-			gasPrice = big.NewInt(0)
 			tonPriceRatio = evm.StateDB.GetTonPriceRatio()
 		}
 	}
@@ -165,7 +164,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 		value:    msg.Value(),
 		data:     msg.Data(),
 		state:    evm.StateDB,
-		l1Fee:    l1Fee,
+		l2ExtraGas: l2ExtraGas,
 		// TON fee token selection flag
 		isTonFeeTokenSelect: isTonFeeTokenSelect,
 		// TON price relative to ETH
@@ -203,35 +202,26 @@ func (st *StateTransition) useGas(amount uint64) error {
 
 func (st *StateTransition) buyGas() error {
 
-	// calculate L2 fee
+	// calculate max L2 fee
 	ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.msg.GasPrice())
 	tonval := new(big.Int)
 
 	if rcfg.UsingOVM {
-		// charge the L1 fee for QueueOrigin sequencer transactions
-		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			ethval = ethval.Add(ethval, st.l1Fee)
-			if st.msg.CheckNonce() {
-				log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
+		// fee token is TON
+		if st.isTonFeeTokenSelect {
+			tonval = new(big.Int).Mul(ethval, st.tonPriceRatio)
+			// TON balance check
+			if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
+				return errInsufficientTonBalanceForGas
 			}
-		}
-	}
-	// fee token is TON
-	if st.isTonFeeTokenSelect {
-		// note that in this case, st.gasPrice = 0 but st.msg.GasPrice() is NOT zero
-		// msg.Gas * msg.GasPrice * tonPriceRatio
-		tonval = new(big.Int).Mul(ethval, st.tonPriceRatio)
-		// TON balance check
-		if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
-			return errInsufficientTonBalanceForGas
-		}
-		st.state.SubTonBalance(st.msg.From(), tonval)
+			st.state.SubTonBalance(st.msg.From(), tonval)
 		// fee token is ETH
-	} else {
-		if st.state.GetBalance(st.msg.From()).Cmp(ethval) < 0 {
-			return errInsufficientBalanceForGas
+		} else {
+			if st.state.GetBalance(st.msg.From()).Cmp(ethval) < 0 {
+				return errInsufficientBalanceForGas
+			}
+			st.state.SubBalance(st.msg.From(), ethval)
 		}
-		st.state.SubBalance(st.msg.From(), ethval)
 	}
 
 	// deduct st.msg.gasLimit in the gas pool
@@ -290,7 +280,10 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if err != nil {
 		return nil, 0, false, err
 	}
-	// st.gas = st.gas - intrnsic gas
+
+	gas = gas + st.l2ExtraGas.Uint64()
+
+	// st.gas = st.gas - gas
 	if err = st.useGas(gas); err != nil {
 		return nil, 0, false, err
 	}
@@ -330,26 +323,14 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	// st.gas = st.gas + refund(st.gasUsed() / 2)
 	st.refundGas()
 
+	ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
 	// TON is used to pay for the gas fee
-	// add L2 fee amount to OvmTonGasPricOracle (fee vault)
+	// add L2 fee amount to OvmTonGasPricOracle (TON fee vault)
 	if st.isTonFeeTokenSelect {
-		ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
 		tonval := new(big.Int).Mul(ethval, st.tonPriceRatio)
 		st.state.AddTonBalance(rcfg.OvmTonGasPricOracle, tonval)
-	}
-	// coinbase reward
-	if rcfg.UsingOVM {
-		// The L2 Fee is the same as the fee that is charged in the normal geth
-		// codepath. Add the L1 fee to the L2 fee for the total fee that is sent
-		// to the sequencer.
-		// l2Fee = st.gasUsed() * st.gasPrice
-		l2Fee := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
-		// fee = st.l1Fee + l2Fee
-		fee := new(big.Int).Add(st.l1Fee, l2Fee)
-		// add balance of miner
-		st.state.AddBalance(evm.Coinbase, fee)
 	} else {
-		st.state.AddBalance(evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
+		st.state.AddBalance(evm.Coinbase, ethval)
 	}
 
 	return ret, st.gasUsed(), vmerr != nil, err
@@ -364,15 +345,15 @@ func (st *StateTransition) refundGas() {
 	// st.gas = st.gas + refund
 	st.gas += refund
 
+	remainingETH := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.msg.GasPrice())
 	if st.isTonFeeTokenSelect {
-		remainingETH := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.msg.GasPrice())
 		// st.gas * st.msg.GasPrice() * tonPriceRatio
-		remainingTon := new(big.Int).Mul(remainingETH, st.tonPriceRatio)
-		st.state.AddTonBalance(st.msg.From(), remainingTon)
+		remainingTON := new(big.Int).Mul(remainingETH, st.tonPriceRatio)
+		st.state.AddTonBalance(st.msg.From(), remainingTON)
 	} else {
 		// Return ETH for remaining gas, exchanged at the original rate.
-		remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
-		st.state.AddBalance(st.msg.From(), remaining)
+		// remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
+		st.state.AddBalance(st.msg.From(), remainingETH)
 	}
 
 	// Also return remaining gas to the block gas counter so it is
