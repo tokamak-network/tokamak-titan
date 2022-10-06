@@ -3,9 +3,7 @@ package op_e2e
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/big"
-	"os"
 	"strings"
 	"time"
 
@@ -17,7 +15,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/p2p"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	l2os "github.com/ethereum-optimism/optimism/op-proposer"
-
+	oplog "github.com/ethereum-optimism/optimism/op-service/log"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -53,11 +51,7 @@ func deriveAccount(w accounts.Wallet, path string) accounts.Account {
 
 type L2OOContractConfig struct {
 	SubmissionFrequency   *big.Int
-	L2StartingBlock       *big.Int
-	GenesisL2Output       [32]byte
 	HistoricalTotalBlocks *big.Int
-	L2StartingTimeStamp   *big.Int
-	L2BlockTime           *big.Int
 }
 
 type DepositContractConfig struct {
@@ -108,17 +102,16 @@ type System struct {
 	wallet *hdwallet.Wallet
 
 	// Connections to running nodes
-	nodes                      map[string]*node.Node
-	backends                   map[string]*eth.Ethereum
-	Clients                    map[string]*ethclient.Client
-	RolupGenesis               rollup.Genesis
-	rollupNodes                map[string]*rollupNode.OpNode
-	l2OutputSubmitter          *l2os.L2OutputSubmitter
-	sequencerHistoryDBFileName string
-	batchSubmitter             *bss.BatchSubmitter
-	L2OOContractAddr           common.Address
-	DepositContractAddr        common.Address
-	Mocknet                    mocknet.Mocknet
+	nodes               map[string]*node.Node
+	backends            map[string]*eth.Ethereum
+	Clients             map[string]*ethclient.Client
+	RolupGenesis        rollup.Genesis
+	rollupNodes         map[string]*rollupNode.OpNode
+	l2OutputSubmitter   *l2os.L2OutputSubmitter
+	batchSubmitter      *bss.BatchSubmitter
+	L2OOContractAddr    common.Address
+	DepositContractAddr common.Address
+	Mocknet             mocknet.Mocknet
 }
 
 func precompileAlloc() core.GenesisAlloc {
@@ -153,9 +146,6 @@ func (sys *System) Close() {
 	}
 	if sys.batchSubmitter != nil {
 		sys.batchSubmitter.Stop()
-	}
-	if sys.sequencerHistoryDBFileName != "" {
-		_ = os.Remove(sys.sequencerHistoryDBFileName)
 	}
 
 	for _, node := range sys.rollupNodes {
@@ -242,7 +232,7 @@ func (cfg SystemConfig) start() (*System, error) {
 
 	l2Alloc[cfg.L1InfoPredeployAddress] = core.GenesisAccount{Code: common.FromHex(bindings.L1BlockDeployedBin), Balance: common.Big0}
 	l2Alloc[predeploys.L2ToL1MessagePasserAddr] = core.GenesisAccount{Code: common.FromHex(bindings.L2ToL1MessagePasserDeployedBin), Balance: common.Big0}
-	l2Alloc[predeploys.OVM_GasPriceOracleAddr] = core.GenesisAccount{Code: common.FromHex(bindings.GasPriceOracleDeployedBin), Balance: common.Big0, Storage: map[common.Hash]common.Hash{
+	l2Alloc[predeploys.GasPriceOracleAddr] = core.GenesisAccount{Code: common.FromHex(bindings.GasPriceOracleDeployedBin), Balance: common.Big0, Storage: map[common.Hash]common.Hash{
 		// storage for GasPriceOracle to have transctorPath wallet as owner
 		common.BigToHash(big.NewInt(0)): common.HexToHash("0x8A0A996b22B103B500Cd0F20d62dF2Ba3364D295"),
 	}}
@@ -288,18 +278,19 @@ func (cfg SystemConfig) start() (*System, error) {
 			IstanbulBlock:           common.Big0,
 			BerlinBlock:             common.Big0,
 			LondonBlock:             common.Big0,
-			MergeForkBlock:          common.Big0,
+			MergeNetsplitBlock:      common.Big0,
 			TerminalTotalDifficulty: common.Big0,
 			Optimism: &params.OptimismConfig{
-				Enabled:          true,
-				BaseFeeRecipient: cfg.BaseFeeRecipient,
-				L1FeeRecipient:   cfg.L1FeeRecipient,
+				BaseFeeRecipient:   cfg.BaseFeeRecipient,
+				L1FeeRecipient:     cfg.L1FeeRecipient,
+				EIP1559Elasticity:  2,
+				EIP1559Denominator: 8,
 			},
 		},
 		Alloc:      l2Alloc,
 		Difficulty: common.Big1,
 		GasLimit:   5000000,
-		Nonce:      4660,
+		Nonce:      0,
 		// must be equal (or higher, while within bounds) as the L1 anchor point of the rollup
 		Timestamp: genesisTimestamp,
 		BaseFee:   big.NewInt(7),
@@ -396,9 +387,6 @@ func (cfg SystemConfig) start() (*System, error) {
 	sys.cfg.RollupConfig.Genesis = sys.RolupGenesis
 	sys.cfg.RollupConfig.BatchSenderAddress = batchSubmitterAddr
 	sys.cfg.RollupConfig.P2PSequencerAddress = p2pSignerAddr
-	sys.cfg.L2OOCfg.L2StartingBlock = new(big.Int).SetUint64(l2GenesisID.Number)
-	sys.cfg.L2OOCfg.L2StartingTimeStamp = new(big.Int).SetUint64(l2Genesis.Timestamp)
-	sys.cfg.L2OOCfg.L2BlockTime = new(big.Int).SetUint64(2)
 
 	// Deploy Deposit Contract
 	deployerPrivKey, err := sys.wallet.PrivateKey(accounts.Account{
@@ -415,16 +403,21 @@ func (cfg SystemConfig) start() (*System, error) {
 		return nil, err
 	}
 
+	// empty genesis L2 output.
+	// Technically this may need to be computed with l2.ComputeL2OutputRoot(...),
+	// but there are no fraud proofs active in the test.
+	genesisL2Output := [32]byte{}
+
 	// Deploy contracts
 	sys.L2OOContractAddr, _, _, err = bindings.DeployL2OutputOracle(
 		opts,
 		l1Client,
 		sys.cfg.L2OOCfg.SubmissionFrequency,
-		sys.cfg.L2OOCfg.GenesisL2Output,
+		genesisL2Output,
 		sys.cfg.L2OOCfg.HistoricalTotalBlocks,
-		sys.cfg.L2OOCfg.L2StartingBlock,
-		sys.cfg.L2OOCfg.L2StartingTimeStamp,
-		sys.cfg.L2OOCfg.L2BlockTime,
+		new(big.Int).SetUint64(l2GenesisID.Number),
+		new(big.Int).SetUint64(l2Genesis.Timestamp),
+		new(big.Int).SetUint64(sys.cfg.RollupConfig.BlockTime),
 		l2OutputSubmitterAddr,
 		crypto.PubkeyToAddress(deployerPrivKey.PublicKey),
 	)
@@ -443,7 +436,8 @@ func (cfg SystemConfig) start() (*System, error) {
 		return nil, err
 	}
 
-	_, err = waitForTransaction(tx.Hash(), l1Client, time.Duration(cfg.L1BlockTime)*time.Second*2)
+	// Wait up to 6 blocks to deploy the Optimism portal
+	_, err = waitForTransaction(tx.Hash(), l1Client, 6*time.Second*time.Duration(cfg.L1BlockTime))
 	if err != nil {
 		return nil, fmt.Errorf("waiting for OptimismPortal: %w", err)
 	}
@@ -494,6 +488,11 @@ func (cfg SystemConfig) start() (*System, error) {
 			}
 		}
 	}
+
+	// Don't log state snapshots in test output
+	snapLog := log.New()
+	snapLog.SetHandler(log.DiscardHandler())
+
 	// Rollup nodes
 	for name, nodeConfig := range cfg.Nodes {
 		c := *nodeConfig // copy
@@ -503,12 +502,12 @@ func (cfg SystemConfig) start() (*System, error) {
 		if p, ok := p2pNodes[name]; ok {
 			c.P2P = p
 
-			if c.Sequencer {
+			if c.Driver.SequencerEnabled {
 				c.P2PSigner = &p2p.PreparedSigner{Signer: p2p.NewLocalSigner(p2pSignerPrivKey)}
 			}
 		}
 
-		node, err := rollupNode.New(context.Background(), &c, cfg.Loggers[name], cfg.Loggers[name], "", metrics.NewMetrics(""))
+		node, err := rollupNode.New(context.Background(), &c, cfg.Loggers[name], snapLog, "", metrics.NewMetrics(""))
 		if err != nil {
 			didErrAfterStart = true
 			return nil, err
@@ -558,11 +557,13 @@ func (cfg SystemConfig) start() (*System, error) {
 		NumConfirmations:          1,
 		ResubmissionTimeout:       3 * time.Second,
 		SafeAbortNonceTooLowCount: 3,
-		LogLevel:                  "info",
-		LogTerminal:               true,
-		Mnemonic:                  sys.cfg.Mnemonic,
-		L2OutputHDPath:            sys.cfg.L2OutputHDPath,
-	}, "", cfg.ProposerLogger)
+		LogConfig: oplog.CLIConfig{
+			Level:  "info",
+			Format: "text",
+		},
+		Mnemonic:       sys.cfg.Mnemonic,
+		L2OutputHDPath: sys.cfg.L2OutputHDPath,
+	}, "", sys.cfg.Loggers["proposer"])
 	if err != nil {
 		return nil, fmt.Errorf("unable to setup l2 output submitter: %w", err)
 	}
@@ -571,34 +572,26 @@ func (cfg SystemConfig) start() (*System, error) {
 		return nil, fmt.Errorf("unable to start l2 output submitter: %w", err)
 	}
 
-	sequencerHistoryDBFile, err := ioutil.TempFile("", "bss.*.json")
-	if err != nil {
-		return nil, fmt.Errorf("unable to create sequencer history db file: %w", err)
-	}
-	sys.sequencerHistoryDBFileName = sequencerHistoryDBFile.Name()
-	if err = sequencerHistoryDBFile.Close(); err != nil {
-		return nil, fmt.Errorf("unable to close sequencer history db file: %w", err)
-	}
-
 	// Batch Submitter
 	sys.batchSubmitter, err = bss.NewBatchSubmitter(bss.Config{
-		L1EthRpc:                   sys.nodes["l1"].WSEndpoint(),
-		L2EthRpc:                   sys.nodes["sequencer"].WSEndpoint(),
-		RollupRpc:                  rollupEndpoint,
-		MinL1TxSize:                1,
-		MaxL1TxSize:                120000,
-		PollInterval:               50 * time.Millisecond,
-		NumConfirmations:           1,
-		ResubmissionTimeout:        5 * time.Second,
-		SafeAbortNonceTooLowCount:  3,
-		LogLevel:                   "info",
-		LogTerminal:                true,
+		L1EthRpc:                  sys.nodes["l1"].WSEndpoint(),
+		L2EthRpc:                  sys.nodes["sequencer"].WSEndpoint(),
+		RollupRpc:                 rollupEndpoint,
+		MinL1TxSize:               1,
+		MaxL1TxSize:               120000,
+		ChannelTimeout:            sys.cfg.RollupConfig.ChannelTimeout,
+		PollInterval:              50 * time.Millisecond,
+		NumConfirmations:          1,
+		ResubmissionTimeout:       5 * time.Second,
+		SafeAbortNonceTooLowCount: 3,
+		LogConfig: oplog.CLIConfig{
+			Level:  "info",
+			Format: "text",
+		},
 		Mnemonic:                   sys.cfg.Mnemonic,
 		SequencerHDPath:            sys.cfg.BatchSubmitterHDPath,
-		SequencerHistoryDBFilename: sys.sequencerHistoryDBFileName,
-		SequencerGenesisHash:       sys.RolupGenesis.L2.Hash.String(),
 		SequencerBatchInboxAddress: sys.cfg.RollupConfig.BatchInboxAddress.String(),
-	}, "", cfg.BatcherLogger)
+	}, sys.cfg.Loggers["batcher"])
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup batch submitter: %w", err)
 	}

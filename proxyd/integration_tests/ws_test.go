@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/log"
+
 	"github.com/ethereum-optimism/optimism/proxyd"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
@@ -42,13 +44,23 @@ func TestConcurrentWSPanic(t *testing.T) {
 	require.NoError(t, err)
 	defer shutdown()
 
+	// suppress tons of log messages
+	oldHandler := log.Root().GetHandler()
+	log.Root().SetHandler(log.DiscardHandler())
+	defer func() {
+		log.Root().SetHandler(oldHandler)
+	}()
+
 	<-readyCh
 
+	var wg sync.WaitGroup
+	wg.Add(2)
 	// spam messages
 	go func() {
 		for {
 			select {
 			case <-quitC:
+				wg.Done()
 				return
 			default:
 				_ = backendToProxyConn.WriteMessage(websocket.TextMessage, []byte("garbage"))
@@ -61,6 +73,7 @@ func TestConcurrentWSPanic(t *testing.T) {
 		for {
 			select {
 			case <-quitC:
+				wg.Done()
 				return
 			default:
 				_ = client.WriteMessage(websocket.TextMessage, []byte("{\"id\": 1, \"method\": \"eth_foo\", \"params\": [\"newHeads\"]}"))
@@ -72,6 +85,7 @@ func TestConcurrentWSPanic(t *testing.T) {
 	// concurrent write to websocket connection
 	time.Sleep(time.Second)
 	close(quitC)
+	wg.Wait()
 }
 
 type backendHandler struct {

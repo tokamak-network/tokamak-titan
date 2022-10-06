@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.24
+
+### Patch Changes
+
+- c3e66e57: Add the gas estimation block tag to `eth_estimateGas` to be RPC compliant
+
+## 0.5.23
+
+### Patch Changes
+
+- c3363225: fix NPE in debug_standardTraceBlockToFile
+
 ## 0.5.22
 
 ### Patch Changes

@@ -1,5 +1,34 @@
 # @eth-optimism/contracts-governance
 
+## 0.1.6
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+- Updated dependencies [d7679ca4]
+  - @eth-optimism/core-utils@0.10.1
+  - @eth-optimism/sdk@1.6.4
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [b27d0fa7]
+- Updated dependencies [dbfea116]
+  - @eth-optimism/sdk@1.6.1
+  - @eth-optimism/core-utils@0.10.0
+
+## 0.1.4
+
+### Patch Changes
+
+- dc9cf2b6: Clean up the hardhat config
+- Updated dependencies [f9fee446]
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/sdk@1.2.1
+
 ## 0.1.3
 
 ### Patch Changes

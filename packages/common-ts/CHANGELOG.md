@@ -1,5 +1,53 @@
 # @eth-optimism/common-ts
 
+## 0.6.6
+
+### Patch Changes
+
+- ce7da914: Minor update to BaseServiceV2 to keep the raw body around when requests are made.
+
+## 0.6.5
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- d7679ca4: Add source maps
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+  - @eth-optimism/core-utils@0.10.1
+
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies [dbfea116]
+  - @eth-optimism/core-utils@0.10.0
+
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies [0df744f6]
+- Updated dependencies [8ae39154]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/core-utils@0.9.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+  - @eth-optimism/core-utils@0.9.2
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [f9fee446]
+  - @eth-optimism/core-utils@0.9.1
+
 ## 0.6.0
 
 ### Minor Changes

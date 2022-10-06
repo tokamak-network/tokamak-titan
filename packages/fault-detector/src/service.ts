@@ -1,8 +1,13 @@
-import { BaseServiceV2, Gauge, validators } from '@eth-optimism/common-ts'
+import {
+  BaseServiceV2,
+  ExpressRouter,
+  Gauge,
+  validators,
+} from '@eth-optimism/common-ts'
 import { getChainId, sleep, toRpcHexString } from '@eth-optimism/core-utils'
 import { CrossChainMessenger } from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
-import { Contract, ethers } from 'ethers'
+import { Contract, ethers, Transaction } from 'ethers'
 import dateformat from 'dateformat'
 
 import {
@@ -17,16 +22,17 @@ type Options = {
 }
 
 type Metrics = {
-  highestCheckedBatchIndex: Gauge
-  highestKnownBatchIndex: Gauge
+  highestBatchIndex: Gauge
   isCurrentlyMismatched: Gauge
-  inUnexpectedErrorState: Gauge
+  nodeConnectionFailures: Gauge
 }
 
 type State = {
+  fpw: number
   scc: Contract
   messenger: CrossChainMessenger
   highestCheckedBatchIndex: number
+  diverged: boolean
 }
 
 export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
@@ -56,21 +62,19 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
         },
       },
       metricsSpec: {
-        highestCheckedBatchIndex: {
+        highestBatchIndex: {
           type: Gauge,
-          desc: 'Highest good batch index',
-        },
-        highestKnownBatchIndex: {
-          type: Gauge,
-          desc: 'Highest known batch index',
+          desc: 'Highest batch indices (checked and known)',
+          labels: ['type'],
         },
         isCurrentlyMismatched: {
           type: Gauge,
           desc: '0 if state is ok, 1 if state is mismatched',
         },
-        inUnexpectedErrorState: {
+        nodeConnectionFailures: {
           type: Gauge,
-          desc: '0 if service is ok, 1 service is in unexpected error state',
+          desc: 'Number of times node connection has failed',
+          labels: ['layer', 'section'],
         },
       },
     })
@@ -84,14 +88,31 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
       l2ChainId: await getChainId(this.options.l2RpcProvider),
     })
 
+    // Not diverged by default.
+    this.state.diverged = false
+
     // We use this a lot, a bit cleaner to pull out to the top level of the state object.
     this.state.scc = this.state.messenger.contracts.l1.StateCommitmentChain
+    this.state.fpw = (await this.state.scc.FRAUD_PROOF_WINDOW()).toNumber()
 
     // Figure out where to start syncing from.
     if (this.options.startBatchIndex === -1) {
       this.logger.info(`finding appropriate starting height`)
-      this.state.highestCheckedBatchIndex =
-        await findFirstUnfinalizedStateBatchIndex(this.state.scc)
+      const firstUnfinalized = await findFirstUnfinalizedStateBatchIndex(
+        this.state.scc
+      )
+
+      // We may not have an unfinalized batches in the case where no batches have been submitted
+      // for the entire duration of the FPW. We generally do not expect this to happen on mainnet,
+      // but it happens often on testnets because the FPW is very short.
+      if (firstUnfinalized === undefined) {
+        this.logger.info(`no unfinalized batches found, starting from latest`)
+        this.state.highestCheckedBatchIndex = (
+          await this.state.scc.getTotalBatches()
+        ).toNumber()
+      } else {
+        this.state.highestCheckedBatchIndex = firstUnfinalized
+      }
     } else {
       this.state.highestCheckedBatchIndex = this.options.startBatchIndex
     }
@@ -101,18 +122,47 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
     })
   }
 
+  async routes(router: ExpressRouter): Promise<void> {
+    router.get('/status', async (req, res) => {
+      return res.status(200).json({
+        ok: !this.state.diverged,
+      })
+    })
+  }
+
   async main(): Promise<void> {
-    const latestBatchIndex = await this.state.scc.getTotalBatches()
-    if (this.state.highestCheckedBatchIndex >= latestBatchIndex.toNumber()) {
+    let latestBatchIndex: number
+    try {
+      latestBatchIndex = (await this.state.scc.getTotalBatches()).toNumber()
+    } catch (err) {
+      this.logger.error(`got error when connecting to node`, {
+        error: err,
+        node: 'l1',
+        section: 'getTotalBatches',
+      })
+      this.metrics.nodeConnectionFailures.inc({
+        layer: 'l1',
+        section: 'getTotalBatches',
+      })
       await sleep(15000)
       return
     }
 
-    this.metrics.highestKnownBatchIndex.set(latestBatchIndex.toNumber())
+    if (this.state.highestCheckedBatchIndex >= latestBatchIndex) {
+      await sleep(15000)
+      return
+    } else {
+      this.metrics.highestBatchIndex.set(
+        {
+          type: 'known',
+        },
+        latestBatchIndex
+      )
+    }
 
     this.logger.info(`checking batch`, {
       batchIndex: this.state.highestCheckedBatchIndex,
-      latestIndex: latestBatchIndex.toNumber(),
+      latestIndex: latestBatchIndex,
     })
 
     let event: ethers.Event
@@ -122,13 +172,36 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
         this.state.highestCheckedBatchIndex
       )
     } catch (err) {
-      this.logger.error(`got unexpected error while searching for batch`, {
-        batchIndex: this.state.highestCheckedBatchIndex,
+      this.logger.error(`got error when connecting to node`, {
         error: err,
+        node: 'l1',
+        section: 'findEventForStateBatch',
       })
+      this.metrics.nodeConnectionFailures.inc({
+        layer: 'l1',
+        section: 'findEventForStateBatch',
+      })
+      await sleep(15000)
+      return
     }
 
-    const batchTransaction = await event.getTransaction()
+    let batchTransaction: Transaction
+    try {
+      batchTransaction = await event.getTransaction()
+    } catch (err) {
+      this.logger.error(`got error when connecting to node`, {
+        error: err,
+        node: 'l1',
+        section: 'getTransaction',
+      })
+      this.metrics.nodeConnectionFailures.inc({
+        layer: 'l1',
+        section: 'getTransaction',
+      })
+      await sleep(15000)
+      return
+    }
+
     const [stateRoots] = this.state.scc.interface.decodeFunctionData(
       'appendStateBatch',
       batchTransaction.data
@@ -138,7 +211,23 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
     const batchSize = event.args._batchSize.toNumber()
     const batchEnd = batchStart + batchSize
 
-    const latestBlock = await this.options.l2RpcProvider.getBlockNumber()
+    let latestBlock: number
+    try {
+      latestBlock = await this.options.l2RpcProvider.getBlockNumber()
+    } catch (err) {
+      this.logger.error(`got error when connecting to node`, {
+        error: err,
+        node: 'l2',
+        section: 'getBlockNumber',
+      })
+      this.metrics.nodeConnectionFailures.inc({
+        layer: 'l2',
+        section: 'getBlockNumber',
+      })
+      await sleep(15000)
+      return
+    }
+
     if (latestBlock < batchEnd) {
       this.logger.info(`node is behind, waiting for sync`, {
         batchEnd,
@@ -151,21 +240,36 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
     // multiple requests of maximum 1000 blocks in the case that batchSize > 1000.
     let blocks: any[] = []
     for (let i = 0; i < batchSize; i += 1000) {
-      const provider = this.options
-        .l2RpcProvider as ethers.providers.JsonRpcProvider
-      blocks = blocks.concat(
-        await provider.send('eth_getBlockRange', [
+      let newBlocks: any[]
+      try {
+        newBlocks = await (
+          this.options.l2RpcProvider as ethers.providers.JsonRpcProvider
+        ).send('eth_getBlockRange', [
           toRpcHexString(batchStart + i),
           toRpcHexString(batchStart + i + Math.min(batchSize - i, 1000) - 1),
           false,
         ])
-      )
+      } catch (err) {
+        this.logger.error(`got error when connecting to node`, {
+          error: err,
+          node: 'l2',
+          section: 'getBlockRange',
+        })
+        this.metrics.nodeConnectionFailures.inc({
+          layer: 'l2',
+          section: 'getBlockRange',
+        })
+        await sleep(15000)
+        return
+      }
+
+      blocks = blocks.concat(newBlocks)
     }
 
     for (const [i, stateRoot] of stateRoots.entries()) {
       if (blocks[i].stateRoot !== stateRoot) {
+        this.state.diverged = true
         this.metrics.isCurrentlyMismatched.set(1)
-        const fpw = await this.state.scc.FRAUD_PROOF_WINDOW()
         this.logger.error(`state root mismatch`, {
           blockNumber: blocks[i].number,
           expectedStateRoot: blocks[i].stateRoot,
@@ -173,7 +277,7 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
           finalizationTime: dateformat(
             new Date(
               (ethers.BigNumber.from(blocks[i].timestamp).toNumber() +
-                fpw.toNumber()) *
+                this.state.fpw) *
                 1000
             ),
             'mmmm dS, yyyy, h:MM:ss TT'
@@ -184,13 +288,16 @@ export class FaultDetector extends BaseServiceV2<Options, Metrics, State> {
     }
 
     this.state.highestCheckedBatchIndex++
-    this.metrics.highestCheckedBatchIndex.set(
+    this.metrics.highestBatchIndex.set(
+      {
+        type: 'checked',
+      },
       this.state.highestCheckedBatchIndex
     )
 
     // If we got through the above without throwing an error, we should be fine to reset.
+    this.state.diverged = false
     this.metrics.isCurrentlyMismatched.set(0)
-    this.metrics.inUnexpectedErrorState.set(0)
   }
 }
 

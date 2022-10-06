@@ -30,8 +30,10 @@ type Config struct {
 	// Note: When L1 has many 1 second consecutive blocks, and L2 grows at fixed 2 seconds,
 	// the L2 time may still grow beyond this difference.
 	MaxSequencerDrift uint64 `json:"max_sequencer_drift"`
-	// Number of epochs (L1 blocks) per sequencing window
+	// Number of epochs (L1 blocks) per sequencing window, including the epoch L1 origin block itself
 	SeqWindowSize uint64 `json:"seq_window_size"`
+	// Number of L1 blocks between when a channel can be opened and when it must be closed by.
+	ChannelTimeout uint64 `json:"channel_timeout"`
 	// Required to verify L1 signatures
 	L1ChainID *big.Int `json:"l1_chain_id"`
 	// Required to identify the L2 network and create p2p signatures unique for this chain.
@@ -43,9 +45,9 @@ type Config struct {
 	// Note: below addresses are part of the block-derivation process,
 	// and required to be the same network-wide to stay in consensus.
 
-	// L2 address receiving all L2 transaction fees
+	// L2 address used to send all priority fees to, also known as the coinbase address in the block.
 	FeeRecipientAddress common.Address `json:"fee_recipient_address"`
-	// L1 address that batches are sent to
+	// L1 address that batches are sent to.
 	BatchInboxAddress common.Address `json:"batch_inbox_address"`
 	// Acceptable batch-sender address
 	BatchSenderAddress common.Address `json:"batch_sender_address"`
@@ -57,6 +59,9 @@ type Config struct {
 func (cfg *Config) Check() error {
 	if cfg.BlockTime == 0 {
 		return fmt.Errorf("block time cannot be 0, got %d", cfg.BlockTime)
+	}
+	if cfg.ChannelTimeout == 0 {
+		return fmt.Errorf("channel timeout must be set, this should cover at least a L1 block time")
 	}
 	if cfg.SeqWindowSize < 2 {
 		return fmt.Errorf("sequencing window size must at least be 2, got %d", cfg.SeqWindowSize)

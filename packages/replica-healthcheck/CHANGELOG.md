@@ -1,5 +1,59 @@
 # @eth-optimism/replica-healthcheck
 
+## 1.1.10
+
+### Patch Changes
+
+- Updated dependencies [ce7da914]
+  - @eth-optimism/common-ts@0.6.6
+
+## 1.1.9
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+- Updated dependencies [d7679ca4]
+  - @eth-optimism/common-ts@0.6.5
+  - @eth-optimism/core-utils@0.10.1
+
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [dbfea116]
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/common-ts@0.6.4
+
+## 1.1.7
+
+### Patch Changes
+
+- Updated dependencies [0df744f6]
+- Updated dependencies [8ae39154]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/core-utils@0.9.3
+  - @eth-optimism/common-ts@0.6.3
+
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/common-ts@0.6.2
+
+## 1.1.5
+
+### Patch Changes
+
+- Updated dependencies [f9fee446]
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 1.1.4
 
 ### Patch Changes

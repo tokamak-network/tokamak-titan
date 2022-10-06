@@ -2,8 +2,10 @@ package eth
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sync"
 )
 
@@ -17,12 +19,18 @@ const executionPayloadFixedPart = 32 + 20 + 32 + 32 + 256 + 32 + 8 + 8 + 8 + 8 +
 // MAX_TRANSACTIONS_PER_PAYLOAD in consensus spec
 const maxTransactionsPerPayload = 1 << 20
 
+// ErrExtraDataTooLarge occurs when the ExecutionPayload's ExtraData field
+// is too large to be properly represented in SSZ.
+var ErrExtraDataTooLarge = errors.New("extra data too large")
+
 // The payloads are small enough to read and write at once.
 // But this happens often enough that we want to avoid re-allocating buffers for this.
 var payloadBufPool = sync.Pool{New: func() any {
 	x := make([]byte, 0, 100_000)
 	return &x
 }}
+
+var ErrBadTransactionOffset = errors.New("transactions offset is smaller than extra data offset, aborting")
 
 func (payload *ExecutionPayload) SizeSSZ() (full uint32) {
 	full = executionPayloadFixedPart + uint32(len(payload.ExtraData))
@@ -54,6 +62,10 @@ func unmarshalBytes32LE(in []byte, z *Uint256Quantity) {
 
 // MarshalSSZ encodes the ExecutionPayload as SSZ type
 func (payload *ExecutionPayload) MarshalSSZ(w io.Writer) (n int, err error) {
+	if len(payload.ExtraData) > math.MaxUint32-executionPayloadFixedPart {
+		return 0, ErrExtraDataTooLarge
+	}
+
 	scope := payload.SizeSSZ()
 
 	buf := *payloadBufPool.Get().(*[]byte)
@@ -166,6 +178,9 @@ func (payload *ExecutionPayload) UnmarshalSSZ(scope uint32, r io.Reader) error {
 	copy(payload.BlockHash[:], buf[offset:offset+32])
 	offset += 32
 	transactionsOffset := binary.LittleEndian.Uint32(buf[offset : offset+4])
+	if transactionsOffset < extraDataOffset {
+		return ErrBadTransactionOffset
+	}
 	offset += 4
 	if offset != executionPayloadFixedPart {
 		panic("fixed part size is inconsistent")
@@ -178,7 +193,7 @@ func (payload *ExecutionPayload) UnmarshalSSZ(scope uint32, r io.Reader) error {
 	copy(payload.ExtraData, buf[extraDataOffset:transactionsOffset])
 	txs, err := unmarshalTransactions(buf[transactionsOffset:])
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal transactions list: %v", err)
+		return fmt.Errorf("failed to unmarshal transactions list: %w", err)
 	}
 	payload.Transactions = txs
 	return nil

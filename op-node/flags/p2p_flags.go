@@ -97,7 +97,7 @@ var (
 		Usage:    "Comma-separated multiaddr-format peer list. Static connections to make and maintain, these peers will be regarded as trusted.",
 		Required: false,
 		Value:    "",
-		EnvVar:   p2pEnv("BOOTNODES"),
+		EnvVar:   p2pEnv("STATIC"),
 	}
 	HostMux = cli.StringFlag{
 		Name:     "p2p.mux",
@@ -193,12 +193,11 @@ var (
 		EnvVar:    p2pEnv("DISCOVERY_PATH"),
 	}
 	SequencerP2PKeyFlag = cli.StringFlag{
-		Name:      "p2p.sequencer.key",
-		Usage:     "File path of hex-encoded private key for signing off on p2p application messages as sequencer.",
-		Required:  false,
-		TakesFile: true,
-		Value:     "",
-		EnvVar:    p2pEnv("SEQUENCER_KEY"),
+		Name:     "p2p.sequencer.key",
+		Usage:    "Hex-encoded private key for signing off on p2p application messages as sequencer.",
+		Required: false,
+		Value:    "",
+		EnvVar:   p2pEnv("SEQUENCER_KEY"),
 	}
 )
 
