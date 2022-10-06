@@ -62,10 +62,6 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
         },
-        // addressManagerAddress: {
-        //   validator: validators.str,
-        //   desc: 'Contract address of Address Manager.',
-        // },
       },
       metricsSpec: {
         highestCheckedL2Tx: {
