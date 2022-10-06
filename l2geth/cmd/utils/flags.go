@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/big"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -52,6 +53,7 @@ import (
 	"github.com/ethereum-optimism/optimism/l2geth/log"
 	"github.com/ethereum-optimism/optimism/l2geth/metrics"
 	"github.com/ethereum-optimism/optimism/l2geth/metrics/influxdb"
+	"github.com/ethereum-optimism/optimism/l2geth/metrics/prometheus"
 	"github.com/ethereum-optimism/optimism/l2geth/miner"
 	"github.com/ethereum-optimism/optimism/l2geth/node"
 	"github.com/ethereum-optimism/optimism/l2geth/p2p"
@@ -1794,6 +1796,11 @@ func SetupMetrics(ctx *cli.Context) {
 
 			go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, 10*time.Second, endpoint, database, username, password, "geth.", tagsMap)
 		}
+
+		m := http.NewServeMux()
+		m.Handle("/debug/metrics/prometheus", prometheus.Handler(metrics.DefaultRegistry))
+
+		go http.ListenAndServe(":http", m)
 	}
 }
 
