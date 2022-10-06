@@ -5,7 +5,16 @@
   "license": "MIT",
   "workspaces": {
     "packages": [
-      "packages/*",
+      "packages/common-ts",
+      "packages/contracts",
+      "packages/core-utils",
+      "packages/data-transport-layer",
+      "packages/drippie-mon",
+      "packages/fault-detector",
+      "packages/hardhat-deploy-config",
+      "packages/message-relayer",
+      "packages/replica-healthcheck",
+      "packages/sdk",
       "batch-submitter",
       "bss-core",
       "gas-oracle",
