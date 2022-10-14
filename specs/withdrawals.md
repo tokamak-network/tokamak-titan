@@ -21,9 +21,9 @@ more specific terms to differentiate:
 - A *withdrawal finalizing transaction* refers specifically to an L1 transaction which finalizes and relays the
   withdrawal.
 
-Withdrawals are initiated on L2 via a call to the Withdrawals predeploy contract, which records the important properties
-of the message in its storage. Withdrawals are finalized on L1 via a call to the `L2WithdrawalVerifier` contract, which
-proves the inclusion of this withdrawal message.
+Withdrawals are initiated on L2 via a call to the Message Passer predeploy contract, which records the important
+properties of the message in its storage. Withdrawals are finalized on L1 via a call to the `L2WithdrawalVerifier`
+contract, which proves the inclusion of this withdrawal message.
 
 In this way, withdrawals are different from [deposits][g-deposits] which make use of a special transaction type in the
 [execution engine][g-execution-engine] client. Rather, withdrawals transaction must use smart contracts on L1 for
@@ -37,7 +37,7 @@ finalization.
   - [On L2](#on-l2)
   - [On L1](#on-l1)
 - [The L2ToL1MessagePasser Contract](#the-l2tol1messagepasser-contract)
-  - [Address Aliasing](#address-aliasing)
+  - [Addresses are not Aliased on Withdrawals](#addresses-are-not-aliased-on-withdrawals)
 - [The Optimism Portal Contract](#the-optimism-portal-contract)
 - [Withdrawal Verification and Finalization](#withdrawal-verification-and-finalization)
 - [Security Considerations](#security-considerations)
@@ -73,7 +73,7 @@ An L2 account sends a withdrawal message (and possibly also ETH) to the `L2ToL1M
 [message-passer-contract]: #the-l2tol1messagepasser-contract
 
 A withdrawal is initiated by calling the L2ToL1MessagePasser contract's `initiateWithdrawal` function.
-The L2ToL1MessagePasser is a simple predeploy contract at `0x4200000000000000000000000000000000000000`
+The L2ToL1MessagePasser is a simple predeploy contract at `0x4200000000000000000000000000000000000016`
 which stores messages to be withdrawn.
 
 ```js
@@ -87,6 +87,8 @@ interface L2ToL1MessagePasser {
         bytes data
     );
 
+    event WithdrawalInitiatedExtension1(bytes32 indexed hash);
+
     event WithdrawerBalanceBurnt(uint256 indexed amount);
 
     function burn() external;
@@ -99,6 +101,14 @@ interface L2ToL1MessagePasser {
 }
 
 ```
+
+The `WithdrawalInitiated` event includes all of the data that is hashed and
+stored in the `sentMessages` mapping. The `WithdrawalInitiatedExtension1` emits
+the hash that was computed and used as part of the storage proof used to
+finalize the withdrawal on L1.
+
+The events are separate as to preserve backwards compatibility. The hashing
+scheme could be upgraded in the future through a contract upgrade.
 
 ### Addresses are not Aliased on Withdrawals
 

@@ -43,16 +43,30 @@ func Start(config *Config) (func(), error) {
 		redisURL = rURL
 	}
 
-	var lim RateLimiter
+	var lim BackendRateLimiter
 	var err error
 	if redisURL == "" {
 		log.Warn("redis is not configured, using local rate limiter")
-		lim = NewLocalRateLimiter()
+		lim = NewLocalBackendRateLimiter()
 	} else {
 		lim, err = NewRedisRateLimiter(redisURL)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// While modifying shared globals is a bad practice, the alternative
+	// is to clone these errors on every invocation. This is inefficient.
+	// We'd also have to make sure that errors.Is and errors.As continue
+	// to function properly on the cloned errors.
+	if config.RateLimit.ErrorMessage != "" {
+		ErrOverRateLimit.Message = config.RateLimit.ErrorMessage
+	}
+	if config.WhitelistErrorMessage != "" {
+		ErrMethodNotWhitelisted.Message = config.WhitelistErrorMessage
+	}
+	if config.BatchConfig.ErrorMessage != "" {
+		ErrTooManyBatchRequests.Message = config.BatchConfig.ErrorMessage
 	}
 
 	maxConcurrentRPCs := config.Server.MaxConcurrentRPCs
@@ -212,7 +226,7 @@ func Start(config *Config) (func(), error) {
 		rpcCache = newRPCCache(newCacheWithCompression(cache), blockNumFn, gasPriceFn, config.Cache.NumBlockConfirmations)
 	}
 
-	srv := NewServer(
+	srv, err := NewServer(
 		backendGroups,
 		wsBackendGroup,
 		NewStringSetFromStrings(config.WSMethodWhitelist),
@@ -222,7 +236,14 @@ func Start(config *Config) (func(), error) {
 		secondsToDuration(config.Server.TimeoutSeconds),
 		config.Server.MaxUpstreamBatchSize,
 		rpcCache,
+		config.RateLimit,
+		config.Server.EnableRequestLog,
+		config.Server.MaxRequestBodyLogLen,
+		config.BatchConfig.MaxSize,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating server: %w", err)
+	}
 
 	if config.Metrics.Enabled {
 		addr := fmt.Sprintf("%s:%d", config.Metrics.Host, config.Metrics.Port)

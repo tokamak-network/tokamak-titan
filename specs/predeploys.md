@@ -12,7 +12,7 @@
 - [L2CrossDomainMessenger](#l2crossdomainmessenger)
 - [L2StandardBridge](#l2standardbridge)
 - [SequencerFeeVault](#sequencerfeevault)
-- [OptimismMintableTokenFactory](#optimismmintabletokenfactory)
+- [OptimismMintableERC20Factory](#optimismmintableerc20factory)
 - [L1BlockNumber](#l1blocknumber)
 - [OVM\_GasPriceOracle](#ovm%5C_gaspriceoracle)
 - [Reserved System Address 1](#reserved-system-address-1)
@@ -39,19 +39,20 @@ or `Bedrock`. Deprecated contracts should not be used.
 
 | Name                         | Address                                    | Introduced | Deprecated |
 | ---------------------------- | ------------------------------------------ | ---------- | ---------- |
-| OVM\_L2ToL1MessagePasser     | 0x4200000000000000000000000000000000000000 | Legacy     | No         |
-| OVM\_DeployerWhitelist       | 0x4200000000000000000000000000000000000002 | Legacy     | Yes        |
-| OVM\_ETH                     | 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000 | Legacy     | Yes        |
+| LegacyMessagePasser          | 0x4200000000000000000000000000000000000000 | Legacy     | Yes        |
+| DeployerWhitelist            | 0x4200000000000000000000000000000000000002 | Legacy     | Yes        |
+| LegacyERC20ETH               | 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000 | Legacy     | Yes        |
 | WETH9                        | 0x4200000000000000000000000000000000000006 | Legacy     | No         |
 | L2CrossDomainMessenger       | 0x4200000000000000000000000000000000000007 | Legacy     | No         |
 | L2StandardBridge             | 0x4200000000000000000000000000000000000010 | Legacy     | No         |
 | SequencerFeeVault            | 0x4200000000000000000000000000000000000011 | Legacy     | No         |
-| OptimismMintableTokenFactory | 0x4200000000000000000000000000000000000012 | Legacy     | No         |
+| OptimismMintableERC20Factory | 0x4200000000000000000000000000000000000012 | Legacy     | No         |
 | L1BlockNumber                | 0x4200000000000000000000000000000000000013 | Legacy     | Yes        |
-| OVM\_GasPriceOracle          | 0x420000000000000000000000000000000000000F | Legacy     | No         |
+| GasPriceOracle               | 0x420000000000000000000000000000000000000F | Legacy     | No         |
 | Reserved System Address 1    | 0x4200000000000000000000000000000000000014 | Legacy     | No         |
 | Reserved System Address 2    | 0x4200000000000000000000000000000000000042 | Legacy     | No         |
 | L1Block                      | 0x4200000000000000000000000000000000000015 | Bedrock    | No         |
+| L2ToL1MessagePasser          | 0x4200000000000000000000000000000000000016 | Bedrock    | No         |
 
 ## OVM\_L2ToL1MessagePasser
 
@@ -161,7 +162,7 @@ interface iOVM_ETH {
 ```solidity
 interface WETH9 {
     function name() public returns (string);
-    funcion symbol() public returns (string);
+    function symbol() public returns (string);
     function decimals public returns (uint8);
 
     event  Approval(address indexed src, address indexed guy, uint wad);
@@ -229,9 +230,9 @@ interface SequencerFeeVault {
 }
 ```
 
-## OptimismMintableTokenFactory
+## OptimismMintableERC20Factory
 
-The `OptimismMintableTokenFactory` can be used to create an ERC20 token contract
+The `OptimismMintableERC20Factory` can be used to create an ERC20 token contract
 on a remote domain that maps to an ERC20 token contract on the local domain
 where tokens can be deposited to the remote domain. It deploys an
 `OptimismMintableERC20` which has the interface that works with the
@@ -254,7 +255,7 @@ interface iOVM_L1BlockNumber {
 The `OVM_GasPriceOracle` is pushed the L1 basefee and the L2 gas price by
 an offchain actor. The offchain actor observes the L1 blockheaders to get the
 L1 basefee as well as the gas usage on L2 to compute what the L2 gas price
-should be based on a congenstion control algorithm.
+should be based on a congestion control algorithm.
 
 Its usage to be pushed the L2 gas price by an offchain actor is deprecated in
 Bedrock, but it is still used to hold the `overhead`, `scalar`, and `decimals`
@@ -273,7 +274,7 @@ interface OVM_GasPriceOracle {
     function l1BaseFee() public returns (uint256);
 
     /**
-     * @dev Returns the amortized cost of 
+     * @dev Returns the amortized cost of
      * batch submission per transaction
      */
     function overhead() public returns (uint256);
@@ -333,10 +334,10 @@ Reserved for future use.
 
 ## L1Block
 
-[l1-block-predeploy]: glossary.md#l1-block-predeployed-contract
+[l1-block-predeploy]: glossary.md#l1-attributes-predeployed-contract
 
-The [L1Block](l1-block-predeploy) was introduced in Bedrock and is responsible for
-mainting L1 context in L2. This allows for L1 state to be accessed in L2.
+The [L1Block][l1-block-predeploy] was introduced in Bedrock and is responsible for
+maintaining L1 context in L2. This allows for L1 state to be accessed in L2.
 
 ```solidity
 interface L1Block {
@@ -370,10 +371,11 @@ interface L1Block {
      * @dev sets the latest L1 block attributes
      */
     function setL1BlockValues(
-        uint256 _number,
-        uint256 _timestamp,
+        uint64 _number,
+        uint64 _timestamp,
         uint256 _basefee,
-        bytes32 _hash
+        bytes32 _hash,
+        uint64 _sequenceNumber
     ) external;
 }
 ```

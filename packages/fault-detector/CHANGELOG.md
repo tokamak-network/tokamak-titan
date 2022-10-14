@@ -1,5 +1,61 @@
 # @eth-optimism/fault-detector
 
+## 0.3.0
+
+### Minor Changes
+
+- 4a5e1832: Updates metrics to use better labels.
+
+### Patch Changes
+
+- Updated dependencies [e2faaa8b]
+  - @eth-optimism/sdk@1.6.5
+
+## 0.2.7
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- 17999a54: Adds a fault status API to the Fault Detector.
+- 2f058b84: Fixes a small bug in the fault detector that would cause errors for testnets where the fault proof window is extremely short.
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+- Updated dependencies [d7679ca4]
+  - @eth-optimism/common-ts@0.6.5
+  - @eth-optimism/contracts@0.5.36
+  - @eth-optimism/core-utils@0.10.1
+  - @eth-optimism/sdk@1.6.4
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [b27d0fa7]
+- Updated dependencies [dbfea116]
+- Updated dependencies [299157e7]
+  - @eth-optimism/sdk@1.6.1
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/contracts@0.5.34
+  - @eth-optimism/common-ts@0.6.4
+
+## 0.2.5
+
+### Patch Changes
+
+- 98206b7e: Properly handle connection failures for L2 node
+
+## 0.2.4
+
+### Patch Changes
+
+- 89d01f2e: Update dev deps
+- Updated dependencies [6e3449ba]
+- Updated dependencies [f9fee446]
+  - @eth-optimism/contracts@0.5.30
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/sdk@1.2.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 0.2.3
 
 ### Patch Changes

@@ -113,17 +113,7 @@
     "0xEFa07e4263D511fC3a7476772e2392efFb1BDb92",
     "0x37212a8F2abbb40000e974DA82D410DdbecFa956",
     [
-      "ChainStorageContainer-CTC-batches",
-      "ChainStorageContainer-SCC-batches",
-      "CanonicalTransactionChain",
-      "StateCommitmentChain",
-      "BondManager",
-      "OVM_L1CrossDomainMessenger",
-      "Proxy__OVM_L1CrossDomainMessenger",
-      "Proxy__OVM_L1StandardBridge",
-      "L2CrossDomainMessenger",
-      "OVM_Sequencer",
-      "OVM_Proposer"
+      "StateCommitmentChain"
     ],
     [
       "0x9dDBa463f716b328fa35e8bDdDE9C27DECce18c5",

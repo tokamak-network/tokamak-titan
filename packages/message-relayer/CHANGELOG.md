@@ -1,5 +1,116 @@
 # @eth-optimism/message-relayer
 
+## 0.5.16
+
+### Patch Changes
+
+- Updated dependencies [ce7da914]
+  - @eth-optimism/common-ts@0.6.6
+  - @eth-optimism/sdk@1.6.6
+
+## 0.5.15
+
+### Patch Changes
+
+- Updated dependencies [e2faaa8b]
+  - @eth-optimism/sdk@1.6.5
+
+## 0.5.14
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- 4f0cc4a4: Small patch release meant to test a fix for a bug in our canary release process for this package.
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+- Updated dependencies [d7679ca4]
+  - @eth-optimism/common-ts@0.6.5
+  - @eth-optimism/core-utils@0.10.1
+  - @eth-optimism/sdk@1.6.4
+
+## 0.5.13
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.6.3
+
+## 0.5.12
+
+### Patch Changes
+
+- Updated dependencies [cfa81f88]
+  - @eth-optimism/sdk@1.6.2
+
+## 0.5.11
+
+### Patch Changes
+
+- Updated dependencies [b27d0fa7]
+- Updated dependencies [dbfea116]
+  - @eth-optimism/sdk@1.6.1
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/common-ts@0.6.4
+
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [3df66a9a]
+- Updated dependencies [8323407f]
+- Updated dependencies [3af9c7a9]
+- Updated dependencies [aa2949ef]
+- Updated dependencies [a1a73e64]
+- Updated dependencies [f53c30b9]
+  - @eth-optimism/sdk@1.6.0
+
+## 0.5.9
+
+### Patch Changes
+
+- Updated dependencies [dcd715a6]
+  - @eth-optimism/sdk@1.5.0
+
+## 0.5.8
+
+### Patch Changes
+
+- Updated dependencies [0df744f6]
+- Updated dependencies [8ae39154]
+- Updated dependencies [f05ab6b6]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/core-utils@0.9.3
+  - @eth-optimism/sdk@1.4.0
+  - @eth-optimism/common-ts@0.6.3
+
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [680714c1]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [29830750]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/sdk@1.3.1
+  - @eth-optimism/common-ts@0.6.2
+
+## 0.5.6
+
+### Patch Changes
+
+- Updated dependencies [032f7214]
+  - @eth-optimism/sdk@1.3.0
+
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies [f9fee446]
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/sdk@1.2.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 0.5.4
 
 ### Patch Changes

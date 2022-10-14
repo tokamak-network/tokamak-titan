@@ -1,5 +1,180 @@
 # @eth-optimism/sdk
 
+## 1.6.6
+
+### Patch Changes
+
+- Updated dependencies [6ed68fa3]
+- Updated dependencies [628affc7]
+- Updated dependencies [3d4e8529]
+- Updated dependencies [caf5dd3e]
+- Updated dependencies [740e1bcc]
+- Updated dependencies [a6cbfee2]
+- Updated dependencies [394a26ec]
+  - @eth-optimism/contracts-bedrock@0.8.0
+  - @eth-optimism/contracts@0.5.37
+
+## 1.6.5
+
+### Patch Changes
+
+- e2faaa8b: Update for new BedrockMessagePasser contract
+- Updated dependencies [cb5fed67]
+- Updated dependencies [c427f0c0]
+- Updated dependencies [e2faaa8b]
+- Updated dependencies [d28ad592]
+- Updated dependencies [76c8ee2d]
+  - @eth-optimism/contracts-bedrock@0.7.0
+
+## 1.6.4
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- 206f6033: Fix outdated references to 'withdrawal contract'
+- d7679ca4: Add source maps
+- Updated dependencies [88dde7c8]
+- Updated dependencies [7215f4ce]
+- Updated dependencies [249a8ed6]
+- Updated dependencies [7d7c4fdf]
+- Updated dependencies [e164e22e]
+- Updated dependencies [0bc1be45]
+- Updated dependencies [af3e56b1]
+- Updated dependencies [206f6033]
+- Updated dependencies [88dde7c8]
+- Updated dependencies [8790156c]
+- Updated dependencies [515685f4]
+  - @eth-optimism/contracts-bedrock@0.6.3
+  - @eth-optimism/contracts@0.5.36
+  - @eth-optimism/core-utils@0.10.1
+
+## 1.6.3
+
+### Patch Changes
+
+- Updated dependencies [651a2883]
+  - @eth-optimism/contracts-bedrock@0.6.2
+
+## 1.6.2
+
+### Patch Changes
+
+- cfa81f88: Add DAI bridge support to Goerli
+- Updated dependencies [85232179]
+- Updated dependencies [593f1cfb]
+- Updated dependencies [334a3eb0]
+- Updated dependencies [f78eb056]
+  - @eth-optimism/contracts-bedrock@0.6.1
+  - @eth-optimism/contracts@0.5.35
+
+## 1.6.1
+
+### Patch Changes
+
+- b27d0fa7: Add wsteth support for DAI bridge to sdk
+- Updated dependencies [7fdc490c]
+- Updated dependencies [3d228a0e]
+- Updated dependencies [dbfea116]
+- Updated dependencies [63ef1949]
+- Updated dependencies [299157e7]
+  - @eth-optimism/contracts-bedrock@0.6.0
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/contracts@0.5.34
+
+## 1.6.0
+
+### Minor Changes
+
+- 3af9c7a9: Removes the ICrossChainMessenger interface to speed up SDK development.
+
+### Patch Changes
+
+- 3df66a9a: Fix eth withdrawal bug
+- 8323407f: Fixes a bug in the SDK for certain bridge withdrawals.
+- aa2949ef: Add eth withdrawal support
+- a1a73e64: Updates the SDK to pull contract addresses from the deployments of the contracts package. Updates the Contracts package to export a function that makes it possible to pull deployed addresses.
+- f53c30b9: Minor refactor to variables within the SDK package.
+- Updated dependencies [a095d544]
+- Updated dependencies [cdf2163e]
+- Updated dependencies [791f30bc]
+- Updated dependencies [193befed]
+- Updated dependencies [0c2719f8]
+- Updated dependencies [02420db0]
+- Updated dependencies [94a8f287]
+- Updated dependencies [7d03c5c0]
+- Updated dependencies [fec22bfe]
+- Updated dependencies [9272253e]
+- Updated dependencies [a1a73e64]
+- Updated dependencies [c025f418]
+- Updated dependencies [329d21b6]
+- Updated dependencies [35eafed0]
+- Updated dependencies [3cde9205]
+  - @eth-optimism/contracts-bedrock@0.5.4
+  - @eth-optimism/contracts@0.5.33
+
+## 1.5.0
+
+### Minor Changes
+
+- dcd715a6: Update wsteth bridge address
+
+## 1.4.0
+
+### Minor Changes
+
+- f05ab6b6: Add wstETH to sdk
+- dac4a9f0: Updates the SDK to be compatible with Bedrock (via the "bedrock: true" constructor param). Updates the build pipeline for contracts-bedrock to export a properly formatted dist folder that matches our other packages.
+
+### Patch Changes
+
+- Updated dependencies [056cb982]
+- Updated dependencies [a32e68ac]
+- Updated dependencies [c648d55c]
+- Updated dependencies [d544f804]
+- Updated dependencies [ccbfe545]
+- Updated dependencies [c97ad241]
+- Updated dependencies [0df744f6]
+- Updated dependencies [45541553]
+- Updated dependencies [3dd296e8]
+- Updated dependencies [fe94b864]
+- Updated dependencies [28649d64]
+- Updated dependencies [898c7ac5]
+- Updated dependencies [51a1595b]
+- Updated dependencies [8ae39154]
+- Updated dependencies [af96563a]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/contracts-bedrock@0.5.3
+  - @eth-optimism/core-utils@0.9.3
+  - @eth-optimism/contracts@0.5.32
+
+## 1.3.1
+
+### Patch Changes
+
+- 680714c1: Updates the CCM to throw a better error for missing or invalid chain IDs
+- 29830750: Update the Goerli SCC's address
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [1de4f48e]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/contracts@0.5.31
+
+## 1.3.0
+
+### Minor Changes
+
+- 032f7214: Update Goerli SDK addresses for new Goerli testnet
+
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [6e3449ba]
+- Updated dependencies [f9fee446]
+  - @eth-optimism/contracts@0.5.30
+  - @eth-optimism/core-utils@0.9.1
+
 ## 1.2.0
 
 ### Minor Changes

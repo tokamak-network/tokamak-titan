@@ -1,5 +1,94 @@
 # data transport layer
 
+## 0.5.47
+
+### Patch Changes
+
+- 81c1cd99: Adds consistency checks for transaction entries in L1 syncing nodes
+- Updated dependencies [ce7da914]
+- Updated dependencies [628affc7]
+- Updated dependencies [740e1bcc]
+  - @eth-optimism/common-ts@0.6.6
+  - @eth-optimism/contracts@0.5.37
+
+## 0.5.46
+
+### Patch Changes
+
+- cf3fcf41: Optimization for mainnet under the assumption that addresses do not change.
+
+## 0.5.45
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- b1cec1d5: Fixes a bug that would break DTL sync when addresses are changed
+- Updated dependencies [7215f4ce]
+- Updated dependencies [206f6033]
+- Updated dependencies [d7679ca4]
+  - @eth-optimism/common-ts@0.6.5
+  - @eth-optimism/contracts@0.5.36
+  - @eth-optimism/core-utils@0.10.1
+
+## 0.5.44
+
+### Patch Changes
+
+- Updated dependencies [334a3eb0]
+  - @eth-optimism/contracts@0.5.35
+
+## 0.5.43
+
+### Patch Changes
+
+- Updated dependencies [dbfea116]
+- Updated dependencies [299157e7]
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/contracts@0.5.34
+  - @eth-optimism/common-ts@0.6.4
+
+## 0.5.42
+
+### Patch Changes
+
+- Updated dependencies [0c2719f8]
+- Updated dependencies [a1a73e64]
+  - @eth-optimism/contracts@0.5.33
+
+## 0.5.41
+
+### Patch Changes
+
+- Updated dependencies [0df744f6]
+- Updated dependencies [8ae39154]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/core-utils@0.9.3
+  - @eth-optimism/common-ts@0.6.3
+  - @eth-optimism/contracts@0.5.32
+
+## 0.5.40
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [1de4f48e]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/contracts@0.5.31
+  - @eth-optimism/common-ts@0.6.2
+
+## 0.5.39
+
+### Patch Changes
+
+- 6e3449ba: Upgrade import path for new typechain
+- Updated dependencies [6e3449ba]
+- Updated dependencies [f9fee446]
+  - @eth-optimism/contracts@0.5.30
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 0.5.38
 
 ### Patch Changes
