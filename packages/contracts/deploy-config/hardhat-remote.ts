@@ -1,17 +1,17 @@
 const config = {
-  l1BlockTimeSeconds: 15,
+  l1BlockTimeSeconds: 1,
   l2BlockGasLimit: 15_000_000,
   l2ChainId: 17,
   ctcL2GasDiscountDivisor: 32,
   ctcEnqueueGasCost: 60_000,
   sccFaultProofWindowSeconds: 0,
   sccSequencerPublishWindowSeconds: 12592000,
-  ovmSequencerAddress: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8',
-  ovmProposerAddress: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
+  ovmSequencerAddress: '0xcBE48D9B72e76e40786093F64924a140128E3263',
+  ovmProposerAddress: '0xE89B1A89339E6824224b660Ed1c5AF3eB683b771',
   ovmBlockSignerAddress: '0x00000398232E2064F896018496b4b44b3D62751F',
-  ovmFeeWalletAddress: '0x391716d440c151c42cdf1c95c1d83a5427bca52c',
-  ovmAddressManagerOwner: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
-  ovmGasPriceOracleOwner: '0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc',
+  ovmFeeWalletAddress: '0xebcB3336262d6E05A5920F6a39B7Cc8dBda44bdB',
+  ovmAddressManagerOwner: '0x36602DC3d18c37627366109FF80E527De1002CF8',
+  ovmGasPriceOracleOwner: '0x9ed2E27310917ec6242D9F0cbA2C7217D82460c5',
 }
 
 export default config
