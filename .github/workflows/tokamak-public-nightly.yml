@@ -2,11 +2,8 @@ name: Tokamak Optimism Publish (Nightly Version)
 
 on:
   push:
-    paths:
-      - '!packages/contracts/genesis/**'
-      - '!packages/contracts/deployments/**'
     branches:
-      - "main"
+      - 'main'
 
 jobs:
   l2geth:
@@ -74,7 +71,7 @@ jobs:
 
       - name: Get version from package.json
         id: extractver
-        run: echo ::set-output name=VERSION::$(jq -r .version ./hardhat/package.json)
+        run: echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
