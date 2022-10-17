@@ -311,7 +311,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./contracts/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/contracts/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
