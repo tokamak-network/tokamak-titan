@@ -1,7 +1,7 @@
 {
-  "name": "optimism",
-  "version": "1.0.0",
-  "author": "Optimism PBC",
+  "name": "tokamak-optimism",
+  "version": "0.1.0",
+  "author": "Tokamak Optimism",
   "license": "MIT",
   "workspaces": {
     "packages": [
