@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strings"
 
 	"github.com/ethereum-optimism/optimism/l2geth/log"
 	"github.com/ethereum-optimism/optimism/l2geth/metrics"
@@ -43,22 +42,21 @@ func Handler(reg metrics.Registry) http.Handler {
 		for _, name := range names {
 			i := reg.Get(name)
 
-			promName := strings.Replace(name, "/", "_", -1)
 			switch m := i.(type) {
 			case metrics.Counter:
-				c.addCounter(promName, m.Snapshot())
+				c.addCounter(name, m.Snapshot())
 			case metrics.Gauge:
-				c.addGauge(promName, m.Snapshot())
+				c.addGauge(name, m.Snapshot())
 			case metrics.GaugeFloat64:
-				c.addGaugeFloat64(promName, m.Snapshot())
+				c.addGaugeFloat64(name, m.Snapshot())
 			case metrics.Histogram:
-				c.addHistogram(promName, m.Snapshot())
+				c.addHistogram(name, m.Snapshot())
 			case metrics.Meter:
-				c.addMeter(promName, m.Snapshot())
+				c.addMeter(name, m.Snapshot())
 			case metrics.Timer:
-				c.addTimer(promName, m.Snapshot())
+				c.addTimer(name, m.Snapshot())
 			case metrics.ResettingTimer:
-				c.addResettingTimer(promName, m.Snapshot())
+				c.addResettingTimer(name, m.Snapshot())
 			default:
 				log.Warn("Unknown Prometheus metric type", "type", fmt.Sprintf("%T", i))
 			}
