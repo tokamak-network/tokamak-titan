@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 /* Interface Imports */
-import { ICrossDomainMessenger } from "./ICrossDomainMessenger.sol";
+import { ICrossDomainMessenger } from "@eth-optimism/contracts/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 
 /**
  * @title CrossDomainEnabledFast

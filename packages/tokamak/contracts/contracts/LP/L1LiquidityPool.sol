@@ -1,24 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
+pragma experimental ABIEncoderV2;
 
 /* Internal Imports */
-import "../../libraries/bridge/CrossDomainEnabled.sol";
-import "../../libraries/constants/Lib_PredeployAddresses.sol";
-import "../predeploys/OVM_GasPriceOracle.sol";
-import "./L2StandardBridge.sol";
-import "../../L1/messaging/IL1LiquidityPool.sol";
-import "./L2BillingContract.sol";
+import "./interfaces/IL2LiquidityPool.sol";
+import "../libraries/CrossDomainEnabledFast.sol";
+import "@eth-optimism/contracts/contracts/L1/messaging/L1StandardBridge.sol";
 
 /* External Imports */
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @dev An L2 LiquidityPool implementation
+ * @dev An L1 LiquidityPool implementation
  */
-
-contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, PausableUpgradeable {
+contract L1LiquidityPool is
+    CrossDomainEnabledFast,
+    ReentrancyGuardUpgradeable,
+    PausableUpgradeable
+{
     using SafeERC20 for IERC20;
 
     /**************
@@ -63,12 +64,16 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         uint256 accUserRewardPerShare; // Accumulated user rewards per share, times 1e12. See below.
         // owner rewards
         uint256 accOwnerReward; // Accumulated owner reward.
-        // start time
+        // start time -- used to calculate APR
         uint256 startTime;
     }
     // Token batch structure
+    struct ClientDepositToken {
+        address l1TokenAddress;
+        uint256 amount;
+    }
     struct ClientPayToken {
-        address payable to;
+        address to;
         address l2TokenAddress;
         uint256 amount;
     }
@@ -83,38 +88,29 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
     mapping(address => mapping(address => UserInfo)) public userInfo;
 
     address public owner;
-    address public L1LiquidityPoolAddress;
+    address public L2LiquidityPoolAddress;
     uint256 public userRewardMinFeeRate;
     uint256 public ownerRewardFeeRate;
-    // Default gas value which can be overridden if more complex logic runs on L1.
-    uint32 public DEFAULT_FINALIZE_WITHDRAWAL_L1_GAS;
-
-    uint256 private constant SAFE_GAS_STIPEND = 2300;
-
-    address public DAO;
-
-    uint256 public extraGasRelay;
-
+    // Default gas value which can be overridden if more complex logic runs on L2.
+    uint32 public SETTLEMENT_L2_GAS;
+    uint256 public SAFE_GAS_STIPEND;
+    // cdm address
+    address public l1CrossDomainMessenger;
+    // L1StandardBridge address
+    address payable public L1StandardBridgeAddress;
     uint256 public userRewardMaxFeeRate;
 
-    // address public xBOBAAddress;
-    // address public BOBAAddress;
-
-    // mapping user address to the status of xBOBA
-    // mapping(address => bool) public xBOBAStatus;
-
-    // billing contract address
-    address public billingContractAddress;
+    bytes32 public priorDepositInfoHash;
+    bytes32 public currentDepositInfoHash;
+    uint256 public lastHashUpdateBlock;
 
     /********************
-     *       Event      *
+     *       Events     *
      ********************/
 
     event AddLiquidity(address sender, uint256 amount, address tokenAddress);
 
-    event ClientDepositL2(address sender, uint256 receivedAmount, address tokenAddress);
-
-    event ClientPayL2Settlement(
+    event ClientPayL1(
         address sender,
         uint256 amount,
         uint256 userRewardFee,
@@ -131,13 +127,11 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
 
     event OwnershipTransferred(address newOwner);
 
-    event DaoRoleTransferred(address newDao);
+    /********************
+     *    Constructor   *
+     ********************/
 
-    /********************************
-     * Constructor & Initialization *
-     ********************************/
-
-    constructor() CrossDomainEnabled(address(0)) {}
+    constructor() CrossDomainEnabledFast(address(0), address(0)) {}
 
     /**********************
      * Function Modifiers *
@@ -148,28 +142,28 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         _;
     }
 
-    modifier onlyDAO() {
-        require(msg.sender == DAO, "Caller is not the DAO");
-        _;
-    }
-
     modifier onlyNotInitialized() {
-        require(address(L1LiquidityPoolAddress) == address(0), "Contract has been initialized");
+        require(address(L2LiquidityPoolAddress) == address(0), "Contract has been initialized");
         _;
     }
 
     modifier onlyInitialized() {
         require(
-            address(L1LiquidityPoolAddress) != address(0),
+            address(L2LiquidityPoolAddress) != address(0),
             "Contract has not yet been initialized"
         );
         _;
     }
 
-    modifier onlyWithBillingContract() {
-        require(billingContractAddress != address(0), "Billing contract address is not set");
+    modifier onlyL1StandardBridge() {
+        require(address(L1StandardBridgeAddress) == msg.sender, "Can't receive ETH");
         _;
     }
+
+    /********************
+     * Fall back Functions *
+     ********************/
+    receive() external payable onlyL1StandardBridge {}
 
     /********************
      * Public Functions *
@@ -187,136 +181,78 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
     }
 
     /**
-     * @dev transfer priviledges to DAO
-     *
-     * @param _newDAO new fee setter
-     */
-    function transferDAORole(address _newDAO) public onlyDAO {
-        require(_newDAO != address(0), "New DAO address cannot be the zero address");
-        DAO = _newDAO;
-        emit DaoRoleTransferred(_newDAO);
-    }
-
-    /**
      * @dev Initialize this contract.
-     * @param _l2CrossDomainMessenger L2 Messenger address being used for sending the cross-chain message.
-     * @param _L1LiquidityPoolAddress Address of the corresponding L1 LP deployed to the main chain
+     *
+     * @param _l1CrossDomainMessenger L1 Messenger address being used for sending the cross-chain message.
+     * @param _l1CrossDomainMessengerFast L1 Messenger address being used for relaying cross-chain messages quickly.
+     * @param _L2LiquidityPoolAddress Address of the corresponding L2 LP deployed to the L2 chain
+     * @param _L1StandardBridgeAddress Address of L1 StandardBridge
      */
-    function initialize(address _l2CrossDomainMessenger, address _L1LiquidityPoolAddress)
-        public
-        onlyOwner
-        onlyNotInitialized
-        initializer
-    {
+    function initialize(
+        address _l1CrossDomainMessenger,
+        address _l1CrossDomainMessengerFast,
+        address _L2LiquidityPoolAddress,
+        address payable _L1StandardBridgeAddress
+    ) public onlyOwner onlyNotInitialized initializer {
         require(
-            _l2CrossDomainMessenger != address(0) && _L1LiquidityPoolAddress != address(0),
+            _l1CrossDomainMessenger != address(0) &&
+                _l1CrossDomainMessengerFast != address(0) &&
+                _L2LiquidityPoolAddress != address(0),
             "zero address not allowed"
         );
-        messenger = _l2CrossDomainMessenger;
-        L1LiquidityPoolAddress = _L1LiquidityPoolAddress;
+        senderMessenger = _l1CrossDomainMessenger;
+        relayerMessenger = _l1CrossDomainMessengerFast;
+        L2LiquidityPoolAddress = _L2LiquidityPoolAddress;
+        L1StandardBridgeAddress = _L1StandardBridgeAddress;
         owner = msg.sender;
-        DAO = msg.sender;
-        // translates to fee rates 0.1%, 1% and 1.5% respectively
-        configureFee(1, 10, 15);
-        configureGas(100000);
+        // translates to fee rates 0.5%, 5% and 0% respectively
+        _configureFee(5, 50, 0);
+        configureGas(700000, 2300);
 
         __Context_init_unchained();
         __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();
     }
 
-    /**
-     * @dev Configure fee of this contract.
-     * @dev Each fee rate is scaled by 10^3 for precision, eg- a fee rate of 50 would mean 5%
-     * 예시. fee rate가 50이면 5% (50 / 1000)
-     * @param _userRewardMinFeeRate minimum fee rate that users get
-     * @param _userRewardMaxFeeRate maximum fee rate that users get
-     * @param _ownerRewardFeeRate fee rate that contract owner gets
-     */
-    function configureFee(
+    function _configureFee(
         uint256 _userRewardMinFeeRate,
         uint256 _userRewardMaxFeeRate,
         uint256 _ownerRewardFeeRate
-    ) public onlyDAO onlyInitialized {
-        require(
-            _userRewardMinFeeRate <= _userRewardMaxFeeRate &&
-                _userRewardMinFeeRate > 0 &&
-                _userRewardMaxFeeRate <= 50 &&
-                _ownerRewardFeeRate <= 50,
-            "user and owner fee rates should be lower than 5 percent each"
-        );
+    ) internal {
         userRewardMinFeeRate = _userRewardMinFeeRate;
         userRewardMaxFeeRate = _userRewardMaxFeeRate;
         ownerRewardFeeRate = _ownerRewardFeeRate;
     }
 
     /**
-     * @dev Configure fee of the L1LP contract
-     * @dev Each fee rate is scaled by 10^3 for precision, eg- a fee rate of 50 would mean 5%
-     * @param _userRewardMinFeeRate minimum fee rate that users get
-     * @param _userRewardMaxFeeRate maximum fee rate that users get
-     * @param _ownerRewardFeeRate fee rate that contract owner gets
-     */
-    function configureFeeExits(
-        uint256 _userRewardMinFeeRate,
-        uint256 _userRewardMaxFeeRate,
-        uint256 _ownerRewardFeeRate
-    ) external onlyDAO onlyInitialized {
-        require(
-            _userRewardMinFeeRate <= _userRewardMaxFeeRate &&
-                _userRewardMinFeeRate > 0 &&
-                _userRewardMaxFeeRate <= 50 &&
-                _ownerRewardFeeRate <= 50,
-            "user and owner fee rates should be lower than 5 percent each"
-        );
-        bytes memory data = abi.encodeWithSelector(
-            IL1LiquidityPool.configureFee.selector,
-            _userRewardMinFeeRate,
-            _userRewardMaxFeeRate,
-            _ownerRewardFeeRate
-        );
-
-        // Send calldata into L1
-        sendCrossDomainMessage(address(L1LiquidityPoolAddress), getFinalizeDepositL1Gas(), data);
-    }
-
-    /**
      * @dev Configure gas.
      *
-     * @param _l1GasFee default finalized withdraw L1 Gas
+     * @param _l2GasFee default finalized deposit L2 Gas
+     * @param _safeGas safe gas stipened
      */
-    function configureGas(uint32 _l1GasFee) public onlyOwner onlyInitialized {
-        DEFAULT_FINALIZE_WITHDRAWAL_L1_GAS = _l1GasFee;
-    }
-
-    /**
-     * @dev Configure billing contract address.
-     *
-     * @param _billingContractAddress billing contract address
-     */
-    function configureBillingContractAddress(address _billingContractAddress) public onlyOwner {
-        require(_billingContractAddress != address(0), "Billing contract address cannot be zero");
-        billingContractAddress = _billingContractAddress;
+    function configureGas(uint32 _l2GasFee, uint256 _safeGas) public onlyOwner onlyInitialized {
+        SETTLEMENT_L2_GAS = _l2GasFee;
+        SAFE_GAS_STIPEND = _safeGas;
     }
 
     /**
      * @dev Return user reward fee rate.
      *
-     * @param _l2TokenAddress L2 token address
+     * @param _l1TokenAddress L1 token address
      */
-    function getUserRewardFeeRate(address _l2TokenAddress)
+    function getUserRewardFeeRate(address _l1TokenAddress)
         public
         view
         onlyInitialized
         returns (uint256 userRewardFeeRate)
     {
-        PoolInfo storage pool = poolInfo[_l2TokenAddress];
+        PoolInfo storage pool = poolInfo[_l1TokenAddress];
         uint256 poolLiquidity = pool.userDepositAmount;
         uint256 poolBalance;
-        if (_l2TokenAddress == Lib_PredeployAddresses.OVM_ETH) {
+        if (_l1TokenAddress == address(0)) {
             poolBalance = address(this).balance;
         } else {
-            poolBalance = IERC20(_l2TokenAddress).balanceOf(address(this));
+            poolBalance = IERC20(_l1TokenAddress).balanceOf(address(this));
         }
         if (poolBalance == 0) {
             return userRewardMaxFeeRate;
@@ -343,10 +279,10 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         require(_l1TokenAddress != _l2TokenAddress, "l1 and l2 token addresses cannot be same");
         require(_l2TokenAddress != address(0), "l2 token address cannot be zero address");
         // use with caution, can register only once
-        PoolInfo storage pool = poolInfo[_l2TokenAddress];
+        PoolInfo storage pool = poolInfo[_l1TokenAddress];
         // l2 token address equal to zero, then pair is not registered.
         require(pool.l2TokenAddress == address(0), "Token Address Already Registered");
-        poolInfo[_l2TokenAddress] = PoolInfo({
+        poolInfo[_l1TokenAddress] = PoolInfo({
             l1TokenAddress: _l1TokenAddress,
             l2TokenAddress: _l2TokenAddress,
             userDepositAmount: 0,
@@ -356,15 +292,6 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
             accOwnerReward: 0,
             startTime: block.timestamp
         });
-    }
-
-    /**
-     * @dev Overridable getter for the L1 gas limit of settling the deposit, in the case it may be
-     * dynamic, and the above public constant does not suffice.
-     *
-     */
-    function getFinalizeDepositL1Gas() public view virtual returns (uint32) {
-        return DEFAULT_FINALIZE_WITHDRAWAL_L1_GAS;
     }
 
     /**
@@ -396,19 +323,21 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         whenNotPaused
     {
         require(
-            msg.value != 0 || _tokenAddress != Lib_PredeployAddresses.OVM_ETH,
+            msg.value != 0 || _tokenAddress != address(0),
             "Either Amount Incorrect or Token Address Incorrect"
         );
         // combine to make logical XOR to avoid user error
         require(
-            !(msg.value != 0 && _tokenAddress != Lib_PredeployAddresses.OVM_ETH),
+            !(msg.value != 0 && _tokenAddress != address(0)),
             "Either Amount Incorrect or Token Address Incorrect"
         );
-        // check whether user sends ovm_ETH or ERC20
+        // check whether user sends ETH or ERC20
+
+        // ETH
         if (msg.value != 0) {
             // override the _amount and token address
             _amount = msg.value;
-            _tokenAddress = Lib_PredeployAddresses.OVM_ETH;
+            _tokenAddress = address(0);
         }
 
         PoolInfo storage pool = poolInfo[_tokenAddress];
@@ -422,9 +351,11 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         // if the user has already deposited token, we move the rewards to
         // pendingReward and update the reward debet.
         if (user.amount > 0) {
+            // pendingReward + amount * pool.accUserRewardPerShare / 1^12 - user.rewardDebt
             user.pendingReward =
                 user.pendingReward +
                 ((user.amount * pool.accUserRewardPerShare) / 1e12 - user.rewardDebt);
+            // user.amount * _amount * pool.accUserRewardPerShare / 1^12
             user.rewardDebt = ((user.amount + _amount) * pool.accUserRewardPerShare) / 1e12;
         } else {
             user.rewardDebt = (_amount * pool.accUserRewardPerShare) / 1e12;
@@ -437,72 +368,17 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         emit AddLiquidity(msg.sender, _amount, _tokenAddress);
 
         // transfer funds if users deposit ERC20
-        if (_tokenAddress != Lib_PredeployAddresses.OVM_ETH) {
+
+        // msg.sender -> L1LiquidityPool, _amount
+        if (_tokenAddress != address(0)) {
             IERC20(_tokenAddress).safeTransferFrom(msg.sender, address(this), _amount);
         }
-    }
-
-    /**
-     * Client deposit ERC20 from their account to this contract, which then releases funds on the L1 side
-     * @param _amount amount that client wants to transfer.
-     * @param _tokenAddress L2 token address
-     */
-    function clientDepositL2(uint256 _amount, address _tokenAddress)
-        external
-        payable
-        whenNotPaused
-        onlyWithBillingContract
-    {
-        // Collect the exit fee
-        L2BillingContract billingContract = L2BillingContract(billingContractAddress);
-        IERC20(billingContract.feeTokenAddress()).safeTransferFrom(
-            msg.sender,
-            billingContractAddress,
-            billingContract.exitFee()
-        );
-
-        require(
-            msg.value != 0 || _tokenAddress != Lib_PredeployAddresses.OVM_ETH,
-            "Either Amount Incorrect or Token Address Incorrect"
-        );
-        // combine to make logical XOR to avoid user error
-        require(
-            !(msg.value != 0 && _tokenAddress != Lib_PredeployAddresses.OVM_ETH),
-            "Either Amount Incorrect or Token Address Incorrect"
-        );
-        // check whether user sends ovm_ETH or ERC20
-        if (msg.value != 0) {
-            // override the _amount and token address
-            _amount = msg.value;
-            _tokenAddress = Lib_PredeployAddresses.OVM_ETH;
-        }
-        PoolInfo storage pool = poolInfo[_tokenAddress];
-
-        require(pool.l2TokenAddress != address(0), "Token Address Not Registered");
-
-        emit ClientDepositL2(msg.sender, _amount, _tokenAddress);
-
-        // transfer funds if users deposit ERC20
-        if (_tokenAddress != Lib_PredeployAddresses.OVM_ETH) {
-            IERC20(_tokenAddress).safeTransferFrom(msg.sender, address(this), _amount);
-        }
-
-        // Construct calldata for L1LiquidityPool.clientPayL1(_to, _amount, _tokenAddress)
-        bytes memory data = abi.encodeWithSelector(
-            IL1LiquidityPool.clientPayL1.selector,
-            msg.sender,
-            _amount,
-            pool.l1TokenAddress
-        );
-
-        // Send calldata into L1
-        sendCrossDomainMessage(address(L1LiquidityPoolAddress), getFinalizeDepositL1Gas(), data);
     }
 
     /**
      * Users withdraw token from LP
      * @param _amount amount to withdraw
-     * @param _tokenAddress L2 token address
+     * @param _tokenAddress L1 token address
      * @param _to receiver to get the funds
      */
     function withdrawLiquidity(
@@ -514,7 +390,7 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         UserInfo storage user = userInfo[_tokenAddress][msg.sender];
 
         require(pool.l2TokenAddress != address(0), "Token Address Not Registered");
-        require(user.amount >= _amount, "Requested amount exceeds amount staked");
+        require(user.amount >= _amount, "Withdraw Error");
 
         // Update accUserRewardPerShare
         updateUserRewardPerShare(_tokenAddress);
@@ -532,18 +408,18 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
 
         emit WithdrawLiquidity(msg.sender, _to, _amount, _tokenAddress);
 
-        if (_tokenAddress != Lib_PredeployAddresses.OVM_ETH) {
+        if (_tokenAddress != address(0)) {
             IERC20(_tokenAddress).safeTransfer(_to, _amount);
         } else {
             (bool sent, ) = _to.call{ gas: SAFE_GAS_STIPEND, value: _amount }("");
-            require(sent, "Failed to send ovm_Eth");
+            require(sent, "Failed to send ETH");
         }
     }
 
     /**
      * withdraw reward from ERC20
      * @param _amount reward amount that liquidity providers want to withdraw
-     * @param _tokenAddress L2 token address
+     * @param _tokenAddress L1 token address
      * @param _to receiver to get the reward
      */
     function withdrawReward(
@@ -559,57 +435,58 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         uint256 pendingReward = user.pendingReward +
             ((user.amount * pool.accUserRewardPerShare) / 1e12 - user.rewardDebt);
 
-        require(pendingReward >= _amount, "Requested amount exceeds pendingReward");
+        require(pendingReward >= _amount, "Withdraw Reward Error");
 
         user.pendingReward = pendingReward - _amount;
         user.rewardDebt = (user.amount * pool.accUserRewardPerShare) / 1e12;
 
         emit WithdrawReward(msg.sender, _to, _amount, _tokenAddress);
 
-        if (_tokenAddress != Lib_PredeployAddresses.OVM_ETH) {
+        if (_tokenAddress != address(0)) {
             IERC20(_tokenAddress).safeTransfer(_to, _amount);
         } else {
             (bool sent, ) = _to.call{ gas: SAFE_GAS_STIPEND, value: _amount }("");
-            require(sent, "Failed to send ovm_Eth");
+            require(sent, "Failed to send Ether");
         }
     }
 
     /*
      * Rebalance LPs
-     * @param _amount token amount that we want to move from L2 to L1
-     * @param _tokenAddress L2 token address
+     * @param _amount token amount that we want to move from L1 to L2
+     * @param _tokenAddress L1 token address
      */
     function rebalanceLP(uint256 _amount, address _tokenAddress) external onlyOwner whenNotPaused {
-        require(_amount != 0, "Amount cannot be 0");
+        require(_amount != 0, "Amount Incorrect");
 
         PoolInfo storage pool = poolInfo[_tokenAddress];
 
-        require(L1LiquidityPoolAddress != address(0), "L1 Liquidity Pool Not Registered");
+        require(L2LiquidityPoolAddress != address(0), "L2 Liquidity Pool Not Registered");
         require(pool.l2TokenAddress != address(0), "Token Address Not Registered");
 
-        if (_tokenAddress == Lib_PredeployAddresses.OVM_ETH) {
-            require(_amount <= address(this).balance, "Requested ETH exceeds pool balance");
-            L2StandardBridge(Lib_PredeployAddresses.L2_STANDARD_BRIDGE).withdrawTo(
-                _tokenAddress,
-                L1LiquidityPoolAddress,
-                _amount,
-                DEFAULT_FINALIZE_WITHDRAWAL_L1_GAS,
+        emit RebalanceLP(_amount, _tokenAddress);
+
+        if (_tokenAddress == address(0)) {
+            require(_amount <= address(this).balance, "Failed to Rebalance LP");
+            L1StandardBridge(L1StandardBridgeAddress).depositETHTo{ value: _amount }(
+                L2LiquidityPoolAddress,
+                SETTLEMENT_L2_GAS,
                 ""
             );
         } else {
             require(
                 _amount <= IERC20(_tokenAddress).balanceOf(address(this)),
-                "Requested ERC20 exceeds pool balance"
+                "Failed to Rebalance LP"
             );
-            L2StandardBridge(Lib_PredeployAddresses.L2_STANDARD_BRIDGE).withdrawTo(
+            IERC20(_tokenAddress).safeIncreaseAllowance(L1StandardBridgeAddress, _amount);
+            L1StandardBridge(L1StandardBridgeAddress).depositERC20To(
                 _tokenAddress,
-                L1LiquidityPoolAddress,
+                pool.l2TokenAddress,
+                L2LiquidityPoolAddress,
                 _amount,
-                DEFAULT_FINALIZE_WITHDRAWAL_L1_GAS,
+                SETTLEMENT_L2_GAS,
                 ""
             );
         }
-        emit RebalanceLP(_amount, _tokenAddress);
     }
 
     /**
@@ -626,26 +503,41 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         _unpause();
     }
 
+    function _updateDepositHash(
+        address _tokenAddress,
+        address _account,
+        uint256 _amount
+    ) internal {
+        // if block number is different only then update prior
+        if (block.number > lastHashUpdateBlock) {
+            priorDepositInfoHash = currentDepositInfoHash;
+        }
+        currentDepositInfoHash = keccak256(
+            abi.encode(currentDepositInfoHash, _tokenAddress, _account, _amount)
+        );
+
+        lastHashUpdateBlock = block.number;
+    }
+
     /*************************
      * Cross-chain Functions *
      *************************/
 
     /**
-     * Settlement pay when there's not enough funds on other side
+     * Move funds from L2 to L1, and pay out from the right liquidity pool
+     * part of the contract pause, if only this method needs pausing use pause on CDM_Fast
      * @param _to receiver to get the funds
      * @param _amount amount to to be transferred.
-     * @param _tokenAddress L2 token address
+     * @param _tokenAddress L1 token address
      */
-    function clientPayL2Settlement(
+    function clientPayL1(
         address payable _to,
         uint256 _amount,
         address _tokenAddress
-    )
-        external
-        onlyInitialized
-        onlyFromCrossDomainAccount(address(L1LiquidityPoolAddress))
-        whenNotPaused
-    {
+    ) external onlyFromCrossDomainAccount(address(L2LiquidityPoolAddress)) whenNotPaused {
+        // replyNeeded helps store the status if a message needs to be sent back to the other layer
+        // in case there is not enough funds to give away
+        bool replyNeeded = false;
         PoolInfo storage pool = poolInfo[_tokenAddress];
         uint256 userRewardFeeRate = getUserRewardFeeRate(_tokenAddress);
         uint256 userRewardFee = (_amount * userRewardFeeRate) / 1000;
@@ -653,24 +545,63 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         uint256 totalFee = userRewardFee + ownerRewardFee;
         uint256 receivedAmount = _amount - totalFee;
 
-        pool.accUserReward = pool.accUserReward + userRewardFee;
-        pool.accOwnerReward = pool.accOwnerReward + ownerRewardFee;
-
-        emit ClientPayL2Settlement(
-            _to,
-            receivedAmount,
-            userRewardFee,
-            ownerRewardFee,
-            totalFee,
-            _tokenAddress
-        );
-
-        if (_tokenAddress != Lib_PredeployAddresses.OVM_ETH) {
-            IERC20(_tokenAddress).safeTransfer(_to, receivedAmount);
+        if (_tokenAddress != address(0)) {
+            if (receivedAmount > IERC20(_tokenAddress).balanceOf(address(this))) {
+                replyNeeded = true;
+            } else {
+                pool.accUserReward = pool.accUserReward + userRewardFee;
+                pool.accOwnerReward = pool.accOwnerReward + ownerRewardFee;
+                IERC20(_tokenAddress).safeTransfer(_to, receivedAmount);
+            }
         } else {
-            //this is ovm_ETH
-            (bool sent, ) = _to.call{ gas: SAFE_GAS_STIPEND, value: receivedAmount }("");
-            require(sent, "Failed to send ovm_Eth");
+            // //this is ETH
+            if (receivedAmount > address(this).balance) {
+                replyNeeded = true;
+            } else {
+                pool.accUserReward = pool.accUserReward + userRewardFee;
+                pool.accOwnerReward = pool.accOwnerReward + ownerRewardFee;
+                //this is ETH
+                (bool sent, ) = _to.call{ gas: SAFE_GAS_STIPEND, value: receivedAmount }("");
+                require(sent, "Failed to send ETH");
+            }
         }
+
+        // refund
+        if (replyNeeded) {
+            // send cross domain message
+            bytes memory data = abi.encodeWithSelector(
+                IL2LiquidityPool.clientPayL2Settlement.selector,
+                _to,
+                _amount,
+                pool.l2TokenAddress
+            );
+
+            sendCrossDomainMessage(address(L2LiquidityPoolAddress), SETTLEMENT_L2_GAS, data);
+        } else {
+            emit ClientPayL1(
+                _to,
+                receivedAmount,
+                userRewardFee,
+                ownerRewardFee,
+                totalFee,
+                _tokenAddress
+            );
+        }
+    }
+
+    /**
+     * @dev Configure fee of this contract. called from L2
+     * @dev Each fee rate is scaled by 10^3 for precision, eg- a fee rate of 50 would mean 5%
+     * @param _userRewardMinFeeRate minimum fee rate that users get
+     * @param _userRewardMaxFeeRate maximum fee rate that users get
+     * @param _ownerRewardFeeRate fee rate that contract owner gets
+     */
+    function configureFee(
+        uint256 _userRewardMinFeeRate,
+        uint256 _userRewardMaxFeeRate,
+        uint256 _ownerRewardFeeRate
+    ) external onlyFromCrossDomainAccount(address(L2LiquidityPoolAddress)) onlyInitialized {
+        require(_userRewardMinFeeRate <= _userRewardMaxFeeRate, "Invalud user reward fee");
+        _configureFee(_userRewardMinFeeRate, _userRewardMaxFeeRate, _ownerRewardFeeRate);
     }
 }
