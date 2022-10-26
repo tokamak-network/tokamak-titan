@@ -17,7 +17,8 @@ if (!process.env.L1_NODE_WEB3_URL) {
   process.env.L1_NODE_WEB3_URL = 'http://localhost:9545'
 }
 
-const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32) // this is to avoid hardhat error
+const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32)
+// this is to avoid hardhat error
 const deploy = process.env.DEPLOY_DIRECTORY || 'deploy'
 
 const config: HardhatUserConfig = {

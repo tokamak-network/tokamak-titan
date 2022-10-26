@@ -31,7 +31,7 @@ const waitUntilTrue = async (
   }
 }
 
-export const registerBobaAddress = async (
+export const registerAddress = async (
   addressManager: any,
   name: string,
   address: string
@@ -85,7 +85,7 @@ const deployFn: DeployFunction = async (hre) => {
   }
 
   // addressManager에 setAddress 실행
-  await registerBobaAddress(addressManager, 'L1CrossDomainMessengerFast', L1_Messenger.address)
+  await registerAddress(addressManager, 'L1CrossDomainMessengerFast', L1_Messenger.address)
   await hre.deployments.save('L1CrossDomainMessengerFast',L1_MessengerDeploymentSubmission)
   console.log(`L1CrossDomainMessengerFast deployed to: ${L1_Messenger.address}`)
 

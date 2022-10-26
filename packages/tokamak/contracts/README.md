@@ -8,18 +8,18 @@ This spins up the entire stack, with all contracts deployed, all the right thing
 ```bash
 
 $ cd ops
-$ ./up_local.sh
+$ docker-compose up -d
 
 ```
 
-**Note - please provide syntax for setting the .env variables (BUILD: 1, DAEMON: 1)**
+**Note - please provide syntax for setting the .env variables**
 
-To get the contract addresses for the basic stack, and the BOBA-specific contracts:
+To get the contract addresses for the basic stack, and the TOKAMAK-specific contracts:
 
 ```bash
 
 curl http://127.0.0.1:8078/addresses.json | jq #basic stack
-curl http://127.0.0.1:8080/addresses.json | jq #BOBA-specific contracts
+curl http://127.0.0.1:8080/addresses.json | jq #TOKAMAK-specific contracts
 
 ```
 
@@ -30,7 +30,7 @@ Spin up the base local L1/L2:
 ```
 
 $ cd ops
-$ BUILD=1 DAEMON=0 ./up_local.sh
+$ docker-compose up -d
 
 ```
 
@@ -68,7 +68,7 @@ You will now see this, if everything worked correctly:
  % yarn deploy
 yarn run v1.22.10
 $ ts-node "./bin/deploy.ts"
-Starting BOBA core contracts deployment...
+Starting TOKAMAK core contracts deployment...
 ADDRESS_MANAGER_ADDRESS was set to 0x5FbDB2315678afecb367f032d93F642f64180aa3
 Nothing to compile
 Deploying...

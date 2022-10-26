@@ -2,13 +2,11 @@
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory, ethers } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
-import { registerBobaAddress } from './000-Messenger.deploy'
 
+import { registerAddress } from './000-Messenger.deploy'
 import ProxyJson from '../artifacts/contracts/libraries/Lib_ResolvedDelegateProxy.sol/Lib_ResolvedDelegateProxy.json'
 import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'
 import L2BillingContractJson from '../artifacts/contracts/L2BillingContract.sol/L2BillingContract.json'
-import DiscretionaryExitFeeJson from '../artifacts/contracts/DiscretionaryExitFee.sol/DiscretionaryExitFee.json'
-import L2NFTBridgeJson from '../artifacts/contracts/bridges/L2NFTBridge.sol/L2NFTBridge.json'
 
 let Factory__Proxy__L2BillingContract: ContractFactory
 let Factory__L2BillingContract: ContractFactory
@@ -16,8 +14,6 @@ let Factory__L2BillingContract: ContractFactory
 let Proxy__L2LiquidityPool: Contract
 let Proxy__L2BillingContract: Contract
 let L2BillingContract: Contract
-let DiscretionaryExitFee: Contract
-let L2NFTBridgeContract: Contract
 
 const deployFn: DeployFunction = async (hre) => {
   const addressManager = getContractFactory('Lib_AddressManager')
@@ -56,10 +52,12 @@ const deployFn: DeployFunction = async (hre) => {
     abi: L2BillingContract.abi,
   }
   await hre.deployments.save(
-    'BobaBillingContract',
+    'TokamakBillingContract',
     L2BillingContractDeploymentSubmission
   )
-  console.log(`BobaBillingContract deployed to: ${L2BillingContract.address}`)
+  console.log(
+    `TokamakBillingContract deployed to: ${L2BillingContract.address}`
+  )
 
   Proxy__L2BillingContract = await Factory__Proxy__L2BillingContract.deploy(
     L2BillingContract.address
@@ -72,74 +70,46 @@ const deployFn: DeployFunction = async (hre) => {
     abi: Proxy__L2BillingContract.abi,
   }
   await hre.deployments.save(
-    'Proxy__BobaBillingContract',
+    'Proxy__TokamakBillingContract',
     Proxy__L2BillingContractDeploymentSubmission
   )
   console.log(
-    `Proxy__BobaBillingContract deployed to: ${Proxy__L2BillingContract.address}`
+    `Proxy__TokamakBillingContract deployed to: ${Proxy__L2BillingContract.address}`
   )
 
   // Initialize the billing contract
-  const L2BOBA = await hre.deployments.getOrNull('TK_L2BOBA')
+  const L2TON = await hre.deployments.getOrNull('TK_L2TON')
   Proxy__L2BillingContract = new Contract(
     Proxy__L2BillingContract.address,
     L2BillingContractJson.abi,
     (hre as any).deployConfig.deployer_l2
   )
   await Proxy__L2BillingContract.initialize(
-    L2BOBA.address,
+    L2TON.address,
     (hre as any).deployConfig.deployer_l2.address,
     ethers.utils.parseEther('10')
   )
   await L2BillingContract.initialize(
-    L2BOBA.address,
+    L2TON.address,
     (hre as any).deployConfig.deployer_l2.address,
     ethers.utils.parseEther('10')
   )
-  console.log(`Proxy__BobaBillingContract initialized`)
+  console.log(`Proxy__TokamakBillingContract initialized`)
 
   // Register the address of the L2 billing contract
   await Proxy__L2LiquidityPool.configureBillingContractAddress(
     Proxy__L2BillingContract.address
   )
-  console.log(`Added BobaBillingContract to Proxy__L2LiquidityPool`)
+  console.log(`Added TokamakBillingContract to Proxy__L2LiquidityPool`)
 
-  // Register the address of the L2 billing contract
-  const DiscretionaryExitFeeSubmission = await hre.deployments.getOrNull(
-    'DiscretionaryExitFee'
-  )
-  DiscretionaryExitFee = new Contract(
-    DiscretionaryExitFeeSubmission.address,
-    DiscretionaryExitFeeJson.abi,
-    (hre as any).deployConfig.deployer_l2
-  )
-  await DiscretionaryExitFee.configureBillingContractAddress(
-    Proxy__L2BillingContract.address
-  )
-  console.log(`Added BobaBillingContract to DiscretionaryExitFee`)
-
-    // Register the address of the L2 NFT bridge
-    const Proxy__L2NFTBridgeSubmission = await hre.deployments.getOrNull(
-      'Proxy__L2NFTBridge'
-    )
-  L2NFTBridgeContract  = new Contract(
-    Proxy__L2NFTBridgeSubmission.address,
-    L2NFTBridgeJson.abi,
-    (hre as any).deployConfig.deployer_l2
-  )
-  await L2NFTBridgeContract.configureBillingContractAddress(
-    Proxy__L2BillingContract.address
-  )
-  console.log(`Added BobaBillingContract to Proxy__L2NFTBridgeSubmission`)
-
-  await registerBobaAddress(
+  await registerAddress(
     addressManager,
-    'Proxy__BobaBillingContract',
+    'Proxy__TokamakBillingContract',
     Proxy__L2BillingContract.address
   )
-  await registerBobaAddress(
+  await registerAddress(
     addressManager,
-    'BobaBillingContract',
+    'TokamakBillingContract',
     L2BillingContract.address
   )
 }

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "TOKAMAK Smart Contracts",
   "private": true,
-  "author": "Theo Lee",
+  "author": "Onther Inc",
   "license": "MIT",
   "types": "dist/index",
   "scripts": {
@@ -14,6 +14,7 @@
     "lint": "yarn lint:check",
     "lint:check": "eslint . --ext js,jsx,ts,tsx",
     "lint:fix": "yarn lint:check --fix",
+    "lint:sol": "solhint --max-warning 0 \"contracts/**/*.sol\"",
     "lint:contracts": "yarn solhint -f table contracts/**/*.sol",
     "test": "yarn test:contracts",
     "test:contracts": "hardhat test --show-stack-traces",

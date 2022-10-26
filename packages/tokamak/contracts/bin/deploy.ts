@@ -7,7 +7,7 @@ require('dotenv').config()
 import hre from 'hardhat'
 
 const main = async () => {
-  console.log('Starting BOBA core contracts deployment...')
+  console.log('Starting TOKAMAK core contracts deployment...')
 
   const network = process.env.NETWORK || 'local'
 
@@ -20,11 +20,11 @@ const main = async () => {
   const relayer = new Wallet(process.env.RELAYER_PRIVATE_KEY, l1Provider)
   const relayerAddress = relayer.address
 
-  const fastRelayer = new Wallet(
-    process.env.FAST_RELAYER_PRIVATE_KEY,
-    l1Provider
-  )
-  const fastRelayerAddress = fastRelayer.address
+  // const fastRelayer = new Wallet(
+  //   process.env.FAST_RELAYER_PRIVATE_KEY,
+  //   l1Provider
+  // )
+  // const fastRelayerAddress = fastRelayer.address
 
   const getAddressManager = (provider: any, addressManagerAddress: any) => {
     return getContractFactory('Lib_AddressManager')
@@ -56,14 +56,6 @@ const main = async () => {
 
   const L2StandardBridgeAddress = await L1StandardBridge.l2TokenBridge()
 
-  const BobaTuringCreditAddress = await addressManager.getAddress(
-    'Proxy__BobaTuringCredit'
-  )
-
-  const BobaTuringHelperAddress = await addressManager.getAddress(
-    'BobaTuringHelper'
-  )
-
   await hre.run('deploy', {
     l1MessengerAddress,
     l2MessengerAddress,
@@ -76,9 +68,6 @@ const main = async () => {
     addressManager,
     network,
     relayerAddress,
-    fastRelayerAddress,
-    BobaTuringCreditAddress,
-    BobaTuringHelperAddress,
     noCompile: process.env.NO_COMPILE ? true : false,
   })
 }

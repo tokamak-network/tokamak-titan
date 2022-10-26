@@ -97,12 +97,6 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
 
     uint256 public userRewardMaxFeeRate;
 
-    // address public xBOBAAddress;
-    // address public BOBAAddress;
-
-    // mapping user address to the status of xBOBA
-    // mapping(address => bool) public xBOBAStatus;
-
     // billing contract address
     address public billingContractAddress;
 

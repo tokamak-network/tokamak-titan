@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# This is what deploys all the right BOBA contracts
+# This is what deploys all the right TOKAMAK contracts
 yarn run deploy
 
 # Register the deployed addresses with DTL

@@ -1,7 +1,8 @@
 import { getContractFactory } from '@eth-optimism/contracts'
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory } from 'ethers'
-import { registerBobaAddress } from './000-Messenger.deploy'
+
+import { registerAddress } from './000-Messenger.deploy'
 
 /* eslint-disable */
 require('dotenv').config()
@@ -43,7 +44,7 @@ const deployFn: DeployFunction = async (hre) => {
     abi: Proxy_L1_Messenger.abi,
   }
 
-  await registerBobaAddress( addressManager, 'Proxy__L1CrossDomainMessengerFast', Proxy_L1_Messenger.address )
+  await registerAddress( addressManager, 'Proxy__L1CrossDomainMessengerFast', Proxy_L1_Messenger.address )
   await hre.deployments.save( 'Proxy__L1CrossDomainMessengerFast', Proxy_L1_MessengerDeploymentSubmission )
   console.log(`Proxy__L1CrossDomainMessengerFast deployed to: ${Proxy_L1_Messenger.address}`)
 

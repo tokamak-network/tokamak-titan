@@ -1,7 +1,8 @@
 /* Imports: External */
-import { DeployFunction } from 'hardhat-deploy/dist/types'
 import path from 'path'
 import fs from 'fs'
+
+import { DeployFunction } from 'hardhat-deploy/dist/types'
 
 const deployFn: DeployFunction = async (hre) => {
   const contracts = {}
@@ -29,10 +30,6 @@ const deployFn: DeployFunction = async (hre) => {
         contracts['NFTs'][nftMatch[2]] = {
           L1: deployments[key].address,
           L2: deployments['NFT_L2' + nftMatch[2]].address,
-        }
-      } else if (tokenMatch[2] === 'xBOBA') {
-        contracts['TOKENS'][tokenMatch[2]] = {
-          L2: deployments['TK_L2' + tokenMatch[2]].address,
         }
       }
     }
