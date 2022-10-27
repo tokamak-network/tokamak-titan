@@ -82,8 +82,10 @@ contract L2BillingContract {
         emit CollectFee(msg.sender, exitFee);
     }
 
+    // Transfer all balance of L2BillingContract to owner
     function withdraw() external onlyInitialized {
         uint256 balance = IERC20(feeTokenAddress).balanceOf(address(this));
+        // minimum amount = 150 TON
         require(balance >= 150e18, "Balance is too low");
         IERC20(feeTokenAddress).safeTransfer(l2FeeWallet, balance);
 

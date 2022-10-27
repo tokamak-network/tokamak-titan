@@ -25,12 +25,15 @@ describe('L2 Billing Contract', async () => {
     signerAddress = await signer.getAddress()
     signer2Address = await signer2.getAddress()
 
+    // Set l2FeeWallet
     l2FeeWallet = signerAddress
 
+    // deploy L2TON
     L2Ton = await (
       await ethers.getContractFactory('L1ERC20')
     ).deploy(initialSupply, tokenName, tokenSymbol, 18)
 
+    // deploy L2BillingContract
     const billingContract = await ethers.getContractFactory('L2BillingContract')
     L2BillingContract = await billingContract.deploy()
     await L2BillingContract.deployed()
@@ -44,6 +47,7 @@ describe('L2 Billing Contract', async () => {
       )
       const l2BillingContract = await billingContract.deploy()
       await l2BillingContract.deployed()
+      // invalid params
       await expect(
         l2BillingContract.initialize(
           '0x0000000000000000000000000000000000000000',
@@ -89,9 +93,10 @@ describe('L2 Billing Contract', async () => {
     })
 
     it('should collect fee successfully', async () => {
+      // signer -> signer2, exitFee
       await L2Ton.connect(signer).transfer(signer2Address, exitFee)
-
       const balanceBefore = await L2Ton.balanceOf(L2BillingContract.address)
+      // approve signer2 (spender: L2BillingContract, amount: exitFee)
       await L2Ton.connect(signer2).approve(L2BillingContract.address, exitFee)
       await L2BillingContract.connect(signer2).collectFee()
       const balanceAfter = await L2Ton.balanceOf(L2BillingContract.address)
@@ -100,12 +105,14 @@ describe('L2 Billing Contract', async () => {
     })
 
     it('should not withdaw fee if balance is too low', async () => {
+      // actual balance is 1 TON < 150 TON
       await expect(L2BillingContract.withdraw()).to.be.revertedWith(
         'Balance is too low'
       )
     })
 
     it('should withdraw fee successfully', async () => {
+      // signer -> L2BillingContract, 150 TON
       await L2Ton.connect(signer).transfer(
         L2BillingContract.address,
         ethers.utils.parseEther('150')
