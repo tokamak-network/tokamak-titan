@@ -750,14 +750,23 @@ var (
 
 	// Metrics flags
 	MetricsEnabledFlag = cli.BoolFlag{
-		Name:  "metrics",
-		Usage: "Enable metrics collection and reporting",
-
+		Name:   "metrics",
+		Usage:  "Enable metrics collection and reporting",
 		EnvVar: "METRICS_ENABLE",
 	}
 	MetricsEnabledExpensiveFlag = cli.BoolFlag{
 		Name:  "metrics.expensive",
 		Usage: "Enable expensive metrics collection and reporting",
+	}
+	MetricsHTTPFlag = cli.StringFlag{
+		Name:  "metrics.addr",
+		Usage: "Enable stand-alone metrics HTTP server listening interface",
+		Value: "0.0.0.0",
+	}
+	MetricsPortFlag = cli.IntFlag{
+		Name:  "metrics.port",
+		Usage: "Enable stand-alone metrics HTTP server listening interface",
+		Value: 6060,
 	}
 	MetricsEnableInfluxDBFlag = cli.BoolFlag{
 		Name:  "metrics.influxdb",
@@ -1797,10 +1806,14 @@ func SetupMetrics(ctx *cli.Context) {
 			go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, 10*time.Second, endpoint, database, username, password, "geth.", tagsMap)
 		}
 
-		m := http.NewServeMux()
-		m.Handle("/debug/metrics/prometheus", prometheus.Handler(metrics.DefaultRegistry))
+		if ctx.IsSet(MetricsHTTPFlag.Name) {
+			m := http.NewServeMux()
+			m.Handle("/debug/metrics/prometheus", prometheus.Handler(metrics.DefaultRegistry))
 
-		go http.ListenAndServe(":http", m)
+			address := fmt.Sprintf("%s:%d", ctx.GlobalString(MetricsHTTPFlag.Name), ctx.GlobalInt(MetricsPortFlag.Name))
+			go http.ListenAndServe(address, m)
+		}
+
 	}
 }
 
