@@ -125,6 +125,8 @@ export class MessageRelayerService extends BaseServiceV2<
           StateCommitmentChain,
           CanonicalTransactionChain,
           BondManager,
+          OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
+          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
         },
       }
     }
