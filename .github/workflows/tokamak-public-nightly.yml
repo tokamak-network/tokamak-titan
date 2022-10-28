@@ -37,6 +37,7 @@ jobs:
           tags: |
             onthertech/optimism.l2geth:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.l2geth:nightly
+            onthertech/optimism.l2geth:nightly-${{ steps.extractver.outputs.VERSION }}
 
   gas-oracle:
     name: Publish Gas Oracle
@@ -69,6 +70,7 @@ jobs:
           tags: |
             onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.gas-oracle:nightly
+            onthertech/optimism.gas-oracle:nightly-${{ steps.extractver.outputs.VERSION }}
 
   hardhat-node:
     name: Publish Hardhat Node
@@ -101,6 +103,7 @@ jobs:
           tags: |
             onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.hardhat-node:nightly
+            onthertech/optimism.hardhat-node:nightly-${{ steps.extractver.outputs.VERSION }}
 
   message-relayer:
     name: Publish Message Relayer
@@ -135,6 +138,7 @@ jobs:
           tags: |
             onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.message-relayer:nightly
+            onthertech/optimism.message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   tokamak-message-relayer:
     name: Publish Tokamak Message Relayer
@@ -169,6 +173,7 @@ jobs:
           tags: |
             onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.tokamak-message-relayer:nightly
+            onthertech/optimism.tokamak-message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   fault-detector:
     name: Publish Fault Detector
@@ -203,6 +208,7 @@ jobs:
           tags: |
             onthertech/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.fault-detector:nightly
+            onthertech/optimism.fault-detector:nightly-${{ steps.extractver.outputs.VERSION }}
 
   drippie-mon:
     name: Publish Drippie Monitor
@@ -237,6 +243,7 @@ jobs:
           tags: |
             onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.drippie-mon:nightly
+            onthertech/optimism.drippie-mon:nightly-${{ steps.extractver.outputs.VERSION }}
 
   data-transport-layer:
     name: Publish Data Transport Layer
@@ -271,6 +278,7 @@ jobs:
           tags: |
             onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.data-transport-layer:nightly
+            onthertech/optimism.data-transport-layer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   contracts:
     name: Publish Deployer
@@ -305,6 +313,7 @@ jobs:
           tags: |
             onthertech/optimism.deployer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.deployer:nightly
+            onthertech/optimism.deployer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   integration_tests:
     name: Publish Integration tests
@@ -339,6 +348,7 @@ jobs:
           tags: |
             onthertech/optimism.integration-tests:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.integration-tests:nightly
+            onthertech/optimism.integration-tests:nightly-${{ steps.extractver.outputs.VERSION }}
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
@@ -373,6 +383,7 @@ jobs:
           tags: |
             onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.replica-healthcheck:nightly
+            onthertech/optimism.replica-healthcheck:nightly-${{ steps.extractver.outputs.VERSION }}
 
   proxyd:
     name: Publish proxyd
@@ -406,6 +417,7 @@ jobs:
           tags: |
             onthertech/optimism.proxyd:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.proxyd:nightly
+            onthertech/optimism.proxyd:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -444,6 +456,7 @@ jobs:
           tags: |
             onthertech/optimism.op-exporter:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.op-exporter:nightly
+            onthertech/optimism.op-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -482,6 +495,7 @@ jobs:
           tags: |
             onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.l2geth-exporter:nightly
+            onthertech/optimism.l2geth-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -519,6 +533,7 @@ jobs:
           tags: |
             onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.batch-submitter-service:nightly
+            onthertech/optimism.batch-submitter-service:nightly-${{ steps.extractver.outputs.VERSION }}
 
   indexer:
     name: Publish indexer
@@ -553,6 +568,7 @@ jobs:
           tags: |
             onthertech/optimism.indexer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.indexer:nightly
+            onthertech/optimism.indexer:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -591,6 +607,7 @@ jobs:
           tags: |
             onthertech/optimism.teleportr:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.teleportr:nightly
+            onthertech/optimism.teleportr:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
