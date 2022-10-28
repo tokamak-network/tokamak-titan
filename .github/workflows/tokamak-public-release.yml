@@ -177,7 +177,7 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
+          target: tokamak-message-relayer
           push: true
           tags: |
             onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.RELEASE }}
