@@ -140,9 +140,9 @@ export class MessageRelayerService extends BaseServiceV2<
       l2SignerOrProvider: this.options.l2RpcProvider,
       l1ChainId,
       l2ChainId,
-      contracts,
       depositConfirmationBlocks,
       l1BlockTimeSeconds,
+      contracts,
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
