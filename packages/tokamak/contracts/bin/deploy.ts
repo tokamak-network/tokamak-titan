@@ -9,22 +9,22 @@ import hre from 'hardhat'
 const main = async () => {
   console.log('Starting TOKAMAK core contracts deployment...')
 
-  const network = process.env.NETWORK || 'local'
+  const network = process.env.CONTRACTS_TARGET_NETWORK || 'local'
 
   const l1Provider = new providers.JsonRpcProvider(process.env.L1_NODE_WEB3_URL)
   const l2Provider = new providers.JsonRpcProvider(process.env.L2_NODE_WEB3_URL)
 
-  const deployer_l1 = new Wallet(process.env.DEPLOYER_PRIVATE_KEY, l1Provider)
-  const deployer_l2 = new Wallet(process.env.DEPLOYER_PRIVATE_KEY, l2Provider)
+  const deployer_l1 = new Wallet(process.env.CONTRACTS_DEPLOYER_KEY, l1Provider)
+  const deployer_l2 = new Wallet(process.env.CONTRACTS_DEPLOYER_KEY, l2Provider)
 
   const relayer = new Wallet(process.env.RELAYER_PRIVATE_KEY, l1Provider)
   const relayerAddress = relayer.address
 
-  // const fastRelayer = new Wallet(
-  //   process.env.FAST_RELAYER_PRIVATE_KEY,
-  //   l1Provider
-  // )
-  // const fastRelayerAddress = fastRelayer.address
+  const fastRelayer = new Wallet(
+    process.env.FAST_RELAYER_PRIVATE_KEY,
+    l1Provider
+  )
+  const fastRelayerAddress = fastRelayer.address
 
   const getAddressManager = (provider: any, addressManagerAddress: any) => {
     return getContractFactory('Lib_AddressManager')
@@ -68,6 +68,7 @@ const main = async () => {
     addressManager,
     network,
     relayerAddress,
+    fastRelayerAddress,
     noCompile: process.env.NO_COMPILE ? true : false,
   })
 }
