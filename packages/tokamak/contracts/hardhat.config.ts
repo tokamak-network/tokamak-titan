@@ -7,7 +7,6 @@ import 'hardhat-deploy'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
-import '@typechain/hardhat'
 
 // Hardhat tasks
 import './tasks/deploy'
@@ -84,10 +83,6 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
-  },
-  typechain: {
-    outDir: 'dist/types',
-    target: 'ethers-v5',
   },
   etherscan: {
     apiKey: {
