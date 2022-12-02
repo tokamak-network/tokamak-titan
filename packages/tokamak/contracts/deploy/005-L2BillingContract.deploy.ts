@@ -82,7 +82,7 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   // Initialize the billing contract
-  const L2TON = await hre.deployments.getOrNull('TK_L2TON') // undefined
+  const L2TON = await hre.deployments.getOrNull('TK_L2TON')
 
   Proxy__L2BillingContract = new Contract(
     Proxy__L2BillingContract.address,

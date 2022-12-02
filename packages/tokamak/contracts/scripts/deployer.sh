@@ -8,6 +8,7 @@ yarn run deploy
 if [ -n "$DTL_REGISTRY_URL" ] ; then
   echo "Will upload addresses.json to $DTL_REGISTRY_URL"
   curl \
+    -X GET \
     --fail \
     --show-error \
     --silent \

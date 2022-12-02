@@ -38,8 +38,6 @@ export const registerAddress = async (
   address: string
 ): Promise<void> => {
 
-  console.log("AddressManager address:",addressManager.address)
-
   const currentAddress = await addressManager.getAddress(name)
   if (address === currentAddress) {
     console.log(
@@ -60,6 +58,10 @@ export const registerAddress = async (
 }
 
 const deployFn: DeployFunction = async (hre) => {
+
+  // check network
+  const network = (hre as any).deployConfig.network
+  console.log('network: ', network)
 
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
