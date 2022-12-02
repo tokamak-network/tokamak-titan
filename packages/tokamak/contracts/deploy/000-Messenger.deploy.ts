@@ -31,6 +31,7 @@ const waitUntilTrue = async (
   }
 }
 
+// register deployed contract address on address manager
 export const registerAddress = async (
   addressManager: any,
   name: string,
@@ -64,19 +65,19 @@ const deployFn: DeployFunction = async (hre) => {
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
-  // L1CrossDomainMessaageFast를 L1 Deployer와 연결
+  // get factory of L1CrossDomainMessageFast contract
   Factory__L1_Messenger = new ContractFactory(
     L1_MessengerJson.abi,
     L1_MessengerJson.bytecode,
     (hre as any).deployConfig.deployer_l1
   )
 
-  // L1CrossDomainMessengerFast 배포
+  // deploy L1CrossDomainMessengerFast
   L1_Messenger = await Factory__L1_Messenger.deploy()
 
   await L1_Messenger.deployTransaction.wait()
 
-  // type in  hardhat-deploy
+  // type in hardhat-deploy
   const L1_MessengerDeploymentSubmission: DeploymentSubmission = {
     ...L1_Messenger,
     receipt: L1_Messenger.receipt,
@@ -84,7 +85,7 @@ const deployFn: DeployFunction = async (hre) => {
     abi: L1_MessengerJson.abi,
   }
 
-  // addressManager에 setAddress 실행
+  // set L1CrossDomainMessengerFast address in address manager
   await registerAddress(addressManager, 'L1CrossDomainMessengerFast', L1_Messenger.address)
   await hre.deployments.save('L1CrossDomainMessengerFast',L1_MessengerDeploymentSubmission)
   console.log(`L1CrossDomainMessengerFast deployed to: ${L1_Messenger.address}`)
@@ -93,7 +94,7 @@ const deployFn: DeployFunction = async (hre) => {
     L1_Messenger.address
   )
 
-  // initialize L1CrossDomainMessengerFast with address_manager
+  // initialize L1CrossDomainMessengerFast
   const L1MessagerTX = await L1_Messenger_Deployed.initialize(
     addressManager.address
   )

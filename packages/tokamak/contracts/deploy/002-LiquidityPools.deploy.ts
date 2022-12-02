@@ -14,10 +14,12 @@ let L1LiquidityPool: Contract
 let L2LiquidityPool: Contract
 
 const deployFn: DeployFunction = async (hre) => {
+  // get address manager
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
+  // get factory of L1LiquidityPool, L2LiquidityPool
   Factory__L1LiquidityPool = new ContractFactory(
     L1LiquidityPoolJson.abi,
     L1LiquidityPoolJson.bytecode,
@@ -30,30 +32,7 @@ const deployFn: DeployFunction = async (hre) => {
     (hre as any).deployConfig.deployer_l2
   )
 
-  console.log(`Deploying L2LP...`)
-
-  L2LiquidityPool = await Factory__L2LiquidityPool.deploy()
-
-  await L2LiquidityPool.deployTransaction.wait()
-
-  const L2LiquidityPoolDeploymentSubmission: DeploymentSubmission = {
-    ...L2LiquidityPool,
-    receipt: L2LiquidityPool.receipt,
-    address: L2LiquidityPool.address,
-    abi: L1LiquidityPoolJson.abi,
-  }
-
-  await registerAddress(
-    addressManager,
-    'L2LiquidityPool',
-    L2LiquidityPool.address
-  )
-  await hre.deployments.save(
-    'L2LiquidityPool',
-    L2LiquidityPoolDeploymentSubmission
-  )
-  console.log(`L2LiquidityPool deployed to: ${L2LiquidityPool.address}`)
-
+  // deploy L1LiquidityPool
   console.log(`Deploying L1LP...`)
   L1LiquidityPool = await Factory__L1LiquidityPool.deploy()
 
@@ -76,6 +55,31 @@ const deployFn: DeployFunction = async (hre) => {
     L1LiquidityPoolDeploymentSubmission
   )
   console.log(`L1LiquidityPool deployed to: ${L1LiquidityPool.address}`)
+
+  console.log(`Deploying L2LP...`)
+
+  // deploy L2LiquidityPool
+  L2LiquidityPool = await Factory__L2LiquidityPool.deploy()
+
+  await L2LiquidityPool.deployTransaction.wait()
+
+  const L2LiquidityPoolDeploymentSubmission: DeploymentSubmission = {
+    ...L2LiquidityPool,
+    receipt: L2LiquidityPool.receipt,
+    address: L2LiquidityPool.address,
+    abi: L1LiquidityPoolJson.abi,
+  }
+
+  await registerAddress(
+    addressManager,
+    'L2LiquidityPool',
+    L2LiquidityPool.address
+  )
+  await hre.deployments.save(
+    'L2LiquidityPool',
+    L2LiquidityPoolDeploymentSubmission
+  )
+  console.log(`L2LiquidityPool deployed to: ${L2LiquidityPool.address}`)
 }
 
 deployFn.tags = ['L1LiquidityPool', 'L2LiquidityPool', 'required']

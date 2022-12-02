@@ -1,6 +1,6 @@
 /* Imports: External */
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
-import { Contract, ContractFactory, ethers } from 'ethers'
+import { Contract, ContractFactory, ethers, providers } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
 
 import { registerAddress } from './000-Messenger.deploy'
@@ -15,10 +15,12 @@ let Proxy__L1LiquidityPool: Contract
 let Proxy__L2LiquidityPool: Contract
 
 const deployFn: DeployFunction = async (hre) => {
+  // get address manager
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
+  // get factory of proxy contracts
   Factory__Proxy__L1LiquidityPool = new ContractFactory(
     ProxyJson.abi,
     ProxyJson.bytecode,
@@ -32,17 +34,19 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   // Deploy proxy contracts
-  console.log(`'Deploying LP Proxy...`)
+  console.log('Deploying LP Proxy...')
 
-  const L1LiquidityPool = await (hre as any).deployments.get('L1LiquidityPool')
-  const L2LiquidityPool = await (hre as any).deployments.get('L2LiquidityPool')
+  // get L1CrossDomainMessengerFastAddress
   const L1CrossDomainMessengerFastAddress = await (
     hre as any
   ).deployConfig.addressManager.getAddress('Proxy__L1CrossDomainMessengerFast')
 
+  // Deploy Proxy__L1LiquidityPool
   Proxy__L1LiquidityPool = await Factory__Proxy__L1LiquidityPool.deploy(
-    L1LiquidityPool.address
+    addressManager.address,
+    'L1LiquidityPool'
   )
+
   await Proxy__L1LiquidityPool.deployTransaction.wait()
   const Proxy__L1LiquidityPoolDeploymentSubmission: DeploymentSubmission = {
     ...Proxy__L1LiquidityPool,
@@ -55,9 +59,12 @@ const deployFn: DeployFunction = async (hre) => {
     `Proxy__L1LiquidityPool deployed to: ${Proxy__L1LiquidityPool.address}`
   )
 
+  // Deploy Proxy__L2LiquidityPool
   Proxy__L2LiquidityPool = await Factory__Proxy__L2LiquidityPool.deploy(
-    L2LiquidityPool.address
+    addressManager.address,
+    'L2LiquidityPool'
   )
+
   await Proxy__L2LiquidityPool.deployTransaction.wait()
   const Proxy__L2LiquidityPoolDeploymentSubmission: DeploymentSubmission = {
     ...Proxy__L2LiquidityPool,
@@ -65,6 +72,7 @@ const deployFn: DeployFunction = async (hre) => {
     address: Proxy__L2LiquidityPool.address,
     abi: Proxy__L2LiquidityPool.abi,
   }
+
   console.log(
     `Proxy__L2LiquidityPool deployed to: ${Proxy__L2LiquidityPool.address}`
   )
@@ -92,11 +100,14 @@ const deployFn: DeployFunction = async (hre) => {
 
   const initL2LPTX = await Proxy__L2LiquidityPool.initialize(
     (hre as any).deployConfig.l2MessengerAddress,
-    Proxy__L1LiquidityPool.address
+    Proxy__L1LiquidityPool.address,
+    // explicit gasLimit
+    { gasLimit: 700000 }
   )
   await initL2LPTX.wait()
   console.log(`Proxy__L2LiquidityPool initialized: ${initL2LPTX.hash}`)
 
+  // register ETH pool
   const registerL1LPETHTX = await Proxy__L1LiquidityPool.registerPool(
     '0x0000000000000000000000000000000000000000',
     '0x4200000000000000000000000000000000000006'
@@ -111,6 +122,7 @@ const deployFn: DeployFunction = async (hre) => {
   await registerL2LPETHTX.wait()
   console.log(`Proxy__L2LiquidityPool registered: ${registerL2LPETHTX.hash}`)
 
+  // save and register L1LiquidityPool, L2LiquidityPool
   await hre.deployments.save(
     'Proxy__L1LiquidityPool',
     Proxy__L1LiquidityPoolDeploymentSubmission

@@ -16,16 +16,19 @@ let Proxy__L2BillingContract: Contract
 let L2BillingContract: Contract
 
 const deployFn: DeployFunction = async (hre) => {
+  // get address manager
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
+  // get factory of proxy contract
   Factory__Proxy__L2BillingContract = new ContractFactory(
     ProxyJson.abi,
     ProxyJson.bytecode,
     (hre as any).deployConfig.deployer_l2
   )
 
+  // get factory of L2BillingContract
   Factory__L2BillingContract = new ContractFactory(
     L2BillingContractJson.abi,
     L2BillingContractJson.bytecode,
@@ -34,6 +37,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   console.log(`'Deploying L2 billing contract...`)
 
+  // check deployed Proxy__L2LiquidityPool
   const Proxy__L2LiquidityPoolDeployment = await hre.deployments.getOrNull(
     'Proxy__L2LiquidityPool'
   )
@@ -60,7 +64,8 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   Proxy__L2BillingContract = await Factory__Proxy__L2BillingContract.deploy(
-    L2BillingContract.address
+    addressManager.address,
+    'L2BillingContract'
   )
   await Proxy__L2BillingContract.deployTransaction.wait()
   const Proxy__L2BillingContractDeploymentSubmission: DeploymentSubmission = {
@@ -78,12 +83,16 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   // Initialize the billing contract
-  const L2TON = await hre.deployments.getOrNull('TK_L2TON')
+
+  const L2TON = await hre.deployments.getOrNull('TK_L2TON') // undefined
+
   Proxy__L2BillingContract = new Contract(
     Proxy__L2BillingContract.address,
     L2BillingContractJson.abi,
     (hre as any).deployConfig.deployer_l2
   )
+
+  // initial exit fee = 10 TON
   await Proxy__L2BillingContract.initialize(
     L2TON.address,
     (hre as any).deployConfig.deployer_l2.address,
@@ -102,6 +111,7 @@ const deployFn: DeployFunction = async (hre) => {
   )
   console.log(`Added TokamakBillingContract to Proxy__L2LiquidityPool`)
 
+  // register addresses in the addrss manager
   await registerAddress(
     addressManager,
     'Proxy__TokamakBillingContract',
