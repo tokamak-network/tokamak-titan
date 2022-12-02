@@ -30,7 +30,6 @@ const deployFn: DeployFunction = async (hre) => {
     (hre as any).deployConfig.deployer_l1
   )
 
-  // 왜 params로 address manager의 address가 들어가나?
   Proxy_L1_Messenger = await Factory__Proxy_L1_Messenger.deploy(
     addressManager.address,
     'L1CrossDomainMessengerFast'

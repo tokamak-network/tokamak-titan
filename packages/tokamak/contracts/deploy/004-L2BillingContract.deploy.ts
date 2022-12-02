@@ -16,7 +16,7 @@ let Proxy__L2BillingContract: Contract
 let L2BillingContract: Contract
 
 const deployFn: DeployFunction = async (hre) => {
-  // get address manager
+  //get address manager
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
@@ -64,8 +64,7 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   Proxy__L2BillingContract = await Factory__Proxy__L2BillingContract.deploy(
-    addressManager.address,
-    'L2BillingContract'
+    L2BillingContract.address
   )
   await Proxy__L2BillingContract.deployTransaction.wait()
   const Proxy__L2BillingContractDeploymentSubmission: DeploymentSubmission = {
@@ -83,7 +82,6 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   // Initialize the billing contract
-
   const L2TON = await hre.deployments.getOrNull('TK_L2TON') // undefined
 
   Proxy__L2BillingContract = new Contract(

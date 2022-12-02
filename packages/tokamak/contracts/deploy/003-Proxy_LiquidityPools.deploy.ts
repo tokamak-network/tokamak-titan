@@ -36,6 +36,9 @@ const deployFn: DeployFunction = async (hre) => {
   // Deploy proxy contracts
   console.log('Deploying LP Proxy...')
 
+  const L1LiquidityPool = await (hre as any).deployments.get('L1LiquidityPool')
+  const L2LiquidityPool = await (hre as any).deployments.get('L2LiquidityPool')
+
   // get L1CrossDomainMessengerFastAddress
   const L1CrossDomainMessengerFastAddress = await (
     hre as any
@@ -43,8 +46,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   // Deploy Proxy__L1LiquidityPool
   Proxy__L1LiquidityPool = await Factory__Proxy__L1LiquidityPool.deploy(
-    addressManager.address,
-    'L1LiquidityPool'
+    L1LiquidityPool.address
   )
 
   await Proxy__L1LiquidityPool.deployTransaction.wait()
@@ -61,8 +63,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   // Deploy Proxy__L2LiquidityPool
   Proxy__L2LiquidityPool = await Factory__Proxy__L2LiquidityPool.deploy(
-    addressManager.address,
-    'L2LiquidityPool'
+    L2LiquidityPool.address
   )
 
   await Proxy__L2LiquidityPool.deployTransaction.wait()
@@ -77,6 +78,7 @@ const deployFn: DeployFunction = async (hre) => {
     `Proxy__L2LiquidityPool deployed to: ${Proxy__L2LiquidityPool.address}`
   )
 
+  // initialize L1LiquidityPool, L2LiquidityPool
   Proxy__L1LiquidityPool = new ethers.Contract(
     Proxy__L1LiquidityPool.address,
     L1LiquidityPoolJson.abi,
@@ -101,13 +103,11 @@ const deployFn: DeployFunction = async (hre) => {
   const initL2LPTX = await Proxy__L2LiquidityPool.initialize(
     (hre as any).deployConfig.l2MessengerAddress,
     Proxy__L1LiquidityPool.address,
-    // explicit gasLimit
-    { gasLimit: 700000 }
   )
   await initL2LPTX.wait()
   console.log(`Proxy__L2LiquidityPool initialized: ${initL2LPTX.hash}`)
 
-  // register ETH pool
+  // register ETH pool in L1/L2
   const registerL1LPETHTX = await Proxy__L1LiquidityPool.registerPool(
     '0x0000000000000000000000000000000000000000',
     '0x4200000000000000000000000000000000000006'
