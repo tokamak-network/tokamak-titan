@@ -3,6 +3,9 @@ import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory, utils } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
 
+/* eslint-disable */
+require('dotenv').config()
+
 import { registerAddress } from './000-Messenger.deploy'
 import L1ERC20Json from '../artifacts/contracts/test-helpers/L1ERC20.sol/L1ERC20.json'
 import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
@@ -60,8 +63,7 @@ const deployFn: DeployFunction = async (hre) => {
   // loop
   for (const token of preSupportedTokens.supportedTokens) {
     if (
-      (hre as any).deployConfig.network === 'local' ||
-      token.symbol === 'TEST'
+      process.env.CONTRACTS_TARGET_NETWORK === 'local'
     ) {
       // token supply
       let supply = initialSupply_18
@@ -102,7 +104,7 @@ const deployFn: DeployFunction = async (hre) => {
         `TK_L1${token.symbol} was newly deployed to ${tokenAddressL1}`
       )
       // goerli: use pre-deployed contracts
-    } else if ((hre as any).deployConfig.network === 'goerli') {
+    } else if (process.env.CONTRACTS_TARGET_NETWORK === 'goerli') {
       tokenAddressL1 = token.address.goerli
 
       await hre.deployments.save('TK_L1' + token.symbol, {
@@ -117,7 +119,7 @@ const deployFn: DeployFunction = async (hre) => {
 
       console.log(`TK_L1${token.name} is located at ${tokenAddressL1}`)
       // mainnet: use pre-deployed contracts
-    } else if ((hre as any).deployConfig.network === 'mainnet') {
+    } else if (process.env.CONTRACTS_TARGET_NETWORK === 'mainnet') {
       tokenAddressL1 = token.address.mainnet
 
       await hre.deployments.save('TK_L1' + token.symbol, {
