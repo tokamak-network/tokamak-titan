@@ -19,7 +19,6 @@ let Proxy__L1LiquidityPool: Contract
 let Proxy__L2LiquidityPool: Contract
 
 const initialSupply_6 = utils.parseUnits('10000', 6)
-const initialSupply_8 = utils.parseUnits('10000', 8)
 const initialSupply_18 = utils.parseEther('10000000000')
 
 const deployFn: DeployFunction = async (hre) => {
@@ -55,8 +54,10 @@ const deployFn: DeployFunction = async (hre) => {
     (hre as any).deployConfig.deployer_l2
   )
 
+  // support address pre-deployed contract in goerli, mainnet
   let tokenAddressL1 = null
 
+  // loop
   for (const token of preSupportedTokens.supportedTokens) {
     if (
       (hre as any).deployConfig.network === 'local' ||
@@ -64,14 +65,12 @@ const deployFn: DeployFunction = async (hre) => {
     ) {
       // token supply
       let supply = initialSupply_18
-
+      // USDC
       if (token.decimals === 6) {
         supply = initialSupply_6
-      } else if (token.decimals === 8) {
-        supply = initialSupply_8
       }
 
-      // L1ERC20 토큰 배포
+      // deploy ERC20 token in L1
       L1ERC20 = await Factory__L1ERC20.deploy(
         supply,
         token.name,
@@ -134,15 +133,14 @@ const deployFn: DeployFunction = async (hre) => {
       console.log(`TK_L1${token.name} is located at ${tokenAddressL1}`)
     }
 
-    // fetch decimal info from L1 token
+    // get ethers.Contract
     L1ERC20 = new Contract(
       tokenAddressL1,
       L1ERC20Json.abi,
       (hre as any).deployConfig.deployer_l1
     )
 
-    //Set up things on L2 for these tokens
-
+    // Set up things on L2 for these tokens
     L2ERC20 = await Factory__L2ERC20.deploy(
       (hre as any).deployConfig.L2StandardBridgeAddress,
       tokenAddressL1,
@@ -168,7 +166,7 @@ const deployFn: DeployFunction = async (hre) => {
     )
     console.log(`TK_L2${token.symbol} was deployed to ${L2ERC20.address}`)
 
-    // Register tokens in LPs
+    // check deployment of LPs
     const Proxy__L1LiquidityPoolDeployment = await hre.deployments.getOrNull(
       'Proxy__L1LiquidityPool'
     )
@@ -176,6 +174,7 @@ const deployFn: DeployFunction = async (hre) => {
       'Proxy__L2LiquidityPool'
     )
 
+    // get LPs
     Proxy__L1LiquidityPool = new Contract(
       Proxy__L1LiquidityPoolDeployment.address,
       L1LiquidityPoolJson.abi,
@@ -187,6 +186,7 @@ const deployFn: DeployFunction = async (hre) => {
       (hre as any).deployConfig.deployer_l2
     )
 
+    // Register tokens in LPs
     await registerLPToken(tokenAddressL1, L2ERC20.address)
     console.log(`${token.name} was registered in LPs`)
   }

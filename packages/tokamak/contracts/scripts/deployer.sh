@@ -4,20 +4,8 @@ set -e
 # This is what deploys all the right TOKAMAK contracts
 yarn run deploy
 
-# Register the deployed addresses with DTL
-if [ -n "$DTL_REGISTRY_URL" ] ; then
-  echo "Will upload addresses.json to $DTL_REGISTRY_URL"
-  curl \
-    -X GET \
-    --fail \
-    --show-error \
-    --silent \
-    -H "Content-Type: application/json" \
-    --retry-connrefused \
-    --retry $RETRIES \
-    --retry-delay 5 \
-    -T dist/dumps/addresses.json \
-    "$DTL_REGISTRY_URL"
-  echo
-  echo "Upload done."
-fi
+# service the deployed  addresses of Tokamak contracts
+echo "Starting server."
+python3 -m http.server \
+    --bind "0.0.0.0" 8082 \
+    --directory ./dist/dumps

@@ -47,8 +47,10 @@ const deployFn: DeployFunction = async (hre) => {
     (hre as any).deployConfig.deployer_l2
   )
 
+  // deploy L2BillingContract
   L2BillingContract = await Factory__L2BillingContract.deploy()
   await L2BillingContract.deployTransaction.wait()
+
   const L2BillingContractDeploymentSubmission: DeploymentSubmission = {
     ...L2BillingContract,
     receipt: L2BillingContract.receipt,
@@ -63,6 +65,7 @@ const deployFn: DeployFunction = async (hre) => {
     `TokamakBillingContract deployed to: ${L2BillingContract.address}`
   )
 
+  // deploy Proxy__L2BillingContract
   Proxy__L2BillingContract = await Factory__Proxy__L2BillingContract.deploy(
     L2BillingContract.address
   )
