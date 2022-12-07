@@ -1,8 +1,8 @@
 {
    "supportedTokens": [
       {
-          "name": "TEST Token",
-          "symbol": "TEST",
+          "name": "WETH Token",
+          "symbol": "WETH",
           "decimals": 18,
           "address": {
             "goerli":"0x00",
@@ -45,6 +45,16 @@
             "goerli":"0x00",
             "mainnet": "0x00"
         }
+      },
+      {
+         "name": "TONStarter",
+         "symbol": "TOS",
+         "decimals": 18,
+         "address": {
+            "goerli":"0x00",
+            "mainnet": "0x00"
+        }
       }
+
    ]
 }
