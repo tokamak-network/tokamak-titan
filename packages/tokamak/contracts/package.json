@@ -5,12 +5,11 @@
   "private": true,
   "author": "Onther Inc",
   "license": "MIT",
-  "types": "dist/index",
   "scripts": {
     "build": "yarn build:contracts",
     "build:contracts": "hardhat compile",
     "deploy": "ts-node \"./bin/deploy.ts\"",
-    "clean": "rm -rf ./artifacts ./cache ./dist",
+    "clean": "rm -rf ./artifacts ./cache",
     "lint": "yarn lint:check",
     "lint:check": "eslint . --ext js,jsx,ts,tsx",
     "lint:fix": "yarn lint:check --fix",
@@ -31,7 +30,7 @@
     "dotenv": "^8.2.0"
   },
   "devDependencies": {
-    "@defi-wonderland/smock": "^2.3.1",
+    "@defi-wonderland/smock": "^2.0.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",

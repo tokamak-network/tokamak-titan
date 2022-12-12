@@ -13,7 +13,6 @@ import {
   encodeXDomainCalldata,
   deploy,
 } from '../helpers'
-
 const MAX_GAS_LIMIT = 8_000_000
 const ENQUEUE_GAS_COST = 60_000
 const L2_GAS_DISCOUNT_DIVISOR = 32
@@ -32,18 +31,14 @@ describe('L1CrossDomainMessengerFast', () => {
   let Fake__L2CrossDomainMessenger: FakeContract
   let Fake__StateCommitmentChain: FakeContract
   before(async () => {
-    Fake__TargetContract = await smock.fake<Contract>('TestERC20')
-    Fake__L2CrossDomainMessenger = await smock.fake<Contract>(
-      'L2CrossDomainMessenger',
-      {
-        // defined by packages/contracts/src/predeploys.ts
-        // L2CrossDomainMessenger
-        address: '0x4200000000000000000000000000000000000007',
-      }
-    )
-    Fake__StateCommitmentChain = await smock.fake<Contract>(
-      'StateCommitmentChain'
-    )
+    // check
+    Fake__TargetContract = await smock.fake('TestERC20')
+    Fake__L2CrossDomainMessenger = await smock.fake('L2CrossDomainMessenger', {
+      // defined by packages/contracts/src/predeploys.ts
+      // L2CrossDomainMessenger
+      address: '0x4200000000000000000000000000000000000007',
+    })
+    Fake__StateCommitmentChain = await smock.fake('StateCommitmentChain')
   })
 
   let AddressManager: Contract
@@ -105,7 +100,7 @@ describe('L1CrossDomainMessengerFast', () => {
 
     // set proxy
     const proxy = await deploy('Lib_ResolvedDelegateProxy', {
-      args: [AddressManager.address, 'L1CrossDomainMessengerFast'],
+      args: [xDomainMessengerImpl.address],
     })
 
     L1CrossDomainMessengerFast = xDomainMessengerImpl.attach(proxy.address)
