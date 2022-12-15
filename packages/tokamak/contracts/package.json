@@ -8,7 +8,7 @@
   "scripts": {
     "build": "yarn build:contracts",
     "build:contracts": "hardhat compile",
-    "deploy": "ts-node \"./bin/deploy.ts\"",
+    "deploy": "ts-node \"./bin/pass-deploy-params.ts\"",
     "clean": "rm -rf ./artifacts ./cache",
     "lint": "yarn lint:check",
     "lint:check": "eslint . --ext js,jsx,ts,tsx",

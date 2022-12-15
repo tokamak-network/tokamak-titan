@@ -6,11 +6,6 @@ pragma experimental ABIEncoderV2;
  * @title IL2LiquidityPool
  */
 interface IL2LiquidityPool {
-    struct ClientPayToken {
-        address payable to;
-        address l2TokenAddress;
-        uint256 amount;
-    }
 
     /********************
      *       Events     *

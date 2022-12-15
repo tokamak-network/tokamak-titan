@@ -70,7 +70,7 @@ CMD ["yarn", "run", "deploy"]
 
 FROM base as tokamak-deployer
 WORKDIR /opt/optimism/packages/tokamak/contracts
-ENTRYPOINT ["./scripts/wait-for-l1-and-l2.sh", "./scripts/deployer.sh"]
+ENTRYPOINT ["./scripts/wait-for-l1-and-l2.sh", "./scripts/tokamak-deployer.sh"]
 
 FROM alpine:3.16.2 as contract-artifacts-bedrock
 RUN mkdir -p /artifacts

@@ -7,7 +7,7 @@ require('dotenv').config()
 import hre from 'hardhat'
 
 const main = async () => {
-  console.log('Starting TOKAMAK core contracts deployment...')
+  console.log('Starting TOKAMAK Contracts Deployment...')
 
   const network = process.env.CONTRACTS_TARGET_NETWORK || 'local'
 

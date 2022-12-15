@@ -1,9 +1,9 @@
 /* Imports: External */
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
-import { Contract, ContractFactory, ethers, providers } from 'ethers'
+import { Contract, ContractFactory, ethers } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
 
-import { registerAddress } from './000-Messenger.deploy'
+import { registerAddress } from './000-L1MessengerFast.deploy'
 import ProxyJson from '../artifacts/contracts/libraries/Lib_ResolvedDelegateProxy.sol/Lib_ResolvedDelegateProxy.json'
 import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
 import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'
@@ -86,7 +86,6 @@ const deployFn: DeployFunction = async (hre) => {
   )
 
   const initL1LPTX = await Proxy__L1LiquidityPool.initialize(
-    (hre as any).deployConfig.l1MessengerAddress,
     L1CrossDomainMessengerFastAddress,
     Proxy__L2LiquidityPool.address,
     (hre as any).deployConfig.L1StandardBridgeAddress

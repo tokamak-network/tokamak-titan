@@ -1,8 +1,5 @@
 # TOKAMAK Smart Contracts
 
-
-## 1. Automatic contract deployment and serving
-
 This spins up the entire stack, with all contracts deployed, all the right things needed for the wallet to function, and for development work on the wallet.
 
 ```bash
@@ -12,83 +9,54 @@ $ docker-compose up -d
 
 ```
 
-**Note - please provide syntax for setting the .env variables**
-
-To get the contract addresses for the basic stack, and the TOKAMAK-specific contracts:
+To get the contract addresses for the system contracts deployed L1, and the TOKAMAK-specific contracts:
 
 ```bash
 
-curl http://127.0.0.1:8078/addresses.json | jq #basic stack
-curl http://127.0.0.1:8080/addresses.json | jq #TOKAMAK-specific contracts
+curl http://127.0.0.1:8080/addresses.json | jq # system contracts
+curl http://127.0.0.1:8082/tokamak-addr.json | jq # Tokamak-specific contracts
 
 ```
 
-## 2. Manual Deployment and Testing
-
-Spin up the base local L1/L2:
-
-```
-
-$ cd ops
-$ docker-compose up -d
-
-```
-
-Create a `.env` file in the root directory of the contracts folder. Add environment-specific variables on new lines in the form of `NAME=VALUE`. Examples are given in the `.env.example` file. Just pick which net you want to work on and copy either the "Rinkeby" _or_ the "Local" envs to your `.env`.
+You will now see the log in tokamak-deployer, if everything worked correctly:
 
 ```bash
 
-# Local
-NODE_ENV=local
-L1_NODE_WEB3_URL=http://localhost:9545
-L2_NODE_WEB3_URL=http://localhost:8545
-ETH1_ADDRESS_RESOLVER_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-TEST_PRIVATE_KEY_1=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-TEST_PRIVATE_KEY_2=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
-TEST_PRIVATE_KEY_3=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-TARGET_GAS_LIMIT=9000000000
-CHAIN_ID=28 #for Rinkeby
-TEST=1 #This deploys the ERC20 test token
-
-```
-
-Build and deploy all the needed contracts:
-
-```bash
-
-$ yarn build
-$ yarn deploy
-
-```
-
-You will now see this, if everything worked correctly:
-
-```bash
-
- % yarn deploy
-yarn run v1.22.10
-$ ts-node "./bin/deploy.ts"
-Starting TOKAMAK core contracts deployment...
+yarn run v1.22.19
+$ ts-node "./bin/pass-deploy-params.ts"
+Starting TOKAMAK Contracts Deployment...
 ADDRESS_MANAGER_ADDRESS was set to 0x5FbDB2315678afecb367f032d93F642f64180aa3
-Nothing to compile
-Deploying...
-🌕 L2LiquidityPool deployed to: 0x7A9Ec1d04904907De0ED7b6839CcdD59c3716AC9
-🌕 L1LiquidityPool deployed to: 0xe8D2A1E88c91DCd5433208d4152Cc4F399a7e91d
-⭐️ L1 LP initialized: 0x511a3000131b6d3ac16a22d12707dc4121a62c198679300a081cfa9586b32d89
-⭐️ L2 LP initialized: 0x0797a3c93960e62a84c59f7f49c91916e430488b08afd38519ef9ac057eabec6
-L1 and L2 pools have registered ETH and OETH
-🌕 L1ERC20 deployed to: 0x4b6aB5F819A515382B0dEB6935D793817bB4af28
-🌕 L2ERC20 deployed to: 0x86A2EE8FAf9A840F7a2c64CA3d51209F9A02081D
-🌕 L2TokenPool deployed to: 0xA4899D35897033b927acFCf422bc745916139776
-⭐️ L2TokenPool registered: 0x43f4d7adec84555ef5548adf41a75c8bdf45798a993cf4d5e42e2b31ab140d01
-🌕 L1_CrossDomainMessenger_Fast deployed to: 0xCace1b78160AE76398F486c8a18044da0d66d86D
-⭐️ Fast L1 Messager initialized: 0x6480f00ca7f65d207bbbf4831074a71fb7ca4b6d999aeb78fbb5fb3841938362
-⭐️ Fast L1 Messager initialized: 0xc44a3f18a3e6c10ceb6da3cebd4b23ee491ef6947ab3bf05574260e3c7f8c206
-🌕 AtomicSwap deployed to: 0xAA292E8611aDF267e563f334Ee42320aC96D0463
-🌕 L1 Message deployed to: 0xc0F115A19107322cFBf1cDBC7ea011C19EbDB4F8
-🌕 L2 Message deployed to: 0x5c74c94173F05dA1720953407cbb920F3DF9f887
-⭐️ L1 Message initialized: 0x37fbbe3ef0ed3f1f4ae6c94fcd1f1825ea6c425091b038c4d4541c8760ea2c53
-⭐️ L2 Message initialized: 0xa736724e36f8098f70f737ac0c643490732a9ff350bd0fc9629a6face73178a8
-✨  Done in 10.84s.
+...
+L1CrossDomainMessengerFast deployed to: 0x59b670e9fA9D0A427751Af201D676719a970857b
+L1CrossDomainMessengerFast initialized: 0x8f4735396b771db77f0ad02fe72fce76bd878eae40690f7b5ae00283d580b3c0
+Proxy__L1CrossDomainMessengerFast deployed to: 0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
+Proxy Fast L1 Messenger initialized: 0x17d79ddad18f22a48191f6765e76208e5430e7321ab040a806749277679b6dab
+L1LiquidityPool deployed to: 0x09635F643e140090A9A8Dcd712eD6285858ceBef
+L2LiquidityPool deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Proxy__L1LiquidityPool deployed to: 0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E
+Proxy__L2LiquidityPool deployed to: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+Proxy__L1LiquidityPool initialized: 0x5e10d805ee735eaa678e74917c02aaf749d9ec430539408ef55530c4e2236169
+Proxy__L2LiquidityPool initialized: 0xcf8224e178e383045303b2a957d8ff4b0be260b8335a795749a1eb80040057d7
+TK_L1WETH was newly deployed to 0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8
+TK_L2WETH was deployed to 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9
+WETH Token was registered in LPs
+TK_L1USDT was newly deployed to 0x998abeb3E57409262aE5b751f60747921B33613E
+TK_L2USDT was deployed to 0x0165878A594ca255338adfa4d48449f69242Eb8F
+Tether USD was registered in LPs
+TK_L1DAI was newly deployed to 0x0E801D84Fa97b50751Dbf25036d067dCf18858bF
+TK_L2DAI was deployed to 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6
+Dai was registered in LPs
+TK_L1USDC was newly deployed to 0x36C02dA8a0983159322a80FFE9F24b1acfF8B570
+TK_L2USDC was deployed to 0x610178dA211FEF7D417bC0e6FeD39F05609AD788
+USD Coin was registered in LPs
+TK_L1TON was newly deployed to 0x5f3f1dBD7B74C6B46e8c44f98792A1dAf8d69154
+TK_L2TON was deployed to 0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0
+Tokamak Network was registered in LPs
+TK_L1TOS was newly deployed to 0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3
+TK_L2TOS was deployed to 0x9A676e781A523b5d0C0e43731313A708CB607508
+TONStarter was registered in LPs
+TokamakBillingContract deployed to: 0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1
+Proxy__TokamakBillingContract deployed to: 0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+Done in 39.40s.
 
 ```

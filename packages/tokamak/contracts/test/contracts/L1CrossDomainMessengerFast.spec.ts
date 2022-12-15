@@ -31,7 +31,7 @@ describe('L1CrossDomainMessengerFast', () => {
   let Fake__L2CrossDomainMessenger: FakeContract
   let Fake__StateCommitmentChain: FakeContract
   before(async () => {
-    // check
+    // initialize fake contracts
     Fake__TargetContract = await smock.fake('TestERC20')
     Fake__L2CrossDomainMessenger = await smock.fake('L2CrossDomainMessenger', {
       // defined by packages/contracts/src/predeploys.ts
@@ -138,6 +138,7 @@ describe('L1CrossDomainMessengerFast', () => {
 
     // check sender of cross domain message
     it('should return the xDomainMsgSender address', async () => {
+      // set sender address
       await Mock__L1CrossDomainMessengerFast.setVariable(
         'xDomainMsgSender',
         NON_ZERO_ADDRESS

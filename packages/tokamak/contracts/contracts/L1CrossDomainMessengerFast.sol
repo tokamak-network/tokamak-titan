@@ -17,6 +17,7 @@ import { ICanonicalTransactionChain } from "@eth-optimism/contracts/contracts/L1
 import { IStateCommitmentChain } from "@eth-optimism/contracts/contracts/L1/rollup/IStateCommitmentChain.sol";
 
 /* External Imports */
+// for security
 import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -182,6 +183,7 @@ contract L1CrossDomainMessengerFast is
         uint256 _messageNonce,
         L2MessageInclusionProof memory _proof
     ) public override onlyRelayer nonReentrant whenNotPaused {
+        // generate calldata from params
         bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
             _target,
             _sender,
@@ -189,6 +191,7 @@ contract L1CrossDomainMessengerFast is
             _messageNonce
         );
 
+        // verify message state from xDomainCalldata and _proof
         require(
             _verifyXDomainMessage(xDomainCalldata, _proof) == true,
             "Provided message could not be verified."
@@ -212,6 +215,7 @@ contract L1CrossDomainMessengerFast is
         );
 
         xDomainMsgSender = _sender;
+        // direct call from _message
         (bool success, ) = _target.call(_message);
         xDomainMsgSender = Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER;
 

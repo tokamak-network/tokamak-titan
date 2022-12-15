@@ -66,12 +66,6 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         // start time
         uint256 startTime;
     }
-    // Token batch structure
-    struct ClientPayToken {
-        address payable to;
-        address l2TokenAddress;
-        uint256 amount;
-    }
 
     /*************
      * Variables *
@@ -92,8 +86,6 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
     uint256 private constant SAFE_GAS_STIPEND = 2300;
 
     address public DAO;
-
-    uint256 public extraGasRelay;
 
     uint256 public userRewardMaxFeeRate;
 
@@ -447,8 +439,9 @@ contract L2LiquidityPool is CrossDomainEnabled, ReentrancyGuardUpgradeable, Paus
         whenNotPaused
         onlyWithBillingContract
     {
-        // Collect the exit fee
+        // transfer exitFee from sender to billingContract
         L2BillingContract billingContract = L2BillingContract(billingContractAddress);
+        // billingContracts에 지정한 exitFee만큼 sender -> Billingcontract에 전송
         IERC20(billingContract.feeTokenAddress()).safeTransferFrom(
             msg.sender,
             billingContractAddress,

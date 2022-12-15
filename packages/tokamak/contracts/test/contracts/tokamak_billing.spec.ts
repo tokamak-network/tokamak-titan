@@ -37,6 +37,7 @@ describe('L2 Billing Contract', async () => {
     const billingContract = await ethers.getContractFactory('L2BillingContract')
     L2BillingContract = await billingContract.deploy()
     await L2BillingContract.deployed()
+    // initial exit fee is 1 TON
     await L2BillingContract.initialize(L2Ton.address, l2FeeWallet, exitFee)
   })
 
@@ -98,6 +99,7 @@ describe('L2 Billing Contract', async () => {
       const balanceBefore = await L2Ton.balanceOf(L2BillingContract.address)
       // approve signer2 (spender: L2BillingContract, amount: exitFee)
       await L2Ton.connect(signer2).approve(L2BillingContract.address, exitFee)
+      // signer2 -> L2BillingContract, exitFee
       await L2BillingContract.connect(signer2).collectFee()
       const balanceAfter = await L2Ton.balanceOf(L2BillingContract.address)
 
@@ -123,6 +125,7 @@ describe('L2 Billing Contract', async () => {
       )
 
       const balanceBefore = await L2Ton.balanceOf(signerAddress)
+      // L2BillingContract -> signer, L2BillingContractBalance
       await L2BillingContract.connect(signer).withdraw()
       const balanceAfter = await L2Ton.balanceOf(signerAddress)
       expect(balanceBefore).to.eq(balanceAfter.sub(L2BillingContractBalanace))

@@ -3,7 +3,7 @@ import { getContractFactory } from '@eth-optimism/contracts'
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory } from 'ethers'
 
-import { registerAddress } from './000-Messenger.deploy'
+import { registerAddress } from './000-L1MessengerFast.deploy'
 import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
 import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'
 

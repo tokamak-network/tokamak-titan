@@ -4,8 +4,8 @@ pragma experimental ABIEncoderV2;
 
 /* Internal Imports */
 import "./interfaces/IL2LiquidityPool.sol";
-import "../libraries/CrossDomainEnabledFast.sol";
 import "@eth-optimism/contracts/contracts/L1/messaging/L1StandardBridge.sol";
+import "@eth-optimism/contracts/contracts/libraries/bridge/CrossDomainEnabled.sol";
 
 /* External Imports */
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
  * @dev An L1 LiquidityPool implementation
  */
 contract L1LiquidityPool is
-    CrossDomainEnabledFast,
+    CrossDomainEnabled,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable
 {
@@ -67,16 +67,6 @@ contract L1LiquidityPool is
         // start time -- used to calculate APR
         uint256 startTime;
     }
-    // Token batch structure
-    struct ClientDepositToken {
-        address l1TokenAddress;
-        uint256 amount;
-    }
-    struct ClientPayToken {
-        address to;
-        address l2TokenAddress;
-        uint256 amount;
-    }
 
     /*************
      * Variables *
@@ -94,15 +84,9 @@ contract L1LiquidityPool is
     // Default gas value which can be overridden if more complex logic runs on L2.
     uint32 public SETTLEMENT_L2_GAS;
     uint256 public SAFE_GAS_STIPEND;
-    // cdm address
-    address public l1CrossDomainMessenger;
     // L1StandardBridge address
     address payable public L1StandardBridgeAddress;
     uint256 public userRewardMaxFeeRate;
-
-    bytes32 public priorDepositInfoHash;
-    bytes32 public currentDepositInfoHash;
-    uint256 public lastHashUpdateBlock;
 
     /********************
      *       Events     *
@@ -131,7 +115,7 @@ contract L1LiquidityPool is
      *    Constructor   *
      ********************/
 
-    constructor() CrossDomainEnabledFast(address(0), address(0)) {}
+    constructor() CrossDomainEnabled(address(0)) {}
 
     /**********************
      * Function Modifiers *
@@ -183,25 +167,21 @@ contract L1LiquidityPool is
     /**
      * @dev Initialize this contract.
      *
-     * @param _l1CrossDomainMessenger L1 Messenger address being used for sending the cross-chain message.
      * @param _l1CrossDomainMessengerFast L1 Messenger address being used for relaying cross-chain messages quickly.
      * @param _L2LiquidityPoolAddress Address of the corresponding L2 LP deployed to the L2 chain
      * @param _L1StandardBridgeAddress Address of L1 StandardBridge
      */
     function initialize(
-        address _l1CrossDomainMessenger,
         address _l1CrossDomainMessengerFast,
         address _L2LiquidityPoolAddress,
         address payable _L1StandardBridgeAddress
     ) public onlyOwner onlyNotInitialized initializer {
         require(
-            _l1CrossDomainMessenger != address(0) &&
-                _l1CrossDomainMessengerFast != address(0) &&
+            _l1CrossDomainMessengerFast != address(0) &&
                 _L2LiquidityPoolAddress != address(0),
             "zero address not allowed"
         );
-        senderMessenger = _l1CrossDomainMessenger;
-        relayerMessenger = _l1CrossDomainMessengerFast;
+        messenger = _l1CrossDomainMessengerFast;
         L2LiquidityPoolAddress = _L2LiquidityPoolAddress;
         L1StandardBridgeAddress = _L1StandardBridgeAddress;
         owner = msg.sender;
@@ -503,21 +483,6 @@ contract L1LiquidityPool is
         _unpause();
     }
 
-    function _updateDepositHash(
-        address _tokenAddress,
-        address _account,
-        uint256 _amount
-    ) internal {
-        // if block number is different only then update prior
-        if (block.number > lastHashUpdateBlock) {
-            priorDepositInfoHash = currentDepositInfoHash;
-        }
-        currentDepositInfoHash = keccak256(
-            abi.encode(currentDepositInfoHash, _tokenAddress, _account, _amount)
-        );
-
-        lastHashUpdateBlock = block.number;
-    }
 
     /*************************
      * Cross-chain Functions *

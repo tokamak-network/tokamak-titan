@@ -6,7 +6,7 @@ import { getContractFactory } from '@eth-optimism/contracts'
 /* eslint-disable */
 require('dotenv').config()
 
-import { registerAddress } from './000-Messenger.deploy'
+import { registerAddress } from './000-L1MessengerFast.deploy'
 import L1ERC20Json from '../artifacts/contracts/test-helpers/L1ERC20.sol/L1ERC20.json'
 import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
 import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'

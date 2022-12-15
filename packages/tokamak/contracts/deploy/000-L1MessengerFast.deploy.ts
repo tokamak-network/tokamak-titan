@@ -6,10 +6,10 @@ import { sleep, hexStringEquals } from '@eth-optimism/core-utils'
 /* eslint-disable */
 require('dotenv').config()
 
-import L1_MessengerJson from '../artifacts/contracts/L1CrossDomainMessengerFast.sol/L1CrossDomainMessengerFast.json'
+import L1_MessengerFastJson from '../artifacts/contracts/L1CrossDomainMessengerFast.sol/L1CrossDomainMessengerFast.json'
 
-let Factory__L1_Messenger: ContractFactory
-let L1_Messenger: Contract
+let Factory__L1_MessengerFast: ContractFactory
+let L1_MessengerFast: Contract
 
 const waitUntilTrue = async (
   check: () => Promise<boolean>,
@@ -67,41 +67,43 @@ const deployFn: DeployFunction = async (hre) => {
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
-  // get factory of L1CrossDomainMessageFast contract
-  Factory__L1_Messenger = new ContractFactory(
-    L1_MessengerJson.abi,
-    L1_MessengerJson.bytecode,
+  // get factory of L1CrossDomainMessageFast contract for deployment
+  Factory__L1_MessengerFast = new ContractFactory(
+    L1_MessengerFastJson.abi,
+    L1_MessengerFastJson.bytecode,
     (hre as any).deployConfig.deployer_l1
   )
 
   // deploy L1CrossDomainMessengerFast
-  L1_Messenger = await Factory__L1_Messenger.deploy()
+  L1_MessengerFast = await Factory__L1_MessengerFast.deploy()
 
-  await L1_Messenger.deployTransaction.wait()
+  await L1_MessengerFast.deployTransaction.wait()
 
-  // type in hardhat-deploy
+  // DeploymentSubmission: define type in hardhat-deploy package
   const L1_MessengerDeploymentSubmission: DeploymentSubmission = {
-    ...L1_Messenger,
-    receipt: L1_Messenger.receipt,
-    address: L1_Messenger.address,
-    abi: L1_MessengerJson.abi,
+    ...L1_MessengerFast,
+    receipt: L1_MessengerFast.receipt,
+    address: L1_MessengerFast.address,
+    abi: L1_MessengerFast.abi,
   }
 
   // set L1CrossDomainMessengerFast address in address manager
-  await registerAddress(addressManager, 'L1CrossDomainMessengerFast', L1_Messenger.address)
-  await hre.deployments.save('L1CrossDomainMessengerFast',L1_MessengerDeploymentSubmission)
-  console.log(`L1CrossDomainMessengerFast deployed to: ${L1_Messenger.address}`)
+  await registerAddress(addressManager, 'L1CrossDomainMessengerFast', L1_MessengerFast.address)
 
-  const L1_Messenger_Deployed = await Factory__L1_Messenger.attach(
-    L1_Messenger.address
+  // save deployment info
+  await hre.deployments.save('L1CrossDomainMessengerFast',L1_MessengerDeploymentSubmission)
+  console.log(`L1CrossDomainMessengerFast deployed to: ${L1_MessengerFast.address}`)
+
+  const L1_Messenger_Deployed = await Factory__L1_MessengerFast.attach(
+    L1_MessengerFast.address
   )
 
   // initialize L1CrossDomainMessengerFast
-  const L1MessagerTX = await L1_Messenger_Deployed.initialize(
+  const L1MessagerFastTX = await L1_Messenger_Deployed.initialize(
     addressManager.address
   )
-  await L1MessagerTX.wait()
-  console.log(`L1CrossDomainMessengerFast initialized: ${L1MessagerTX.hash}`)
+  await L1MessagerFastTX.wait()
+  console.log(`L1CrossDomainMessengerFast initialized: ${L1MessagerFastTX.hash}`)
 
 }
 
