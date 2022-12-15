@@ -8,11 +8,12 @@ import (
 	"io"
 	"math/big"
 
+	"github.com/urfave/cli"
+
 	"github.com/ethereum-optimism/optimism/op-node/flags"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/urfave/cli"
 )
 
 var SigningDomainBlocksV1 = [32]byte{}
@@ -81,14 +82,13 @@ type SignerSetup interface {
 
 // LoadSignerSetup loads a configuration for a Signer to be set up later
 func LoadSignerSetup(ctx *cli.Context) (SignerSetup, error) {
-	keyFile := ctx.GlobalString(flags.SequencerP2PKeyFlag.Name)
-	if keyFile != "" {
+	key := ctx.GlobalString(flags.SequencerP2PKeyFlag.Name)
+	if key != "" {
 		// Mnemonics are bad because they leak *all* keys when they leak.
 		// Unencrypted keys from file are bad because they are easy to leak (and we are not checking file permissions).
-		// TODO: load from encrypted keystore
-		priv, err := crypto.LoadECDSA(keyFile)
+		priv, err := crypto.HexToECDSA(key)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read batch submitter key: %v", err)
+			return nil, fmt.Errorf("failed to read batch submitter key: %w", err)
 		}
 
 		return &PreparedSigner{Signer: NewLocalSigner(priv)}, nil

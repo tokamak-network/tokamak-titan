@@ -1,5 +1,154 @@
 # @eth-optimism/drippie-mon
 
+## 0.3.17
+
+### Patch Changes
+
+- Updated dependencies [02c457a5]
+- Updated dependencies [ce7da914]
+- Updated dependencies [d3fe9b6d]
+- Updated dependencies [220ad4ef]
+- Updated dependencies [5d86ff0e]
+  - @eth-optimism/contracts-periphery@1.0.1
+  - @eth-optimism/common-ts@0.6.6
+  - @eth-optimism/sdk@1.6.6
+
+## 0.3.16
+
+### Patch Changes
+
+- Updated dependencies [e2faaa8b]
+- Updated dependencies [5c3f2b1f]
+- Updated dependencies [3883f34b]
+  - @eth-optimism/sdk@1.6.5
+  - @eth-optimism/contracts-periphery@1.0.0
+
+## 0.3.15
+
+### Patch Changes
+
+- 7215f4ce: Bump ethers to 5.7.0 globally
+- 0ceff8b8: Drippie Spearbit audit fix for issue #25, reorder DripStatus enum for clarity
+- Updated dependencies [7215f4ce]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [206f6033]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [d7679ca4]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+- Updated dependencies [0ceff8b8]
+  - @eth-optimism/common-ts@0.6.5
+  - @eth-optimism/contracts-periphery@0.2.4
+  - @eth-optimism/core-utils@0.10.1
+  - @eth-optimism/sdk@1.6.4
+
+## 0.3.14
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.6.3
+
+## 0.3.13
+
+### Patch Changes
+
+- Updated dependencies [cfa81f88]
+  - @eth-optimism/sdk@1.6.2
+
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [f4bf4f52]
+- Updated dependencies [b27d0fa7]
+- Updated dependencies [dbfea116]
+  - @eth-optimism/contracts-periphery@0.2.3
+  - @eth-optimism/sdk@1.6.1
+  - @eth-optimism/core-utils@0.10.0
+  - @eth-optimism/common-ts@0.6.4
+
+## 0.3.11
+
+### Patch Changes
+
+- Updated dependencies [ea371af2]
+- Updated dependencies [3df66a9a]
+- Updated dependencies [8323407f]
+- Updated dependencies [3af9c7a9]
+- Updated dependencies [aa2949ef]
+- Updated dependencies [a1a73e64]
+- Updated dependencies [f53c30b9]
+  - @eth-optimism/contracts-periphery@0.2.2
+  - @eth-optimism/sdk@1.6.0
+
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [dcd715a6]
+  - @eth-optimism/sdk@1.5.0
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [0df744f6]
+- Updated dependencies [8ae39154]
+- Updated dependencies [f05ab6b6]
+- Updated dependencies [dac4a9f0]
+  - @eth-optimism/core-utils@0.9.3
+  - @eth-optimism/sdk@1.4.0
+  - @eth-optimism/common-ts@0.6.3
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [0bf3b9b4]
+- Updated dependencies [93d3bd41]
+- Updated dependencies [680714c1]
+- Updated dependencies [8d26459b]
+- Updated dependencies [4477fe9f]
+- Updated dependencies [29830750]
+- Updated dependencies [bcfd1edc]
+- Updated dependencies [0bf3b9b4]
+  - @eth-optimism/core-utils@0.9.2
+  - @eth-optimism/contracts-periphery@0.2.1
+  - @eth-optimism/sdk@1.3.1
+  - @eth-optimism/common-ts@0.6.2
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [032f7214]
+  - @eth-optimism/sdk@1.3.0
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [95fc3fbf]
+- Updated dependencies [019657db]
+- Updated dependencies [6ff5c0a3]
+- Updated dependencies [119f0e97]
+- Updated dependencies [9c8b1f00]
+- Updated dependencies [8a335b7b]
+- Updated dependencies [f9fee446]
+- Updated dependencies [89d01f2e]
+  - @eth-optimism/contracts-periphery@0.2.0
+  - @eth-optimism/core-utils@0.9.1
+  - @eth-optimism/sdk@1.2.1
+  - @eth-optimism/common-ts@0.6.1
+
 ## 0.3.5
 
 ### Patch Changes

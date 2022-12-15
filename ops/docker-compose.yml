@@ -12,7 +12,7 @@ x-system-addr-env: &system-addr-env
 services:
   # this is a helper service used because there's no official hardhat image
   l1_chain:
-    image: ethereumoptimism/hardhat:${DOCKER_TAG_HARDHAT:-latest}
+    image: onthertech/optimism.hardhat:${DOCKER_TAG_HARDHAT:-latest}
     build:
       context: ./docker/hardhat
       dockerfile: Dockerfile
@@ -29,7 +29,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: deployer
-    image: ethereumoptimism/deployer:${DOCKER_TAG_DEPLOYER:-latest}
+    image: onthertech/optimism.deployer:${DOCKER_TAG_DEPLOYER:-latest}
     entrypoint: ./deployer.sh
     environment:
       # Env vars for the deployment script.
@@ -49,7 +49,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: data-transport-layer
-    image: ethereumoptimism/data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
+    image: onthertech/optimism.data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
     # override with the dtl script and the env vars required for it
     entrypoint: ./dtl.sh
     env_file:
@@ -74,7 +74,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: onthertech/optimism.l2geth:${DOCKER_TAG_L2GETH:-latest}
     # override with the geth script and the env vars required for it
     entrypoint: sh ./geth.sh
     env_file:
@@ -108,10 +108,11 @@ services:
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: message-relayer
-    image: ethereumoptimism/message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
+      target: tokamak-message-relayer
+    image: onthertech/optimism.message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
     entrypoint: ./relayer.sh
     environment:
+      URL: http://deployer:8081/addresses.json
       MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
       MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
       MESSAGE_RELAYER__L1_WALLET: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
@@ -127,7 +128,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: fault-detector
-    image: ethereumoptimism/fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
+    image: onthertech/optimism.fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
     entrypoint: ./detector.sh
     environment:
       FAULT_DETECTOR__L1_RPC_PROVIDER: http://l1_chain:8545
@@ -145,7 +146,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: onthertech/optimism.l2geth:${DOCKER_TAG_L2GETH:-latest}
     entrypoint: sh ./geth.sh
     env_file:
       - ./envs/geth.env
@@ -172,7 +173,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: onthertech/optimism.l2geth:${DOCKER_TAG_L2GETH:-latest}
     entrypoint: sh ./geth.sh
     env_file:
       - ./envs/geth.env
@@ -200,7 +201,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: replica-healthcheck
-    image: ethereumoptimism/replica-healthcheck:${DOCKER_TAG_REPLICA_HEALTHCHECK:-latest}
+    image: onthertech/optimism.replica-healthcheck:${DOCKER_TAG_REPLICA_HEALTHCHECK:-latest}
     environment:
       HEALTHCHECK__REFERENCE_RPC_PROVIDER: http://l2geth:8545
       HEALTHCHECK__TARGET_RPC_PROVIDER: http://replica:8545
@@ -214,7 +215,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: integration-tests
-    image: ethereumoptimism/integration-tests:${DOCKER_TAG_INTEGRATION_TESTS:-latest}
+    image: onthertech/optimism.integration-tests:${DOCKER_TAG_INTEGRATION_TESTS:-latest}
     entrypoint: ./integration-tests.sh
     environment:
       L1_URL: http://l1_chain:8545
@@ -239,7 +240,7 @@ services:
     build:
       context: ..
       dockerfile: ./gas-oracle/Dockerfile
-    image: ethereumoptimism/gas-oracle:${DOCKER_TAG_GAS_ORACLE:-latest}
+    image: onthertech/optimism.gas-oracle:${DOCKER_TAG_GAS_ORACLE:-latest}
     environment:
       GAS_PRICE_ORACLE_ETHEREUM_HTTP_URL: http://l1_chain:8545
       GAS_PRICE_ORACLE_LAYER_TWO_HTTP_URL: http://l2geth:8545
@@ -254,7 +255,7 @@ services:
     build:
       context: ..
       dockerfile: ./batch-submitter/Dockerfile
-    image: ethereumoptimism/batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
+    image: onthertech/optimism.batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
     entrypoint: ./batch-submitter.sh
     env_file:
       - ./envs/batch-submitter.env

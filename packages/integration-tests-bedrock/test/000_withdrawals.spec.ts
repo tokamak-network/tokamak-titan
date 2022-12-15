@@ -33,9 +33,7 @@ const getTargetOutput = async (
   withdrawalTimestamp: number
 ) => {
   const submissionInterval = (await oracle.SUBMISSION_INTERVAL()).toNumber()
-  const startingTimestamp = (
-    await oracle.STARTING_TIMESTAMP()
-  ).toNumber()
+  const startingTimestamp = (await oracle.STARTING_TIMESTAMP()).toNumber()
   const nextTimestamp = (await oracle.nextTimestamp()).toNumber()
   let targetOutputTimestamp
   if (withdrawalTimestamp < nextTimestamp) {
@@ -243,7 +241,7 @@ describe('Withdrawals', () => {
         {
           version: constants.HashZero,
           stateRoot: targetStateRoot,
-          withdrawerStorageRoot: proof.storageHash,
+          messagePasserStorageRoot: proof.storageHash,
           latestBlockhash: targetHash,
         },
         rlp.encode(proof.storageProof[0].proof),

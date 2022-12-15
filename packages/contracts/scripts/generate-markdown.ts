@@ -39,6 +39,14 @@ const PUBLIC_DEPLOYMENTS: DeploymentInfo[] = [
     notice: `Optimism Goerli is an internal Optimism development network. You're probably looking for [Optimism Kovan](../kovan#readme), the public Optimism testnet.`,
     l1Explorer: 'https://goerli.etherscan.io',
   },
+  {
+    folder: 'rinkeby',
+    name: 'Optimism Rinkeby (public testnet)',
+    chainid: 4,
+    rpc: 'https://rinkeby.optimism.tokamak.network',
+    l1Explorer: 'https://rinkeby.etherscan.io',
+    l2Explorer: 'https://rinkeby.explorer.tokamak.network',
+  },
 ]
 
 // List of contracts that are part of a deployment but aren't meant to be used by the general

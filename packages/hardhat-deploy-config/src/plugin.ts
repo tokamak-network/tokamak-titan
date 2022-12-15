@@ -1,4 +1,5 @@
 import * as path from 'path'
+import * as fs from 'fs'
 
 import { extendEnvironment, extendConfig } from 'hardhat/config'
 import {
@@ -6,6 +7,7 @@ import {
   HardhatRuntimeEnvironment,
   HardhatUserConfig,
 } from 'hardhat/types'
+import { lazyObject } from 'hardhat/plugins'
 import { ethers } from 'ethers'
 
 // From: https://github.com/wighawag/hardhat-deploy/blob/master/src/index.ts#L63-L76
@@ -27,9 +29,16 @@ const normalizePath = (
 export const loadDeployConfig = (hre: HardhatRuntimeEnvironment): any => {
   let config: any
   try {
-    config =
+    const base = `${hre.config.paths.deployConfig}/${hre.network.name}`
+    if (fs.existsSync(`${base}.ts`)) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require(`${hre.config.paths.deployConfig}/${hre.network.name}.ts`).default
+      config = require(`${base}.ts`).default
+    } else if (fs.existsSync(`${base}.json`)) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      config = require(`${base}.json`)
+    } else {
+      throw new Error('not found')
+    }
   } catch (err) {
     throw new Error(
       `error while loading deploy config for network: ${hre.network.name}, ${err}`
@@ -97,12 +106,12 @@ extendConfig(
   (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
     config.paths.deployConfig = normalizePath(
       config,
-      userConfig.paths.deployConfig,
+      userConfig.paths?.deployConfig,
       'deploy-config'
     )
   }
 )
 
 extendEnvironment((hre) => {
-  hre.deployConfig = loadDeployConfig(hre)
+  hre.deployConfig = lazyObject(() => loadDeployConfig(hre))
 })

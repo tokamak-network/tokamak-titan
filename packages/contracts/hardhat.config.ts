@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv'
 import { ethers } from 'ethers'
 
 // Hardhat plugins
+import '@eth-optimism/hardhat-deploy-config'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
@@ -12,7 +13,6 @@ import '@typechain/hardhat'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
 import 'hardhat-output-validator'
-import '@eth-optimism/hardhat-deploy-config'
 
 // Hardhat tasks
 import './tasks'
@@ -35,31 +35,13 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8545',
       saveDeployments: false,
     },
-    'optimism-kovan': {
-      chainId: 69,
-      url: 'https://kovan.optimism.io',
-      deploy,
-      accounts: [privateKey],
-    },
-    'optimism-mainnet': {
-      chainId: 10,
-      url: 'https://mainnet.optimism.io',
-      deploy,
-      accounts: [privateKey],
-    },
     'mainnet-trial': {
       chainId: 42069,
       url: 'http://127.0.0.1:8545',
       accounts: [privateKey],
     },
-    rinkeby: {
-      chainId: 4,
-      url: process.env.CONTRACTS_RPC_URL || '',
-      deploy,
-      accounts: [privateKey],
-    },
-    kovan: {
-      chainId: 42,
+    'hardhat-remote': {
+      chainId: 31337,
       url: process.env.CONTRACTS_RPC_URL || '',
       deploy,
       accounts: [privateKey],
@@ -123,8 +105,6 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
-      rinkeby: process.env.ETHERSCAN_API_KEY,
-      optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
     },
   },
