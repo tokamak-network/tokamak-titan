@@ -54,6 +54,7 @@ const main = async () => {
   const L2StandardBridgeAddress = await L1StandardBridge.l2TokenBridge()
   console.log('address of L2stadardBridge: ', L2StandardBridgeAddress)
 
+  // tasks
   await hre.run('deploy', {
     l1MessengerAddress,
     l2MessengerAddress,

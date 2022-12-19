@@ -6,7 +6,7 @@ import { registerAddress } from './000-L1MessengerFast.deploy'
 
 /* eslint-disable */
 require('dotenv').config()
-
+import ProxyJson from '../artifacts/contracts/libraries/Lib_ResolvedDelegateProxy.sol/Lib_ResolvedDelegateProxy.json'
 import L1_MessengerFastJson from '../artifacts/contracts/L1CrossDomainMessengerFast.sol/L1CrossDomainMessengerFast.json'
 
 let Factory__Proxy_L1_MessengerFast: ContractFactory
@@ -14,7 +14,6 @@ let Factory__L1_MessengerFast: ContractFactory
 let Proxy_L1_MessengerFast: Contract
 
 const deployFn: DeployFunction = async (hre) => {
-
   const addressManager = getContractFactory('Lib_AddressManager')
     .connect((hre as any).deployConfig.deployer_l1)
     .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
@@ -25,14 +24,19 @@ const deployFn: DeployFunction = async (hre) => {
     (hre as any).deployConfig.deployer_l1
   )
 
-  Factory__Proxy_L1_MessengerFast = getContractFactory(
-    'Lib_ResolvedDelegateProxy',
+  // get factory of proxy contracts
+  Factory__Proxy_L1_MessengerFast = new ContractFactory(
+    ProxyJson.abi,
+    ProxyJson.bytecode,
     (hre as any).deployConfig.deployer_l1
   )
 
-  Proxy_L1_MessengerFast = await Factory__Proxy_L1_MessengerFast.deploy(
-    addressManager.address,
+  const L1_MessengerFast = await (hre as any).deployments.get(
     'L1CrossDomainMessengerFast'
+  )
+
+  Proxy_L1_MessengerFast = await Factory__Proxy_L1_MessengerFast.deploy(
+    L1_MessengerFast.address
   )
 
   await Proxy_L1_MessengerFast.deployTransaction.wait()
@@ -44,9 +48,18 @@ const deployFn: DeployFunction = async (hre) => {
     abi: Proxy_L1_MessengerFast.abi,
   }
 
-  await registerAddress(addressManager, 'Proxy__L1CrossDomainMessengerFast', Proxy_L1_MessengerFast.address )
-  await hre.deployments.save( 'Proxy__L1CrossDomainMessengerFast', Proxy_L1_MessengerDeploymentSubmission )
-  console.log(`Proxy__L1CrossDomainMessengerFast deployed to: ${Proxy_L1_MessengerFast.address}`)
+  await registerAddress(
+    addressManager,
+    'Proxy__L1CrossDomainMessengerFast',
+    Proxy_L1_MessengerFast.address
+  )
+  await hre.deployments.save(
+    'Proxy__L1CrossDomainMessengerFast',
+    Proxy_L1_MessengerDeploymentSubmission
+  )
+  console.log(
+    `Proxy__L1CrossDomainMessengerFast deployed to: ${Proxy_L1_MessengerFast.address}`
+  )
 
   const Proxy_L1_MessengerFast_Deployed = Factory__L1_MessengerFast.attach(
     Proxy_L1_MessengerFast.address
@@ -58,7 +71,6 @@ const deployFn: DeployFunction = async (hre) => {
   )
   await ProxyL1MessengerTX.wait()
   console.log(`Proxy Fast L1 Messenger initialized: ${ProxyL1MessengerTX.hash}`)
-
 }
 
 deployFn.tags = ['Proxy_FastMessenger', 'required']

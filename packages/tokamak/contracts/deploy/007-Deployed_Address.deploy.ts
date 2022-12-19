@@ -7,25 +7,13 @@ import { DeployFunction } from 'hardhat-deploy/dist/types'
 const deployFn: DeployFunction = async (hre) => {
   const contracts = {}
 
-  contracts['TOKENS'] = {}
-
   // get all deployed contracts
   const deployments = await hre.deployments.all()
 
   // key = contract name
   for (const key in deployments) {
     if (deployments.hasOwnProperty(key)) {
-      const regex = /TK_L(1|2)([A-Z]+)/i
-      const tokenMatch = key.match(regex)
-      if (tokenMatch == null) {
-        //not a token address
-        contracts[key] = deployments[key].address
-      } else if (tokenMatch && tokenMatch[1] === '1') {
-        contracts['TOKENS'][tokenMatch[2]] = {
-          L1: deployments[key].address,
-          L2: deployments['TK_L2' + tokenMatch[2]].address,
-        }
-      }
+      contracts[key] = deployments[key].address
     }
   }
 

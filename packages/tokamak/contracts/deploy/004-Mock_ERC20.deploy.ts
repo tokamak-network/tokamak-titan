@@ -2,6 +2,7 @@
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory, utils } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
+import { getChainId } from '@eth-optimism/core-utils'
 
 /* eslint-disable */
 require('dotenv').config()
@@ -10,21 +11,24 @@ import { registerAddress } from './000-L1MessengerFast.deploy'
 import L1ERC20Json from '../artifacts/contracts/test-helpers/L1ERC20.sol/L1ERC20.json'
 import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
 import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'
-import preSupportedTokens from '../preSupportedTokens.json'
 
 let Factory__L1ERC20: ContractFactory
 let Factory__L2ERC20: ContractFactory
 
-let L1ERC20: Contract
-let L2ERC20: Contract
+let L1TON: Contract
+let L2TON: Contract
 
 let Proxy__L1LiquidityPool: Contract
 let Proxy__L2LiquidityPool: Contract
 
-const initialSupply_6 = utils.parseUnits('10000', 6)
 const initialSupply_18 = utils.parseEther('10000000000')
 
 const deployFn: DeployFunction = async (hre) => {
+  // check whether we use Hardhat node
+  const isHardhatNode = async (hre) => {
+    return (await getChainId(hre.ethers.provider)) === 31337
+  }
+
   // register token pool in LPs
   const registerLPToken = async (L1TokenAddress, L2TokenAddress) => {
     const registerL1LP = await Proxy__L1LiquidityPool.registerPool(
@@ -40,133 +44,69 @@ const deployFn: DeployFunction = async (hre) => {
     await registerL2LP.wait()
   }
 
-  // get address manager
-  const addressManager = getContractFactory('Lib_AddressManager')
-    .connect((hre as any).deployConfig.deployer_l1)
-    .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
+  if (await isHardhatNode(hre)) {
+    // get address manager
+    const addressManager = getContractFactory('Lib_AddressManager')
+      .connect((hre as any).deployConfig.deployer_l1)
+      .attach(process.env.ADDRESS_MANAGER_ADDRESS) as any
 
-  // get ContractFactory of L1/L2ERC20
-  Factory__L1ERC20 = new ContractFactory(
-    L1ERC20Json.abi,
-    L1ERC20Json.bytecode,
-    (hre as any).deployConfig.deployer_l1
-  )
-
-  Factory__L2ERC20 = getContractFactory(
-    'L2StandardERC20',
-    (hre as any).deployConfig.deployer_l2
-  )
-
-  // support address pre-deployed contract in goerli, mainnet
-  let tokenAddressL1 = null
-
-  // loop
-  for (const token of preSupportedTokens.supportedTokens) {
-    if (
-      process.env.CONTRACTS_TARGET_NETWORK === 'local'
-    ) {
-      // token supply
-      let supply = initialSupply_18
-      // USDC
-      if (token.decimals === 6) {
-        supply = initialSupply_6
-      }
-
-      // deploy ERC20 token in L1
-      L1ERC20 = await Factory__L1ERC20.deploy(
-        supply,
-        token.name,
-        token.symbol,
-        token.decimals
-      )
-      await L1ERC20.deployTransaction.wait()
-
-      tokenAddressL1 = L1ERC20.address
-
-      const L1ERC20DeploymentSubmission: DeploymentSubmission = {
-        ...L1ERC20,
-        receipt: L1ERC20.receipt,
-        address: L1ERC20.address,
-        abi: L1ERC20Json.abi,
-      }
-
-      // hre.deployments에 저장
-      await hre.deployments.save(
-        'TK_L1' + token.symbol,
-        L1ERC20DeploymentSubmission
-      )
-      await registerAddress(
-        addressManager,
-        'TK_L1' + token.symbol,
-        tokenAddressL1
-      )
-      console.log(
-        `TK_L1${token.symbol} was newly deployed to ${tokenAddressL1}`
-      )
-      // goerli: use pre-deployed contracts
-    } else if (process.env.CONTRACTS_TARGET_NETWORK === 'goerli') {
-      tokenAddressL1 = token.address.goerli
-
-      await hre.deployments.save('TK_L1' + token.symbol, {
-        abi: L1ERC20Json.abi,
-        address: tokenAddressL1,
-      })
-      await registerAddress(
-        addressManager,
-        'TK_L1' + token.symbol,
-        tokenAddressL1
-      )
-
-      console.log(`TK_L1${token.name} is located at ${tokenAddressL1}`)
-      // mainnet: use pre-deployed contracts
-    } else if (process.env.CONTRACTS_TARGET_NETWORK === 'mainnet') {
-      tokenAddressL1 = token.address.mainnet
-
-      await hre.deployments.save('TK_L1' + token.symbol, {
-        abi: L1ERC20Json.abi,
-        address: tokenAddressL1,
-      })
-      await registerAddress(
-        addressManager,
-        'TK_L1' + token.symbol,
-        tokenAddressL1
-      )
-
-      console.log(`TK_L1${token.name} is located at ${tokenAddressL1}`)
-    }
-
-    // get ethers.Contract
-    L1ERC20 = new Contract(
-      tokenAddressL1,
+    // get ContractFactory of L1/L2ERC20
+    Factory__L1ERC20 = new ContractFactory(
       L1ERC20Json.abi,
+      L1ERC20Json.bytecode,
       (hre as any).deployConfig.deployer_l1
     )
 
-    // Set up things on L2 for these tokens
-    L2ERC20 = await Factory__L2ERC20.deploy(
-      (hre as any).deployConfig.L2StandardBridgeAddress,
-      tokenAddressL1,
-      token.name,
-      token.symbol
+    Factory__L2ERC20 = getContractFactory(
+      'L2StandardERC20',
+      (hre as any).deployConfig.deployer_l2
     )
-    await L2ERC20.deployTransaction.wait()
 
-    const L2ERC20DeploymentSubmission: DeploymentSubmission = {
-      ...L2ERC20,
-      receipt: L2ERC20.receipt,
-      address: L2ERC20.address,
-      abi: L2ERC20.abi,
+    // deploy L1TON
+    L1TON = await Factory__L1ERC20.deploy(
+      initialSupply_18,
+      'Tokamak Network',
+      'TON',
+      18
+    )
+    await L1TON.deployTransaction.wait()
+
+    const L1TONDeploymentSubmission: DeploymentSubmission = {
+      ...L1TON,
+      receipt: L1TON.receipt,
+      address: L1TON.address,
+      abi: L1ERC20Json.abi,
     }
-    await hre.deployments.save(
-      'TK_L2' + token.symbol,
-      L2ERC20DeploymentSubmission
+
+    // save deployment
+    await hre.deployments.save('L1TON', L1TONDeploymentSubmission)
+
+    // register L1TON in address manager
+    await registerAddress(addressManager, 'L1TON', L1TON.address)
+    console.log(`L1TON was newly deployed to ${L1TON.address}`)
+
+    // deploy L2TON
+    L2TON = await Factory__L2ERC20.deploy(
+      (hre as any).deployConfig.L2StandardBridgeAddress,
+      L1TON.address,
+      'Tokamak Network',
+      'TON'
     )
-    await registerAddress(
-      addressManager,
-      'TK_L2' + token.symbol,
-      L2ERC20.address
-    )
-    console.log(`TK_L2${token.symbol} was deployed to ${L2ERC20.address}`)
+    await L2TON.deployTransaction.wait()
+
+
+    // save L2TON deployment using hre
+    const L2TONDeploymentSubmission: DeploymentSubmission = {
+      ...L2TON,
+      receipt: L2TON.receipt,
+      address: L2TON.address,
+      abi: L2TON.abi,
+    }
+    await hre.deployments.save('L2TON', L2TONDeploymentSubmission)
+
+    // register L2TON in address manager
+    await registerAddress(addressManager, 'L2TON', L2TON.address)
+    console.log(`L2TON was deployed to ${L2TON.address}`)
 
     // check deployment of LPs
     const Proxy__L1LiquidityPoolDeployment = await hre.deployments.getOrNull(
@@ -189,10 +129,10 @@ const deployFn: DeployFunction = async (hre) => {
     )
 
     // Register tokens in LPs
-    await registerLPToken(tokenAddressL1, L2ERC20.address)
-    console.log(`${token.name} was registered in LPs`)
+    await registerLPToken(L1TON.address, L2TON.address)
+    console.log(`TON was registered in LPs`)
   }
 }
 
-deployFn.tags = ['L1ERC20', 'test']
+deployFn.tags = ['L1TON', 'L2TON', 'test']
 export default deployFn

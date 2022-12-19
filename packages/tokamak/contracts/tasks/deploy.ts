@@ -2,8 +2,10 @@
 import { task } from 'hardhat/config'
 import * as types from 'hardhat/internal/core/params/argumentTypes'
 
-const DEFAULT_EM_CHAIN_ID = 28
+// tokamak optimism goerli
+const DEFAULT_EM_CHAIN_ID = 5050
 
+// create custom task
 task('deploy', 'Deploy contracts to L1 and L2')
   .addOptionalParam(
     'emOvmChainId',
