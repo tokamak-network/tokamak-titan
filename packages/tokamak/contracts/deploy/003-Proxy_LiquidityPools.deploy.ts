@@ -101,7 +101,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   const initL2LPTX = await Proxy__L2LiquidityPool.initialize(
     (hre as any).deployConfig.l2MessengerAddress,
-    Proxy__L1LiquidityPool.address,
+    Proxy__L1LiquidityPool.address
   )
   await initL2LPTX.wait()
   console.log(`Proxy__L2LiquidityPool initialized: ${initL2LPTX.hash}`)

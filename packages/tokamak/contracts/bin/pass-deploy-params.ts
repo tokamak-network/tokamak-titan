@@ -1,4 +1,5 @@
 import { Wallet, providers } from 'ethers'
+// eslint-disable-next-line import/order
 import { getContractFactory } from '@eth-optimism/contracts'
 
 /* eslint-disable */

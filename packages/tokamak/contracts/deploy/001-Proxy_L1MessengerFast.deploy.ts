@@ -2,6 +2,7 @@ import { getContractFactory } from '@eth-optimism/contracts'
 import { DeployFunction, DeploymentSubmission } from 'hardhat-deploy/dist/types'
 import { Contract, ContractFactory } from 'ethers'
 
+// eslint-disable-next-line import/order
 import { registerAddress } from './000-L1MessengerFast.deploy'
 
 /* eslint-disable */
