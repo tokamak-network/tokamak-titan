@@ -1,13 +1,20 @@
 /* Imports: External */
 import { Signer } from 'ethers'
-import { getChainId, sleep } from '@eth-optimism/core-utils'
+import { getContractFactory } from '@eth-optimism/contracts'
+import { Address, getChainId, sleep } from '@eth-optimism/core-utils'
 import {
   BaseServiceV2,
   validators,
   Gauge,
   Counter,
 } from '@eth-optimism/common-ts'
-import { CrossChainMessenger, MessageStatus } from '@eth-optimism/sdk'
+import {
+  CrossChainMessenger,
+  MessageStatus,
+  NumberLike,
+  DEPOSIT_CONFIRMATION_BLOCKS,
+  CHAIN_BLOCK_TIMES,
+} from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
 type MessageRelayerOptions = {
@@ -15,6 +22,7 @@ type MessageRelayerOptions = {
   l2RpcProvider: Provider
   l1Wallet: Signer
   fromL2TransactionIndex?: number
+  addressManagerAddress?: Address
 }
 
 type MessageRelayerMetrics = {
@@ -62,6 +70,10 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
         },
+        addressManagerAddress: {
+          validator: validators.str,
+          desc: 'Contract address of Address Manager.',
+        },
       },
       metricsSpec: {
         highestCheckedL2Tx: {
@@ -85,11 +97,54 @@ export class MessageRelayerService extends BaseServiceV2<
       this.options.l1RpcProvider
     )
 
+    let contracts = {}
+
+    if (this.options.addressManagerAddress) {
+      const addressManager = getContractFactory('Lib_AddressManager')
+        .connect(this.state.wallet)
+        .attach(this.options.addressManagerAddress)
+      const L1CrossDomainMessenger = await addressManager.getAddress(
+        'Proxy__OVM_L1CrossDomainMessenger'
+      )
+      const L1StandardBridge = await addressManager.getAddress(
+        'Proxy__OVM_L1StandardBridge'
+      )
+      const StateCommitmentChain = await addressManager.getAddress(
+        'StateCommitmentChain'
+      )
+      const CanonicalTransactionChain = await addressManager.getAddress(
+        'CanonicalTransactionChain'
+      )
+      const BondManager = await addressManager.getAddress('BondManager')
+
+      contracts = {
+        l1: {
+          AddressManager: this.options.addressManagerAddress,
+          L1CrossDomainMessenger,
+          L1StandardBridge,
+          StateCommitmentChain,
+          CanonicalTransactionChain,
+          BondManager,
+          OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
+          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
+        },
+      }
+    }
+
+    const l1ChainId = await getChainId(this.state.wallet.provider)
+    const l2ChainId = await getChainId(this.options.l2RpcProvider)
+    const depositConfirmationBlocks: NumberLike =
+      DEPOSIT_CONFIRMATION_BLOCKS[l2ChainId]
+    const l1BlockTimeSeconds: NumberLike = CHAIN_BLOCK_TIMES[l1ChainId]
+
     this.state.messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.state.wallet,
       l2SignerOrProvider: this.options.l2RpcProvider,
-      l1ChainId: await getChainId(this.state.wallet.provider),
-      l2ChainId: await getChainId(this.options.l2RpcProvider),
+      l1ChainId,
+      l2ChainId,
+      depositConfirmationBlocks,
+      l1BlockTimeSeconds,
+      contracts,
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1

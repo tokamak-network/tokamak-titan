@@ -3,7 +3,7 @@ name: Tokamak Optimism Public (Release Version)
 on:
   push:
     tags:
-      - "release-*"
+      - 'release-*'
 
 jobs:
   l2geth:
@@ -87,7 +87,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./hardhat/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
@@ -177,7 +177,7 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
+          target: tokamak-message-relayer
           push: true
           tags: |
             onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.RELEASE }}
@@ -200,7 +200,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./fault-detector/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
@@ -237,7 +237,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./drippie-mon/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
@@ -274,7 +274,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./data-transport-layer/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
@@ -311,7 +311,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./contracts/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/contracts/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
@@ -385,7 +385,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./replica-healthcheck/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
           echo ::set-output name=GITSHA::"$GITHUB_SHA"
 
       - name: Login to Docker Hub
