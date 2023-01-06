@@ -30,7 +30,7 @@
     "dotenv": "^8.2.0"
   },
   "devDependencies": {
-    "@defi-wonderland/smock": "^2.0.2",
+    "@defi-wonderland/smock": "^2.3.4",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
@@ -38,13 +38,13 @@
     "ethers": "^5.7.0",
     "hardhat": "^2.9.6",
     "hardhat-deploy": "^0.11.10",
+    "merkle-patricia-tree": "^4.0.0",
     "mocha": "^8.4.0",
+    "random-bytes-seed": "^1.0.3",
+    "rlp": "^2.2.6",
     "solidity-coverage": "^0.7.17",
     "ts-generator": "0.0.8",
     "ts-node": "^10.0.0",
-    "typescript": "^4.6.2",
-    "random-bytes-seed": "^1.0.3",
-    "merkle-patricia-tree": "^4.0.0",
-    "rlp": "^2.2.6"
+    "typescript": "^4.6.2"
   }
 }

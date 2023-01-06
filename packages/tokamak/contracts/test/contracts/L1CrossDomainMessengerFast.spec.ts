@@ -32,6 +32,7 @@ describe('L1CrossDomainMessengerFast', () => {
   let Fake__StateCommitmentChain: FakeContract
   before(async () => {
     // initialize fake contracts
+
     Fake__TargetContract = await smock.fake('TestERC20')
     Fake__L2CrossDomainMessenger = await smock.fake('L2CrossDomainMessenger', {
       // defined by packages/contracts/src/predeploys.ts

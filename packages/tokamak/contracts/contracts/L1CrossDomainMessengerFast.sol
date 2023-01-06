@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 /* Library Imports */
-import { AddressAliasHelper } from "@eth-optimism/contracts/contracts/standards/AddressAliasHelper.sol";
 import { Lib_AddressResolver } from "@eth-optimism/contracts/contracts/libraries/resolver/Lib_AddressResolver.sol";
 import { Lib_OVMCodec } from "@eth-optimism/contracts/contracts/libraries/codec/Lib_OVMCodec.sol";
 import { Lib_AddressManager } from "@eth-optimism/contracts/contracts/libraries/resolver/Lib_AddressManager.sol";
@@ -13,7 +12,6 @@ import { Lib_CrossDomainUtils } from "@eth-optimism/contracts/contracts/librarie
 
 /* Interface Imports */
 import { IL1CrossDomainMessenger } from "@eth-optimism/contracts/contracts/L1/messaging/IL1CrossDomainMessenger.sol";
-import { ICanonicalTransactionChain } from "@eth-optimism/contracts/contracts/L1/rollup/ICanonicalTransactionChain.sol";
 import { IStateCommitmentChain } from "@eth-optimism/contracts/contracts/L1/rollup/IStateCommitmentChain.sol";
 
 /* External Imports */
@@ -27,6 +25,16 @@ import {
 import {
     ReentrancyGuardUpgradeable
 } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+
+// For test
+import "@eth-optimism/contracts/contracts/L1/rollup/CanonicalTransactionChain.sol";
+import "@eth-optimism/contracts/contracts/L1/rollup/StateCommitmentChain.sol";
+import "@eth-optimism/contracts/contracts/L1/rollup/ChainStorageContainer.sol";
+import "@eth-optimism/contracts/contracts/L1/messaging/L1CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/test-helpers/TestERC20.sol";
+
 
 /**
  * @title L1CrossDomainMessengerFast
