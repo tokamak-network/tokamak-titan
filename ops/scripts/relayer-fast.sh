@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+
+RETRIES=${RETRIES:-60}
+
+# wait for $URL
+echo $URL
+until $(curl --silent --fail --output /dev/null "$URL"); do
+  sleep 10
+  echo "Will wait $((RETRIES--)) more times for $URL to be up..."
+
+  if [ "$RETRIES" -lt 0 ]; then
+    echo "Timeout waiting for base addresses at $URL"
+    exit 1
+  fi
+done
+echo "Base addresses available at $URL"
+
+RETRIES=60
+
+# wait for $TOKAMAK_CONTRACTS_URL
+echo $TOKAMAK_CONTRACTS_URL
+until $(curl --fail --output /dev/null "$TOKAMAK_CONTRACTS_URL"); do
+  sleep 10
+  echo "Will wait $((RETRIES--)) more times for $TOKAMAK_CONTRACTS_URL to be up..."
+
+  if [ "$RETRIES" -lt 0 ]; then
+    echo "Timeout waiting for boba addresses at $TOKAMAK_CONTRACTS_URL"
+    exit 1
+  fi
+done
+echo "Tokamak addresses available at $TOKAMAK_CONTRACTS_URL"
+
+# set the MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS environment variable
+if [[ ! -z "$URL" ]]; then
+    # get the addrs from the URL provided
+    ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $URL)
+    # set the env
+    export MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS=$(echo $ADDRESSES | jq -r '.AddressManager')
+fi
+
+# set the L1_MESSENGER_FAST environment variable
+echo $TOKAMAK_CONTRACTS_URL
+if [[ ! -z "$TOKAMAK_CONTRACTS_URL" ]]; then
+    # get the addrs from the URL provided
+    ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $TOKAMAK_CONTRACTS_URL)
+    # set the env
+    echo $ADDRESSES
+    export L1_MESSENGER_FAST=$(echo $ADDRESSES | jq -r '.Proxy__L1CrossDomainMessengerFast')
+fi
+
+# waits for l2geth to be up
+curl \
+    --fail \
+    --show-error \
+    --silent \
+    --output /dev/null \
+    --retry-connrefused \
+    --retry $RETRIES \
+    --retry-delay 1 \
+    $MESSAGE_RELAYER__L2_RPC_PROVIDER
+
+# go
+exec yarn start
