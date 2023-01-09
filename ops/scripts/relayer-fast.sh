@@ -38,28 +38,17 @@ if [[ ! -z "$URL" ]]; then
     ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $URL)
     # set the env
     export MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS=$(echo $ADDRESSES | jq -r '.AddressManager')
+    echo $MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS
 fi
 
 # set the L1_MESSENGER_FAST environment variable
-echo $TOKAMAK_CONTRACTS_URL
 if [[ ! -z "$TOKAMAK_CONTRACTS_URL" ]]; then
     # get the addrs from the URL provided
     ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $TOKAMAK_CONTRACTS_URL)
     # set the env
-    echo $ADDRESSES
     export L1_MESSENGER_FAST=$(echo $ADDRESSES | jq -r '.Proxy__L1CrossDomainMessengerFast')
+    echo $L1_MESSENGER_FAST
 fi
-
-# waits for l2geth to be up
-curl \
-    --fail \
-    --show-error \
-    --silent \
-    --output /dev/null \
-    --retry-connrefused \
-    --retry $RETRIES \
-    --retry-delay 1 \
-    $MESSAGE_RELAYER__L2_RPC_PROVIDER
 
 # go
 exec yarn start
