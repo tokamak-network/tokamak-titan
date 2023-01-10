@@ -2,21 +2,20 @@
 pragma solidity ^0.8.9;
 
 /* Library Imports */
-import { AddressAliasHelper } from "../../standards/AddressAliasHelper.sol";
-import { Lib_AddressResolver } from "../../libraries/resolver/Lib_AddressResolver.sol";
-import { Lib_OVMCodec } from "../../libraries/codec/Lib_OVMCodec.sol";
-import { Lib_AddressManager } from "../../libraries/resolver/Lib_AddressManager.sol";
-import { Lib_SecureMerkleTrie } from "../../libraries/trie/Lib_SecureMerkleTrie.sol";
-import { Lib_DefaultValues } from "../../libraries/constants/Lib_DefaultValues.sol";
-import { Lib_PredeployAddresses } from "../../libraries/constants/Lib_PredeployAddresses.sol";
-import { Lib_CrossDomainUtils } from "../../libraries/bridge/Lib_CrossDomainUtils.sol";
+import { Lib_AddressResolver } from "@eth-optimism/contracts/contracts/libraries/resolver/Lib_AddressResolver.sol";
+import { Lib_OVMCodec } from "@eth-optimism/contracts/contracts/libraries/codec/Lib_OVMCodec.sol";
+import { Lib_AddressManager } from "@eth-optimism/contracts/contracts/libraries/resolver/Lib_AddressManager.sol";
+import { Lib_SecureMerkleTrie } from "@eth-optimism/contracts/contracts/libraries/trie/Lib_SecureMerkleTrie.sol";
+import { Lib_DefaultValues } from "@eth-optimism/contracts/contracts/libraries/constants/Lib_DefaultValues.sol";
+import { Lib_PredeployAddresses } from "@eth-optimism/contracts/contracts/libraries/constants/Lib_PredeployAddresses.sol";
+import { Lib_CrossDomainUtils } from "@eth-optimism/contracts/contracts/libraries/bridge/Lib_CrossDomainUtils.sol";
 
 /* Interface Imports */
-import { IL1CrossDomainMessenger } from "./IL1CrossDomainMessenger.sol";
-import { ICanonicalTransactionChain } from "../rollup/ICanonicalTransactionChain.sol";
-import { IStateCommitmentChain } from "../rollup/IStateCommitmentChain.sol";
+import { IL1CrossDomainMessenger } from "@eth-optimism/contracts/contracts/L1/messaging/IL1CrossDomainMessenger.sol";
+import { IStateCommitmentChain } from "@eth-optimism/contracts/contracts/L1/rollup/IStateCommitmentChain.sol";
 
 /* External Imports */
+// for security
 import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -27,19 +26,22 @@ import {
     ReentrancyGuardUpgradeable
 } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import { IL1DepositHash } from "./IL1DepositHash.sol";
+// For test
+import "@eth-optimism/contracts/contracts/L1/rollup/CanonicalTransactionChain.sol";
+import "@eth-optimism/contracts/contracts/L1/rollup/StateCommitmentChain.sol";
+import "@eth-optimism/contracts/contracts/L1/rollup/ChainStorageContainer.sol";
+import "@eth-optimism/contracts/contracts/L1/messaging/L1CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.sol";
+import "@eth-optimism/contracts/contracts/test-helpers/TestERC20.sol";
+
 
 /**
  * @title L1CrossDomainMessengerFast
  * @dev The L1 Cross Domain Messenger contract sends messages from L1 to L2, and relays messages from L2 onto L1.
  * In the event that a message sent from L1 to L2 is rejected for exceeding the L2 epoch gas limit, it can be resubmitted
  * via this contract's replay function.
- * This 'fast' CDM (CDMF) only relays messages from L2 onto L1 and cannot send or replay messages. Those functions have been
- * disabled. The overall goal of the 'fast' messenger is to relay messages to L1 without being subject to the 7 day delay,
- * which is normally implemented by blocking messages that are less than 7 days old.
  *
- * Compiler used: solc
- * Runtime target: EVM
  */
 contract L1CrossDomainMessengerFast is
     IL1CrossDomainMessenger,
@@ -107,7 +109,7 @@ contract L1CrossDomainMessengerFast is
     function initialize(address _libAddressManager) public initializer {
         require(
             address(libAddressManager) == address(0),
-            "L1CrossDomainMessengerFast already intialized."
+            "L1CrossDomainMessenger already intialized."
         );
         libAddressManager = Lib_AddressManager(_libAddressManager);
         xDomainMsgSender = Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER;
@@ -154,7 +156,7 @@ contract L1CrossDomainMessengerFast is
     function xDomainMessageSender() public view override returns (address) {
         require(
             xDomainMsgSender != Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER,
-            "CDMF: xDomainMessageSender is not set"
+            "xDomainMessageSender is not set"
         );
         return xDomainMsgSender;
     }
@@ -170,7 +172,8 @@ contract L1CrossDomainMessengerFast is
         bytes memory _message,
         uint32 _gasLimit
     ) public override {
-        revert("sendMessage via L1CrossDomainMessengerFast is disabled");
+        // refund gas and restore state
+        revert("Sending via this messenger is disabled");
     }
 
     /********************
@@ -188,6 +191,7 @@ contract L1CrossDomainMessengerFast is
         uint256 _messageNonce,
         L2MessageInclusionProof memory _proof
     ) public override onlyRelayer nonReentrant whenNotPaused {
+        // generate calldata from params
         bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
             _target,
             _sender,
@@ -195,29 +199,31 @@ contract L1CrossDomainMessengerFast is
             _messageNonce
         );
 
+        // verify message state from xDomainCalldata and _proof
         require(
             _verifyXDomainMessage(xDomainCalldata, _proof) == true,
-            "CDMF: Provided message could not be verified."
+            "Provided message could not be verified."
         );
 
         bytes32 xDomainCalldataHash = keccak256(xDomainCalldata);
 
         require(
             successfulMessages[xDomainCalldataHash] == false,
-            "CDMF: Provided message has already been received."
+            "Provided message has already been received."
         );
 
         require(
             blockedMessages[xDomainCalldataHash] == false,
-            "CDMF: Provided message has been blocked."
+            "Provided message has been blocked."
         );
 
         require(
             _target != resolve("CanonicalTransactionChain"),
-            "CDMF: Cannot send L2->L1 messages to L1 system contracts."
+            "Cannot send L2->L1 messages to L1 system contracts."
         );
 
         xDomainMsgSender = _sender;
+        // direct call from _message
         (bool success, ) = _target.call(_message);
         xDomainMsgSender = Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER;
 
@@ -237,21 +243,6 @@ contract L1CrossDomainMessengerFast is
         relayedMessages[relayId] = true;
     }
 
-    function relayMessage(
-        address _target,
-        address _sender,
-        bytes memory _message,
-        uint256 _messageNonce,
-        L2MessageInclusionProof memory _proof,
-        bytes32 _standardBridgeDepositHash,
-        bytes32 _lpDepositHash
-    ) public nonReentrant whenNotPaused {
-        // verify hashes
-        _verifyDepositHashes(_standardBridgeDepositHash, _lpDepositHash);
-
-        relayMessage(_target, _sender, _message, _messageNonce, _proof);
-    }
-
     /**
      * Replays a cross domain message to the target messenger.
      * @inheritdoc IL1CrossDomainMessenger
@@ -264,7 +255,7 @@ contract L1CrossDomainMessengerFast is
         uint32 _oldGasLimit,
         uint32 _newGasLimit
     ) public override {
-        revert("replayMessage via L1CrossDomainMessengerFast is disabled");
+        revert("Sending via this messenger is disabled");
     }
 
     /**********************
@@ -298,6 +289,7 @@ contract L1CrossDomainMessengerFast is
             resolve("StateCommitmentChain")
         );
 
+        // not check time after challenge period
         return (
             ovmStateCommitmentChain.verifyStateCommitment(
                 _proof.stateRoot,
@@ -337,7 +329,7 @@ contract L1CrossDomainMessengerFast is
 
         require(
             exists == true,
-            "CDMF: Message passing predeploy has not been initialized or invalid proof provided."
+            "Message passing predeploy has not been initialized or invalid proof provided."
         );
 
         Lib_OVMCodec.EVMAccount memory account = Lib_OVMCodec.decodeEVMAccount(
@@ -351,38 +343,5 @@ contract L1CrossDomainMessengerFast is
                 _proof.storageTrieWitness,
                 account.storageRoot
             );
-    }
-
-    function _verifyDepositHashes(bytes32 _standardBridgeDepositHash, bytes32 _lpDepositHash)
-        internal
-    {
-        // fetch address of standard bridge and LP1
-        address standardBridge = resolve("Proxy__L1StandardBridge");
-        address L1LP = resolve("Proxy__L1LiquidityPool");
-
-        if (block.number == IL1DepositHash(standardBridge).lastHashUpdateBlock()) {
-            require(
-                _standardBridgeDepositHash == IL1DepositHash(standardBridge).priorDepositInfoHash(),
-                "Standard Bridge hashes do not match"
-            );
-        } else {
-            require(
-                _standardBridgeDepositHash ==
-                    IL1DepositHash(standardBridge).currentDepositInfoHash(),
-                "Standard Bridge hashes do not match"
-            );
-        }
-
-        if (block.number == IL1DepositHash(L1LP).lastHashUpdateBlock()) {
-            require(
-                _lpDepositHash == IL1DepositHash(L1LP).priorDepositInfoHash(),
-                "LP1 hashes do not match"
-            );
-        } else {
-            require(
-                _lpDepositHash == IL1DepositHash(L1LP).currentDepositInfoHash(),
-                "LP1 hashes do not match"
-            );
-        }
     }
 }
