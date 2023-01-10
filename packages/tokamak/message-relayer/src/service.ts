@@ -21,7 +21,17 @@ type MessageRelayerOptions = {
   l1RpcProvider: Provider
   l2RpcProvider: Provider
   l1Wallet: Signer
+  minBatchSize: number
+  maxWaitTimeS: number
+  isFastRelayer: boolean
+  enableRelayerFilter: boolean
+  filterEndpoint?: string
+  filterPollingInterval?: number
+  multiRelayLimit?: number
+  numConfirmations?: number
   fromL2TransactionIndex?: number
+  pollingInterval?: number
+  l1StartOffset?: number
   addressManagerAddress?: Address
 }
 
@@ -65,10 +75,60 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Wallet used to interact with L1.',
           secret: true,
         },
+        minBatchSize: {
+          validator: validators.num,
+          desc: 'Minimum size of the batch',
+          default: 2,
+        },
+        maxWaitTimeS: {
+          validator: validators.num,
+          desc: 'Maximum number of seconds to wait',
+          default: 60,
+        },
+        isFastRelayer: {
+          validator: validators.bool,
+          desc: 'Whether the relayer support fast relay',
+          default: true,
+        },
+        enableRelayerFilter: {
+          validator: validators.bool,
+          desc: 'Whether the relayer can use filter',
+          default: true,
+        },
+        filterEndpoint: {
+          validator: validators.str,
+          desc: 'The endpoint for getting filter',
+          default: '',
+        },
+        filterPollingInterval: {
+          validator: validators.num,
+          desc: 'The polling interval for getting filter',
+          default: 60000,
+        },
+        multiRelayLimit: {
+          validator: validators.num,
+          desc: 'The limit size of message buffer',
+          default: 10,
+        },
+        numConfirmations: {
+          validator: validators.num,
+          desc: 'The number of confirmations',
+          default: 1,
+        },
         fromL2TransactionIndex: {
           validator: validators.num,
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
+        },
+        pollingInterval: {
+          validator: validators.num,
+          desc: 'The polling interval of relayer service',
+          default: 1000,
+        },
+        l1StartOffset: {
+          validator: validators.num,
+          desc: 'The starting offset of the L1 block',
+          default: 1,
         },
         addressManagerAddress: {
           validator: validators.str,
@@ -100,6 +160,7 @@ export class MessageRelayerService extends BaseServiceV2<
     let contracts = {}
 
     if (this.options.addressManagerAddress) {
+      // const L1CrossDomainMessageFast
       const addressManager = getContractFactory('Lib_AddressManager')
         .connect(this.state.wallet)
         .attach(this.options.addressManagerAddress)
@@ -125,8 +186,8 @@ export class MessageRelayerService extends BaseServiceV2<
           StateCommitmentChain,
           CanonicalTransactionChain,
           BondManager,
-          OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
-          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
+          OptimismPortal: '0x0000000000000000000000000000000000000000' as const, // it should be used in bedrock
+          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const, // it should be used in bedrock
         },
       }
     }
