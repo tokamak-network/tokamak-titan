@@ -130,8 +130,6 @@ services:
     depends_on:
       - l1_chain
       - l2geth
-    deploy:
-      replicas: 0
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
@@ -143,6 +141,25 @@ services:
       MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
       MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
       MESSAGE_RELAYER__L1_WALLET: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
+      RETRIES: 60
+
+  fast_relayer:
+    depends_on:
+      - l1_chain
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./ops/docker/Dockerfile.packages
+      target: tokamak-message-relayer-fast
+    image: onthertech/optimism.message-relayer-fast:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
+    entrypoint: ./relayer-fast.sh
+    environment:
+      URL: http://deployer:8081/addresses.json
+      TOKAMAK_CONTRACTS_URL: http://tokamak_deployer:8082/tokamak-addr.json
+      MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
+      MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
+      MESSAGE_RELAYER__L1_WALLET: '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0'
+      FAST_RELAYER: 'true'
       RETRIES: 60
 
   fault_detector:
