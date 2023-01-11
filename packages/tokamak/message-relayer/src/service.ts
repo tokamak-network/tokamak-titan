@@ -46,6 +46,14 @@ type MessageRelayerState = {
   messenger: CrossChainMessenger
   highestCheckedL2Tx: number
   highestKnownL2Tx: number
+  //filter
+  relayerFilter: Array<any>
+  fastRelayerFilter: Array<any>
+  lastFilterPollingTimestamp: number
+  //batch system
+  timeOfLastRelayS: number
+  messageBuffer: Array<any>
+  timeOfLastPendingRelay: any
 }
 
 export class MessageRelayerService extends BaseServiceV2<
@@ -170,12 +178,14 @@ export class MessageRelayerService extends BaseServiceV2<
     let contracts = {}
 
     if (this.options.addressManagerAddress) {
-      // const L1CrossDomainMessageFast
       const addressManager = getContractFactory('Lib_AddressManager')
         .connect(this.state.wallet)
         .attach(this.options.addressManagerAddress)
       const L1CrossDomainMessenger = await addressManager.getAddress(
         'Proxy__OVM_L1CrossDomainMessenger'
+      )
+      const L1CrossDomainMessengerFast = await addressManager.getAddress(
+        'Proxy__L1CrossDomainMessengerFast'
       )
       const L1StandardBridge = await addressManager.getAddress(
         'Proxy__OVM_L1StandardBridge'
@@ -192,6 +202,7 @@ export class MessageRelayerService extends BaseServiceV2<
         l1: {
           AddressManager: this.options.addressManagerAddress,
           L1CrossDomainMessenger,
+          L1CrossDomainMessengerFast,
           L1StandardBridge,
           StateCommitmentChain,
           CanonicalTransactionChain,
@@ -204,6 +215,7 @@ export class MessageRelayerService extends BaseServiceV2<
 
     const l1ChainId = await getChainId(this.state.wallet.provider)
     const l2ChainId = await getChainId(this.options.l2RpcProvider)
+    // use constants depends on ChainId (predefined network)
     const depositConfirmationBlocks: NumberLike =
       DEPOSIT_CONFIRMATION_BLOCKS[l2ChainId]
     const l1BlockTimeSeconds: NumberLike = CHAIN_BLOCK_TIMES[l1ChainId]
@@ -218,10 +230,21 @@ export class MessageRelayerService extends BaseServiceV2<
       contracts,
       fastRelayer: this.options.isFastRelayer,
     })
+    console.log(this.state.messenger)
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
     this.state.highestKnownL2Tx =
       await this.state.messenger.l2Provider.getBlockNumber()
+
+    // filter
+    this.state.relayerFilter = []
+    this.state.fastRelayerFilter = []
+    this.state.lastFilterPollingTimestamp = 0
+
+    //batch system
+    this.state.timeOfLastRelayS = Date.now()
+    this.state.messageBuffer = []
+    this.state.timeOfLastPendingRelay = false
   }
 
   protected async main(): Promise<void> {
