@@ -153,6 +153,16 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 
   protected async init(): Promise<void> {
+    // check options
+    this.logger.info('Initializing message relayer', {
+      fromL2TransactionIndex: this.options.fromL2TransactionIndex,
+      pollingInterval: this.options.pollingInterval,
+      filterPollingInterval: this.options.filterPollingInterval,
+      minBatchSize: this.options.minBatchSize,
+      maxWaitTimeS: this.options.maxWaitTimeS,
+      isFastRelayer: this.options.isFastRelayer,
+    })
+
     this.state.wallet = this.options.l1Wallet.connect(
       this.options.l1RpcProvider
     )
@@ -206,6 +216,7 @@ export class MessageRelayerService extends BaseServiceV2<
       depositConfirmationBlocks,
       l1BlockTimeSeconds,
       contracts,
+      fastRelayer: this.options.isFastRelayer,
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
