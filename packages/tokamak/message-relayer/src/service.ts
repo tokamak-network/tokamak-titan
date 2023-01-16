@@ -17,6 +17,8 @@ import {
 } from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
+import 'dotenv/config'
+
 type MessageRelayerOptions = {
   l1RpcProvider: Provider
   l2RpcProvider: Provider
@@ -96,7 +98,7 @@ export class MessageRelayerService extends BaseServiceV2<
         isFastRelayer: {
           validator: validators.bool,
           desc: 'Whether the relayer support fast relay',
-          default: true,
+          default: false,
         },
         enableRelayerFilter: {
           validator: validators.bool,
@@ -161,6 +163,9 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 
   protected async init(): Promise<void> {
+    if (process.env.FAST_RELAYER) {
+      this.options.isFastRelayer = true
+    }
     // check options
     this.logger.info('Initializing message relayer', {
       fromL2TransactionIndex: this.options.fromL2TransactionIndex,
@@ -230,7 +235,6 @@ export class MessageRelayerService extends BaseServiceV2<
       contracts,
       fastRelayer: this.options.isFastRelayer,
     })
-    console.log(this.state.messenger)
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
     this.state.highestKnownL2Tx =
