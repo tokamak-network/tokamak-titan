@@ -113,6 +113,11 @@ export class CrossChainMessenger {
   public bedrock: boolean
 
   /**
+   * Whether or not fast relayer is enabled.
+   */
+  public fastRelayer: boolean
+
+  /**
    * Parameters for the L2OutputOracle contract.
    */
   private _l2OutputOracleParameters: L2OutputOracleParameters
@@ -141,8 +146,10 @@ export class CrossChainMessenger {
     contracts?: DeepPartial<OEContractsLike>
     bridges?: BridgeAdapterData
     bedrock?: boolean
+    fastRelayer?: boolean
   }) {
     this.bedrock = opts.bedrock ?? false
+    this.fastRelayer = opts.fastRelayer
     this.l1SignerOrProvider = toSignerOrProvider(opts.l1SignerOrProvider)
     this.l2SignerOrProvider = toSignerOrProvider(opts.l2SignerOrProvider)
 

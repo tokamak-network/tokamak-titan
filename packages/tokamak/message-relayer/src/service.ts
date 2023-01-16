@@ -17,11 +17,23 @@ import {
 } from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
+import 'dotenv/config'
+
 type MessageRelayerOptions = {
   l1RpcProvider: Provider
   l2RpcProvider: Provider
   l1Wallet: Signer
+  minBatchSize: number
+  maxWaitTimeS: number
+  isFastRelayer: boolean
+  enableRelayerFilter: boolean
+  filterEndpoint?: string
+  filterPollingInterval?: number
+  multiRelayLimit?: number
+  numConfirmations?: number
   fromL2TransactionIndex?: number
+  pollingInterval?: number
+  l1StartOffset?: number
   addressManagerAddress?: Address
 }
 
@@ -36,6 +48,14 @@ type MessageRelayerState = {
   messenger: CrossChainMessenger
   highestCheckedL2Tx: number
   highestKnownL2Tx: number
+  //filter
+  relayerFilter: Array<any>
+  fastRelayerFilter: Array<any>
+  lastFilterPollingTimestamp: number
+  //batch system
+  timeOfLastRelayS: number
+  messageBuffer: Array<any>
+  timeOfLastPendingRelay: any
 }
 
 export class MessageRelayerService extends BaseServiceV2<
@@ -65,10 +85,60 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Wallet used to interact with L1.',
           secret: true,
         },
+        minBatchSize: {
+          validator: validators.num,
+          desc: 'Minimum size of the batch',
+          default: 2,
+        },
+        maxWaitTimeS: {
+          validator: validators.num,
+          desc: 'Maximum number of seconds to wait',
+          default: 60,
+        },
+        isFastRelayer: {
+          validator: validators.bool,
+          desc: 'Whether the relayer support fast relay',
+          default: false,
+        },
+        enableRelayerFilter: {
+          validator: validators.bool,
+          desc: 'Whether the relayer can use filter',
+          default: true,
+        },
+        filterEndpoint: {
+          validator: validators.str,
+          desc: 'The endpoint for getting filter',
+          default: '',
+        },
+        filterPollingInterval: {
+          validator: validators.num,
+          desc: 'The polling interval for getting filter',
+          default: 60000,
+        },
+        multiRelayLimit: {
+          validator: validators.num,
+          desc: 'The limit size of message buffer',
+          default: 10,
+        },
+        numConfirmations: {
+          validator: validators.num,
+          desc: 'The number of confirmations',
+          default: 1,
+        },
         fromL2TransactionIndex: {
           validator: validators.num,
           desc: 'Index of the first L2 transaction to start processing from.',
           default: 0,
+        },
+        pollingInterval: {
+          validator: validators.num,
+          desc: 'The polling interval of relayer service',
+          default: 1000,
+        },
+        l1StartOffset: {
+          validator: validators.num,
+          desc: 'The starting offset of the L1 block',
+          default: 1,
         },
         addressManagerAddress: {
           validator: validators.str,
@@ -93,6 +163,19 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 
   protected async init(): Promise<void> {
+    if (process.env.FAST_RELAYER) {
+      this.options.isFastRelayer = true
+    }
+    // check options
+    this.logger.info('Initializing message relayer', {
+      fromL2TransactionIndex: this.options.fromL2TransactionIndex,
+      pollingInterval: this.options.pollingInterval,
+      filterPollingInterval: this.options.filterPollingInterval,
+      minBatchSize: this.options.minBatchSize,
+      maxWaitTimeS: this.options.maxWaitTimeS,
+      isFastRelayer: this.options.isFastRelayer,
+    })
+
     this.state.wallet = this.options.l1Wallet.connect(
       this.options.l1RpcProvider
     )
@@ -105,6 +188,9 @@ export class MessageRelayerService extends BaseServiceV2<
         .attach(this.options.addressManagerAddress)
       const L1CrossDomainMessenger = await addressManager.getAddress(
         'Proxy__OVM_L1CrossDomainMessenger'
+      )
+      const L1CrossDomainMessengerFast = await addressManager.getAddress(
+        'Proxy__L1CrossDomainMessengerFast'
       )
       const L1StandardBridge = await addressManager.getAddress(
         'Proxy__OVM_L1StandardBridge'
@@ -121,18 +207,20 @@ export class MessageRelayerService extends BaseServiceV2<
         l1: {
           AddressManager: this.options.addressManagerAddress,
           L1CrossDomainMessenger,
+          L1CrossDomainMessengerFast,
           L1StandardBridge,
           StateCommitmentChain,
           CanonicalTransactionChain,
           BondManager,
-          OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
-          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
+          OptimismPortal: '0x0000000000000000000000000000000000000000' as const, // it should be used in bedrock
+          L2OutputOracle: '0x0000000000000000000000000000000000000000' as const, // it should be used in bedrock
         },
       }
     }
 
     const l1ChainId = await getChainId(this.state.wallet.provider)
     const l2ChainId = await getChainId(this.options.l2RpcProvider)
+    // use constants depends on ChainId (predefined network)
     const depositConfirmationBlocks: NumberLike =
       DEPOSIT_CONFIRMATION_BLOCKS[l2ChainId]
     const l1BlockTimeSeconds: NumberLike = CHAIN_BLOCK_TIMES[l1ChainId]
@@ -145,11 +233,22 @@ export class MessageRelayerService extends BaseServiceV2<
       depositConfirmationBlocks,
       l1BlockTimeSeconds,
       contracts,
+      fastRelayer: this.options.isFastRelayer,
     })
 
     this.state.highestCheckedL2Tx = this.options.fromL2TransactionIndex || 1
     this.state.highestKnownL2Tx =
       await this.state.messenger.l2Provider.getBlockNumber()
+
+    // filter
+    this.state.relayerFilter = []
+    this.state.fastRelayerFilter = []
+    this.state.lastFilterPollingTimestamp = 0
+
+    //batch system
+    this.state.timeOfLastRelayS = Date.now()
+    this.state.messageBuffer = []
+    this.state.timeOfLastPendingRelay = false
   }
 
   protected async main(): Promise<void> {
