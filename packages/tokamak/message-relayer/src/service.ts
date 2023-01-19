@@ -26,7 +26,6 @@ type MessageRelayerOptions = {
   maxWaitTimeS: number
   isFastRelayer: boolean
   enableRelayerFilter: boolean
-  filterEndpoint?: string
   filterPollingInterval?: number
   multiRelayLimit?: number
   numConfirmations?: number
@@ -103,11 +102,6 @@ export class MessageRelayerService extends BaseServiceV2<
           validator: validators.bool,
           desc: 'Whether the relayer can use filter',
           default: true,
-        },
-        filterEndpoint: {
-          validator: validators.str,
-          desc: 'The endpoint for getting filter',
-          default: '',
         },
         filterPollingInterval: {
           validator: validators.num,
@@ -243,9 +237,7 @@ export class MessageRelayerService extends BaseServiceV2<
     this.state.relayerFilter = []
     this.state.fastRelayerFilter = []
     this.state.lastFilterPollingTimestamp = 0
-    if (process.env.TOKAMAK_CONTRACTS_URL) {
-      this.options.filterEndpoint = process.env.TOKAMAK_CONTRACTS_URL
-    }
+
     //batch system
     this.state.timeOfLastRelayS = Date.now()
     this.state.messageBuffer = []
@@ -342,43 +334,32 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 
   private async _getFilter(): Promise<void> {
-    this.state.lastFilterPollingTimestamp = 0
-    const right =
-      this.state.lastFilterPollingTimestamp + this.options.filterPollingInterval
-    console.log(
-      this.state.lastFilterPollingTimestamp,
-      this.options.filterPollingInterval,
-      new Date().getTime() > right
-    )
     try {
-      // fast_relayer
-      if (this.options.filterEndpoint) {
-        if (
-          this.state.lastFilterPollingTimestamp === 0 ||
-          new Date().getTime() >
-            this.state.lastFilterPollingTimestamp +
-              this.options.filterPollingInterval
-        ) {
-          const addressManager = getContractFactory('Lib_AddressManager')
-            .connect(this.state.wallet)
-            .attach(this.options.addressManagerAddress)
-          const L1LiquidityPool = await addressManager.getAddress(
-            'Proxy__L1LiquidityPool'
-          )
-          const L1StandardBridge = await addressManager.getAddress(
-            'Proxy__OVM_L1StandardBridge'
-          )
-          const fastRelayerFilterSelect = [L1LiquidityPool]
-          const relayerFilterSelect = [L1StandardBridge]
+      if (
+        this.state.lastFilterPollingTimestamp === 0 ||
+        new Date().getTime() >
+          this.state.lastFilterPollingTimestamp +
+            this.options.filterPollingInterval
+      ) {
+        const addressManager = getContractFactory('Lib_AddressManager')
+          .connect(this.state.wallet)
+          .attach(this.options.addressManagerAddress)
+        const L1LiquidityPool = await addressManager.getAddress(
+          'Proxy__L1LiquidityPool'
+        )
+        const L1StandardBridge = await addressManager.getAddress(
+          'Proxy__OVM_L1StandardBridge'
+        )
+        const fastRelayerFilterSelect = [L1LiquidityPool]
+        const relayerFilterSelect = [L1StandardBridge]
 
-          this.state.lastFilterPollingTimestamp = new Date().getTime()
-          this.state.fastRelayerFilter = fastRelayerFilterSelect
-          this.state.relayerFilter = relayerFilterSelect
-          this.logger.info('Found the two filters', {
-            relayerFilterSelect,
-            fastRelayerFilterSelect,
-          })
-        }
+        this.state.lastFilterPollingTimestamp = new Date().getTime()
+        this.state.fastRelayerFilter = fastRelayerFilterSelect
+        this.state.relayerFilter = relayerFilterSelect
+        this.logger.info('Found the two filters', {
+          relayerFilterSelect,
+          fastRelayerFilterSelect,
+        })
       }
     } catch {
       this.logger.error('CRITICAL ERROR: Failed to fetch the Filter')
