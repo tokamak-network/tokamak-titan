@@ -23,6 +23,15 @@ interface IL1CrossDomainMessenger is ICrossDomainMessenger {
         bytes storageTrieWitness;
     }
 
+    // for batch relay
+    struct L2ToL1Message {
+        address target;
+        address sender;
+        bytes message;
+        uint256 messageNonce;
+        IL1CrossDomainMessenger.L2MessageInclusionProof proof;
+    }
+
     /********************
      * Public Functions *
      ********************/
@@ -60,4 +69,10 @@ interface IL1CrossDomainMessenger is ICrossDomainMessenger {
         uint32 _oldGasLimit,
         uint32 _newGasLimit
     ) external;
+
+    /**
+     * @notice Forwards multiple cross domain messages to the L1 Cross Domain Messenger for relaying
+     * @param _messages An array of L2 to L1 messages
+     */
+    function batchRelayMessages(L2ToL1Message[] calldata _messages) external;
 }

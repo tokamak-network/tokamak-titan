@@ -10,6 +10,22 @@
 
 ## Methods
 
+### batchRelayMessages
+
+```solidity
+function batchRelayMessages(IL1CrossDomainMessenger.L2ToL1Message[] _messages) external nonpayable
+```
+
+Forwards multiple cross domain messages to the L1 Cross Domain Messenger for relaying
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messages | IL1CrossDomainMessenger.L2ToL1Message[] | An array of L2 to L1 messages
+
 ### relayMessage
 
 ```solidity

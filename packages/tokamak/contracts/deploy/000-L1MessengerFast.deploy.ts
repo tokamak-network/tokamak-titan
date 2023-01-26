@@ -90,6 +90,9 @@ const deployFn: DeployFunction = async (hre) => {
   // set L1CrossDomainMessengerFast address in address manager
   await registerAddress(addressManager, 'L1CrossDomainMessengerFast', L1_MessengerFast.address)
 
+  // set MessageRelayer address in address manager
+  await registerAddress(addressManager, 'MessageRelayer', (hre as any).deployConfig.relayerAddress)
+
   // save deployment info
   await hre.deployments.save('L1CrossDomainMessengerFast',L1_MessengerDeploymentSubmission)
   console.log(`L1CrossDomainMessengerFast deployed to: ${L1_MessengerFast.address}`)
