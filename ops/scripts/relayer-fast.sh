@@ -5,7 +5,6 @@ set -e
 RETRIES=${RETRIES:-60}
 
 # wait for $URL
-echo $URL
 until $(curl --silent --fail --output /dev/null "$URL"); do
   sleep 10
   echo "Will wait $((RETRIES--)) more times for $URL to be up..."
@@ -20,7 +19,6 @@ echo "Base addresses available at $URL"
 RETRIES=60
 
 # wait for $TOKAMAK_CONTRACTS_URL
-echo $TOKAMAK_CONTRACTS_URL
 until $(curl --fail --output /dev/null "$TOKAMAK_CONTRACTS_URL"); do
   sleep 10
   echo "Will wait $((RETRIES--)) more times for $TOKAMAK_CONTRACTS_URL to be up..."
@@ -39,15 +37,6 @@ if [[ ! -z "$URL" ]]; then
     # set the env
     export MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS=$(echo $ADDRESSES | jq -r '.AddressManager')
     echo $MESSAGE_RELAYER__ADDRESS_MANAGER_ADDRESS
-fi
-
-# set the L1_MESSENGER_FAST environment variable
-if [[ ! -z "$TOKAMAK_CONTRACTS_URL" ]]; then
-    # get the addrs from the URL provided
-    ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $TOKAMAK_CONTRACTS_URL)
-    # set the env
-    export L1_MESSENGER_FAST=$(echo $ADDRESSES | jq -r '.Proxy__L1CrossDomainMessengerFast')
-    echo $L1_MESSENGER_FAST
 fi
 
 # go

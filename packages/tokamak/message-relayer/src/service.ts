@@ -16,7 +16,6 @@ import {
   CHAIN_BLOCK_TIMES,
 } from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
-
 import 'dotenv/config'
 
 type MessageRelayerOptions = {
@@ -27,7 +26,6 @@ type MessageRelayerOptions = {
   maxWaitTimeS: number
   isFastRelayer: boolean
   enableRelayerFilter: boolean
-  filterEndpoint?: string
   filterPollingInterval?: number
   multiRelayLimit?: number
   numConfirmations?: number
@@ -104,11 +102,6 @@ export class MessageRelayerService extends BaseServiceV2<
           validator: validators.bool,
           desc: 'Whether the relayer can use filter',
           default: true,
-        },
-        filterEndpoint: {
-          validator: validators.str,
-          desc: 'The endpoint for getting filter',
-          default: '',
         },
         filterPollingInterval: {
           validator: validators.num,
@@ -267,6 +260,9 @@ export class MessageRelayerService extends BaseServiceV2<
       return
     }
 
+    // get filter
+    await this._getFilter()
+
     this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
     const block =
@@ -335,6 +331,39 @@ export class MessageRelayerService extends BaseServiceV2<
 
     // All messages have been relayed so we can move on to the next block.
     this.state.highestCheckedL2Tx++
+  }
+
+  private async _getFilter(): Promise<void> {
+    try {
+      if (
+        this.state.lastFilterPollingTimestamp === 0 ||
+        new Date().getTime() >
+          this.state.lastFilterPollingTimestamp +
+            this.options.filterPollingInterval
+      ) {
+        const addressManager = getContractFactory('Lib_AddressManager')
+          .connect(this.state.wallet)
+          .attach(this.options.addressManagerAddress)
+        const L1LiquidityPool = await addressManager.getAddress(
+          'Proxy__L1LiquidityPool'
+        )
+        const L1StandardBridge = await addressManager.getAddress(
+          'Proxy__OVM_L1StandardBridge'
+        )
+        const fastRelayerFilterSelect = [L1LiquidityPool]
+        const relayerFilterSelect = [L1StandardBridge]
+
+        this.state.lastFilterPollingTimestamp = new Date().getTime()
+        this.state.fastRelayerFilter = fastRelayerFilterSelect
+        this.state.relayerFilter = relayerFilterSelect
+        this.logger.info('Found the two filters', {
+          relayerFilterSelect,
+          fastRelayerFilterSelect,
+        })
+      }
+    } catch {
+      this.logger.error('CRITICAL ERROR: Failed to fetch the Filter')
+    }
   }
 }
 
