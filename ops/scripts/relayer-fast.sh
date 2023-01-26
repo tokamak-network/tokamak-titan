@@ -5,7 +5,6 @@ set -e
 RETRIES=${RETRIES:-60}
 
 # wait for $URL
-echo $URL
 until $(curl --silent --fail --output /dev/null "$URL"); do
   sleep 10
   echo "Will wait $((RETRIES--)) more times for $URL to be up..."
@@ -20,7 +19,6 @@ echo "Base addresses available at $URL"
 RETRIES=60
 
 # wait for $TOKAMAK_CONTRACTS_URL
-echo $TOKAMAK_CONTRACTS_URL
 until $(curl --fail --output /dev/null "$TOKAMAK_CONTRACTS_URL"); do
   sleep 10
   echo "Will wait $((RETRIES--)) more times for $TOKAMAK_CONTRACTS_URL to be up..."
