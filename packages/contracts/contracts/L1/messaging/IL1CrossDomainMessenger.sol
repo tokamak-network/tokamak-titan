@@ -29,7 +29,7 @@ interface IL1CrossDomainMessenger is ICrossDomainMessenger {
         address sender;
         bytes message;
         uint256 messageNonce;
-        IL1CrossDomainMessenger.L2MessageInclusionProof proof;
+        L2MessageInclusionProof proof;
     }
 
     /********************

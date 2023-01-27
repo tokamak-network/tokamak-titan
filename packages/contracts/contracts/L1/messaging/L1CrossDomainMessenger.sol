@@ -180,7 +180,7 @@ contract L1CrossDomainMessenger is
         bytes memory _message,
         uint256 _messageNonce,
         L2MessageInclusionProof memory _proof
-    ) public onlyRelayer nonReentrant whenNotPaused {
+    ) public nonReentrant whenNotPaused {
         bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
             _target,
             _sender,
