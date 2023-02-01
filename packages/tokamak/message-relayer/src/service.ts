@@ -281,7 +281,6 @@ export class MessageRelayerService extends BaseServiceV2<
     const secondsElapsed = Math.floor(
       (Date.now() - this.state.timeOfLastRelayS) / 1000
     )
-    console.log('\n***********************************')
     console.log('Seconds elapsed since last batch push:', secondsElapsed)
 
     const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
@@ -291,7 +290,6 @@ export class MessageRelayerService extends BaseServiceV2<
       const pendingTXSecondsElapsed = Math.floor(
         (Date.now() - this.state.timeOfLastPendingRelay) / 1000
       )
-      console.log('\n***********************************')
       console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
       pendingTXTimeOut =
         pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
