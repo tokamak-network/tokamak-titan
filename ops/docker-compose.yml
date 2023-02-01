@@ -60,6 +60,7 @@ services:
       CONTRACTS_TARGET_NETWORK: 'local'
       RETRIES: 200
       TOKAMAK_CONTRACTS_URL: http://tokamak_deployer:8082/tokamak-addr.json
+      RELAYER_PRIVATE_KEY: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
       # skip compilation when run in docker-compose, since the contracts
       # were already compiled in the builder step
       NO_COMPILE: 1

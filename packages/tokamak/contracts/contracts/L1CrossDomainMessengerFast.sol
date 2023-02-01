@@ -84,18 +84,11 @@ contract L1CrossDomainMessengerFast is
      * Function Modifiers *
      **********************/
 
-    /**
-     * Modifier to enforce that, if configured, only the OVM_L2MessageRelayer contract may
-     * successfully call a method.
-     */
     modifier onlyRelayer() {
-        address relayer = resolve("OVM_L2MessageRelayer");
-        if (relayer != address(0)) {
-            require(
-                msg.sender == relayer,
-                "Only OVM_L2MessageRelayer can relay L2-to-L1 messages."
-            );
-        }
+        require(
+            msg.sender == resolve("MessageRelayer"),
+            "L1CrossDomainMessenger: Function can only be called by the MessageRelayer"
+        );
         _;
     }
 
@@ -343,5 +336,28 @@ contract L1CrossDomainMessengerFast is
                 _proof.storageTrieWitness,
                 account.storageRoot
             );
+    }
+
+    /**
+     * @notice Forwards multiple cross domain messages to the L1 Cross Domain Messenger Fast for relaying
+     * @param _messages An array of L2 to L1 messages
+     */
+    function batchRelayMessages(
+        L2ToL1Message[] calldata _messages
+    )
+        external
+        onlyRelayer
+    {
+
+        for (uint256 i = 0; i < _messages.length; i++) {
+            L2ToL1Message memory message = _messages[i];
+            relayMessage(
+                message.target,
+                message.sender,
+                message.message,
+                message.messageNonce,
+                message.proof
+            );
+        }
     }
 }

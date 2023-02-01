@@ -1,5 +1,5 @@
 /* Imports: External */
-import { Signer } from 'ethers'
+import { Signer, utils } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
 import { Address, getChainId, sleep } from '@eth-optimism/core-utils'
 import {
@@ -22,6 +22,7 @@ type MessageRelayerOptions = {
   l1RpcProvider: Provider
   l2RpcProvider: Provider
   l1Wallet: Signer
+  // batch system
   minBatchSize: number
   maxWaitTimeS: number
   isFastRelayer: boolean
@@ -29,10 +30,12 @@ type MessageRelayerOptions = {
   filterPollingInterval?: number
   multiRelayLimit?: number
   numConfirmations?: number
+  maxWaitTxTimeS: number
   fromL2TransactionIndex?: number
   pollingInterval?: number
   l1StartOffset?: number
   addressManagerAddress?: Address
+  maxGasPriceInGwei?: number
 }
 
 type MessageRelayerMetrics = {
@@ -90,7 +93,7 @@ export class MessageRelayerService extends BaseServiceV2<
         },
         maxWaitTimeS: {
           validator: validators.num,
-          desc: 'Maximum number of seconds to wait',
+          desc: 'Maximum number of seconds to wait for batch tx',
           default: 60,
         },
         isFastRelayer: {
@@ -107,6 +110,11 @@ export class MessageRelayerService extends BaseServiceV2<
           validator: validators.num,
           desc: 'The polling interval for getting filter',
           default: 60000,
+        },
+        maxWaitTxTimeS: {
+          validator: validators.num,
+          desc: 'Maximum time to wait for the next tx to be submitted since the last tx was submitted',
+          default: 180,
         },
         multiRelayLimit: {
           validator: validators.num,
@@ -136,6 +144,11 @@ export class MessageRelayerService extends BaseServiceV2<
         addressManagerAddress: {
           validator: validators.str,
           desc: 'Contract address of Address Manager.',
+        },
+        maxGasPriceInGwei: {
+          validator: validators.num,
+          desc: 'Max gas price in Gwei',
+          default: 100,
         },
       },
       metricsSpec: {
@@ -262,6 +275,69 @@ export class MessageRelayerService extends BaseServiceV2<
 
     // get filter
     await this._getFilter()
+
+    // Batch flushing logic
+
+    const secondsElapsed = Math.floor(
+      (Date.now() - this.state.timeOfLastRelayS) / 1000
+    )
+    console.log('Seconds elapsed since last batch push:', secondsElapsed)
+
+    const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
+
+    let pendingTXTimeOut = true
+    if (this.state.timeOfLastPendingRelay !== false) {
+      const pendingTXSecondsElapsed = Math.floor(
+        (Date.now() - this.state.timeOfLastPendingRelay) / 1000
+      )
+      console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
+      pendingTXTimeOut =
+        pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
+    }
+
+    const bufferFull =
+      this.state.messageBuffer.length >= this.options.minBatchSize
+        ? true
+        : false
+
+    // check gas price
+    const gasPrice = await this.state.wallet.getGasPrice()
+    const gasPriceGwei = Number(utils.formatUnits(gasPrice, 'gwei'))
+    const gasPriceAcceptable =
+      gasPriceGwei < this.options.maxGasPriceInGwei ? true : false
+
+    if (
+      this.state.messageBuffer.length !== 0 &&
+      (bufferFull || timeOut) &&
+      pendingTXTimeOut
+    ) {
+      if (gasPriceAcceptable) {
+        if (bufferFull) {
+          console.log('Buffer full: flushing')
+        }
+        if (timeOut) {
+          console.log('Buffer timeout: flushing')
+        }
+
+        //const newMB = []
+
+        // TODO: push message to newMB depending on the message status of cur
+        // TODO: finalize message in the newMB
+        // for (const cur of this.state.messageBuffer) {
+        // }
+      } else {
+        console.log('Current gas price is unacceptable')
+        this.state.timeOfLastPendingRelay = Date.now()
+      }
+      this.state.timeOfLastRelayS = Date.now()
+    } else {
+      console.log(
+        'Buffer still too small - current buffer length: ',
+        this.state.messageBuffer.length
+      )
+      console.log('Buffer flush size set to: ', this.options.minBatchSize)
+      console.log('***********************************\n')
+    }
 
     this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 

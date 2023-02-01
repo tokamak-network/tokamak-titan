@@ -70,6 +70,18 @@ contract L1CrossDomainMessenger is
      */
     constructor() Lib_AddressResolver(address(0)) {}
 
+    /**********************
+     * Function Modifiers *
+     **********************/
+
+    modifier onlyRelayer() {
+        require(
+            msg.sender == resolve("MessageRelayer"),
+            "L1CrossDomainMessenger: Function can only be called by the MessageRelayer"
+        );
+        _;
+    }
+
     /********************
      * Public Functions *
      ********************/
@@ -373,5 +385,22 @@ contract L1CrossDomainMessenger is
             _gasLimit,
             _message
         );
+    }
+
+    /**
+     * @notice Forwards multiple cross domain messages to the L1 Cross Domain Messenger for relaying
+     * @param _messages An array of L2 to L1 messages
+     */
+    function batchRelayMessages(L2ToL1Message[] calldata _messages) external onlyRelayer {
+        for (uint256 i = 0; i < _messages.length; i++) {
+            L2ToL1Message memory message = _messages[i];
+            relayMessage(
+                message.target,
+                message.sender,
+                message.message,
+                message.messageNonce,
+                message.proof
+            );
+        }
     }
 }
