@@ -69,6 +69,14 @@ const getL1ContractsByNetworkName = (network: string): OEL1ContractsLike => {
     L1CrossDomainMessenger: getDeployedAddress(
       'Proxy__OVM_L1CrossDomainMessenger'
     ),
+    // L1CrossDomainMessengerFast: getDeployedAddress(
+    //   'Proxy__L1CrossDomainMessengerFast'
+    // ),
+
+    // for development in local
+    // TODO: get deployed address for mainnet and testnet
+    L1CrossDomainMessengerFast:
+      '0x0000000000000000000000000000000000000000' as const,
     L1StandardBridge: getDeployedAddress('Proxy__OVM_L1StandardBridge'),
     StateCommitmentChain: getDeployedAddress('StateCommitmentChain'),
     CanonicalTransactionChain: getDeployedAddress('CanonicalTransactionChain'),
@@ -103,6 +111,8 @@ export const CONTRACT_ADDRESSES: {
       AddressManager: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as const,
       L1CrossDomainMessenger:
         '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318' as const,
+      L1CrossDomainMessengerFast:
+        '0x4A679253410272dd5232B3Ff7cF5dbB88f295319' as const,
       L1StandardBridge: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as const,
       StateCommitmentChain:
         '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as const,
@@ -119,6 +129,8 @@ export const CONTRACT_ADDRESSES: {
       AddressManager: '0x5FbDB2315678afecb367f032d93F642f64180aa3' as const,
       L1CrossDomainMessenger:
         '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318' as const,
+      L1CrossDomainMessengerFast:
+        '0x4A679253410272dd5232B3Ff7cF5dbB88f295319' as const,
       L1StandardBridge: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788' as const,
       StateCommitmentChain:
         '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9' as const,
@@ -135,6 +147,8 @@ export const CONTRACT_ADDRESSES: {
       AddressManager: '0x6900000000000000000000000000000000000005' as const,
       L1CrossDomainMessenger:
         '0x6900000000000000000000000000000000000002' as const,
+      L1CrossDomainMessengerFast:
+        '0x0000000000000000000000000000000000000000' as const,
       L1StandardBridge: '0x6900000000000000000000000000000000000003' as const,
       StateCommitmentChain:
         '0x0000000000000000000000000000000000000000' as const,

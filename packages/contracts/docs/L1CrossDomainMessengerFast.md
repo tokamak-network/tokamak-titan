@@ -26,6 +26,22 @@ Allow a message.
 |---|---|---|
 | _xDomainCalldataHash | bytes32 | Hash of the message to block.
 
+### batchRelayMessages
+
+```solidity
+function batchRelayMessages(IL1CrossDomainMessenger.L2ToL1Message[] _messages) external nonpayable
+```
+
+Forwards multiple cross domain messages to the L1 Cross Domain Messenger Fast for relaying
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messages | IL1CrossDomainMessenger.L2ToL1Message[] | An array of L2 to L1 messages
+
 ### blockMessage
 
 ```solidity
