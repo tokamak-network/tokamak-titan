@@ -592,8 +592,9 @@ export class CrossChainMessenger {
   ): Promise<MessageStatus> {
     // check message type
     const resolved = await this.toCrossChainMessage(message)
+
     // hashing the message (keccak256)
-    // L1CrossDomainMessengerFast의 xDomainCalldata와 동일한 값
+    // messageHash is equal to xDomainCalldata in L1CrossDomainMessengerFast
     const messageHash = hashCrossChainMessage(resolved)
     if (resolved.direction === MessageDirection.L1_TO_L2) {
       throw new Error(`can only determine for L2 to L1 messages`)
@@ -614,10 +615,10 @@ export class CrossChainMessenger {
         if (targetBlock.timestamp + challengePeriod > latestBlock.timestamp) {
           return MessageStatus.IN_CHALLENGE_PERIOD
         } else {
+          // get status (success or fail)
           let successStatus: boolean
           let failedStatus: boolean
           if (this.fastRelayer) {
-            // get status (success or failed)
             successStatus =
               await this.contracts.l1.L1CrossDomainMessengerFast.successfulMessages(
                 messageHash
