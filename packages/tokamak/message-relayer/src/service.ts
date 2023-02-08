@@ -1,5 +1,5 @@
 /* Imports: External */
-import { Signer, utils } from 'ethers'
+import { Signer, utils, BigNumber } from 'ethers'
 import { getContractFactory } from '@eth-optimism/contracts'
 import { Address, getChainId, sleep } from '@eth-optimism/core-utils'
 import {
@@ -8,6 +8,7 @@ import {
   Gauge,
   Counter,
 } from '@eth-optimism/common-ts'
+import * as ynatm from '@eth-optimism/ynatm'
 import {
   CrossChainMessenger,
   MessageStatus,
@@ -36,12 +37,15 @@ type MessageRelayerOptions = {
   pollingInterval?: number
   addressManagerAddress?: Address
   maxGasPriceInGwei?: number
+  gasRetryIncrement?: number
+  resubmissionTimeout?: number
 }
 
 type MessageRelayerMetrics = {
   highestCheckedL2Tx: Gauge
   highestKnownL2Tx: Gauge
-  numRelayedMessages: Counter
+  // numRelayedMessages: Counter
+  numBatchTx: Counter
 }
 
 type MessageRelayerState = {
@@ -145,6 +149,15 @@ export class MessageRelayerService extends BaseServiceV2<
           desc: 'Max gas price in Gwei',
           default: 100,
         },
+        gasRetryIncrement: {
+          validator: validators.num,
+          desc: 'Gas retry increment for relay tx',
+        },
+        resubmissionTimeout: {
+          validator: validators.num,
+          desc: 'Timeout in resubmission for relay tx',
+          default: 60,
+        },
       },
       metricsSpec: {
         highestCheckedL2Tx: {
@@ -155,9 +168,10 @@ export class MessageRelayerService extends BaseServiceV2<
           type: Gauge,
           desc: 'Highest known L2 transaction',
         },
-        numRelayedMessages: {
+        // TODO: numRelayedMessages
+        numBatchTx: {
           type: Counter,
-          desc: 'Number of messages relayed by the service',
+          desc: 'Number of Batch tx',
         },
       },
     })
@@ -276,7 +290,6 @@ export class MessageRelayerService extends BaseServiceV2<
     const secondsElapsed = Math.floor(
       (Date.now() - this.state.timeOfLastRelayS) / 1000
     )
-    console.log('\n***********************************')
     console.log('Seconds elapsed since last batch push:', secondsElapsed)
 
     const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
@@ -286,7 +299,6 @@ export class MessageRelayerService extends BaseServiceV2<
       const pendingTXSecondsElapsed = Math.floor(
         (Date.now() - this.state.timeOfLastPendingRelay) / 1000
       )
-      console.log('\n***********************************')
       console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
       pendingTXTimeOut =
         pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
@@ -349,7 +361,78 @@ export class MessageRelayerService extends BaseServiceV2<
             limit: this.options.multiRelayLimit,
           })
 
-          // TODO: finalize message in the newMB
+          // ynatm logic
+          const sendTxAndWaitForReceipt = async (
+            _gasPrice: BigNumber
+          ): Promise<any> => {
+            // Generate the transaction we will repeatedly submit
+
+            // nonce 조회
+            const nonce = await this.options.l1Wallet.getTransactionCount()
+            const txResponse = await this.state.messenger.finalizeBatchMessage(
+              subBuffer,
+              {
+                overrides: {
+                  gasPrice: _gasPrice,
+                  nonce,
+                },
+              }
+            )
+            const txReceipt = await txResponse.wait(
+              this.options.numConfirmations
+            )
+            return txReceipt
+          }
+
+          const minGasPrice = await this._getGasPriceInGwei(
+            this.options.l1Wallet
+          )
+          let receipt
+          try {
+            // Gradually keeps trying a transaction with an incremental amount of gas
+            // while keeping the same nonce.
+            receipt = await ynatm.send({
+              sendTransactionFunction: sendTxAndWaitForReceipt,
+              minGasPrice: ynatm.toGwei(minGasPrice),
+              maxGasPrice: ynatm.toGwei(this.options.maxGasPriceInGwei),
+              gasPriceScalingFunction: ynatm.LINEAR(
+                this.options.gasRetryIncrement
+              ),
+              delay: this.options.resubmissionTimeout,
+            })
+            this.logger.info('Relay transaction sent')
+            this.metrics.numBatchTx.inc()
+          } catch (err) {
+            this.logger.error('Relay attempt failed, skipping', {
+              message: err.toString(),
+              stack: err.stack,
+              code: err.code,
+            })
+          }
+
+          if (!receipt) {
+            this.logger.error('No receipt for relayMultiMessage transaction')
+          } else if (receipt.status === 1) {
+            this.logger.info('Sucessful relayMultiMessage', {
+              blockNumber: receipt.blockNumber,
+              transactionIndex: receipt.transactionIndex,
+              status: receipt.status,
+              msgCount: subBuffer.length,
+              gasUsed: receipt.gasUsed.toString(),
+              effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+            })
+          } else {
+            this.logger.warning('Unsuccessful relayMultiMessage', {
+              blockNumber: receipt.blockNumber,
+              transactionIndex: receipt.transactionIndex,
+              status: receipt.status,
+              msgCount: subBuffer.length,
+              gasUsed: receipt.gasUsed.toString(),
+              effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+            })
+          }
+
+          this.state.timeOfLastPendingRelay = Date.now()
         }
       } else {
         console.log('Current gas price is unacceptable')
@@ -362,8 +445,11 @@ export class MessageRelayerService extends BaseServiceV2<
         this.state.messageBuffer.length
       )
       console.log('Buffer flush size set to: ', this.options.minBatchSize)
-      console.log('***********************************\n')
     }
+
+    // TODO
+    // scanning the new messages only if the pending messages are relayed
+    // to l1
 
     this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
@@ -420,7 +506,6 @@ export class MessageRelayerService extends BaseServiceV2<
       try {
         const tx = await this.state.messenger.finalizeMessage(message)
         this.logger.info(`relayer sent tx: ${tx.hash}`)
-        this.metrics.numRelayedMessages.inc()
       } catch (err) {
         if (err.message.includes('message has already been received')) {
           // It's fine, the message was relayed by someone else
@@ -466,6 +551,10 @@ export class MessageRelayerService extends BaseServiceV2<
     } catch {
       this.logger.error('CRITICAL ERROR: Failed to fetch the Filter')
     }
+  }
+
+  private async _getGasPriceInGwei(signer): Promise<number> {
+    return parseInt(utils.formatUnits(await signer.getGasPrice(), 'gwei'), 10)
   }
 }
 

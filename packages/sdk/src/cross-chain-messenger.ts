@@ -1474,6 +1474,18 @@ export class CrossChainMessenger {
     )
   }
 
+  public async finalizeBatchMessage(
+    messages: Array<MessageLike>,
+    opts?: {
+      signer?: Signer
+      overrides?: Overrides
+    }
+  ): Promise<TransactionResponse> {
+    return (opts?.signer || this.l1Signer).sendTransaction(
+      await this.populateTransaction.finalizeBatchMessage(messages, opts)
+    )
+  }
+
   /**
    * Deposits some ETH into the L2 chain.
    *
@@ -1791,6 +1803,41 @@ export class CrossChainMessenger {
       }
     },
 
+    finalizeBatchMessage: async (
+      messages: Array<MessageLike>,
+      opts?: {
+        overrides?: Overrides
+      }
+    ): Promise<TransactionRequest> => {
+      const batchMessage = []
+      for (const message of messages) {
+        const resolved = await this.toCrossChainMessage(message)
+
+        if (resolved.direction === MessageDirection.L1_TO_L2) {
+          throw new Error('cannot finalize L1 to L2 message')
+        }
+        const proof = await this.getMessageProof(resolved)
+        batchMessage.push({
+          target: resolved.target,
+          sender: resolved.sender,
+          message: resolved.message,
+          messageNonce: resolved.messageNonce,
+          proof,
+        })
+      }
+      if (this.fastRelayer) {
+        // ethers.js v5 does not handle overloading
+        return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
+          'batchRelayMessages((address,address,bytes,uint256,(bytes32,(uint256,bytes32,uint256,uint256,bytes),(uint256,bytes32[]),bytes,bytes))[])'
+        ](batchMessage, opts?.overrides || {})
+      } else {
+        return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.batchRelayMessages(
+          batchMessage,
+          opts?.overrides || {}
+        )
+      }
+    },
+
     /**
      * Generates a transaction for depositing some ETH into the L2 chain.
      *
@@ -1984,6 +2031,17 @@ export class CrossChainMessenger {
     ): Promise<BigNumber> => {
       return this.l1Provider.estimateGas(
         await this.populateTransaction.finalizeMessage(message, opts)
+      )
+    },
+
+    finalizeBatchMessage: async (
+      messages: Array<MessageLike>,
+      opts?: {
+        overrides?: Overrides
+      }
+    ): Promise<BigNumber> => {
+      return this.l1Provider.estimateGas(
+        await this.populateTransaction.finalizeBatchMessage(messages, opts)
       )
     },
 
