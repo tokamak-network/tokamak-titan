@@ -152,6 +152,7 @@ export class MessageRelayerService extends BaseServiceV2<
         gasRetryIncrement: {
           validator: validators.num,
           desc: 'Gas retry increment for relay tx',
+          default: 5,
         },
         resubmissionTimeout: {
           validator: validators.num,
@@ -168,7 +169,7 @@ export class MessageRelayerService extends BaseServiceV2<
           type: Gauge,
           desc: 'Highest known L2 transaction',
         },
-        // TODO: numRelayedMessages
+        // TODO: add numRelayedMessages
         numBatchTx: {
           type: Counter,
           desc: 'Number of Batch tx',
@@ -447,9 +448,8 @@ export class MessageRelayerService extends BaseServiceV2<
       console.log('Buffer flush size set to: ', this.options.minBatchSize)
     }
 
-    // TODO
-    // scanning the new messages only if the pending messages are relayed
-    // to l1
+    // TODO: scanning the new messages only if
+    // the pending messages are relayed to l1
 
     this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
