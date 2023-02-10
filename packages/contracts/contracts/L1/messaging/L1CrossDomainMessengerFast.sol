@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 /* Library Imports */
-import { AddressAliasHelper } from "../../standards/AddressAliasHelper.sol";
 import { Lib_AddressResolver } from "../../libraries/resolver/Lib_AddressResolver.sol";
 import { Lib_OVMCodec } from "../../libraries/codec/Lib_OVMCodec.sol";
 import { Lib_AddressManager } from "../../libraries/resolver/Lib_AddressManager.sol";
@@ -13,10 +12,10 @@ import { Lib_CrossDomainUtils } from "../../libraries/bridge/Lib_CrossDomainUtil
 
 /* Interface Imports */
 import { IL1CrossDomainMessenger } from "./IL1CrossDomainMessenger.sol";
-import { ICanonicalTransactionChain } from "../rollup/ICanonicalTransactionChain.sol";
 import { IStateCommitmentChain } from "../rollup/IStateCommitmentChain.sol";
 
 /* External Imports */
+// for security
 import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -28,13 +27,13 @@ import {
 } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
- * @title L1CrossDomainMessenger
+ * @title L1CrossDomainMessengerFast
  * @dev The L1 Cross Domain Messenger contract sends messages from L1 to L2, and relays messages
- * from L2 onto L1. In the event that a message sent from L1 to L2 is rejected for exceeding the L2
+ *  from L2 onto L1. In the event that a message sent from L1 to L2 is rejected for exceeding the L2
  * epoch gas limit, it can be resubmitted via this contract's replay function.
  *
  */
-contract L1CrossDomainMessenger is
+contract L1CrossDomainMessengerFast is
     IL1CrossDomainMessenger,
     Lib_AddressResolver,
     OwnableUpgradeable,
@@ -90,7 +89,6 @@ contract L1CrossDomainMessenger is
     /**
      * @param _libAddressManager Address of the Address Manager.
      */
-    // slither-disable-next-line external-function
     function initialize(address _libAddressManager) public initializer {
         require(
             address(libAddressManager) == address(0),
@@ -107,10 +105,17 @@ contract L1CrossDomainMessenger is
     }
 
     /**
-     * Pause relaying.
+     * Pause fast exit relays
      */
     function pause() external onlyOwner {
         _pause();
+    }
+
+    /**
+     * UnPause fast exit relays
+     */
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     /**
@@ -131,8 +136,7 @@ contract L1CrossDomainMessenger is
         emit MessageAllowed(_xDomainCalldataHash);
     }
 
-    // slither-disable-next-line external-function
-    function xDomainMessageSender() public view returns (address) {
+    function xDomainMessageSender() public view override returns (address) {
         require(
             xDomainMsgSender != Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER,
             "xDomainMessageSender is not set"
@@ -146,42 +150,31 @@ contract L1CrossDomainMessenger is
      * @param _message Message to send to the target.
      * @param _gasLimit Gas limit for the provided message.
      */
-    // slither-disable-next-line external-function
     function sendMessage(
         address _target,
         bytes memory _message,
         uint32 _gasLimit
-    ) public {
-        address ovmCanonicalTransactionChain = resolve("CanonicalTransactionChain");
-        // Use the CTC queue length as nonce
-        uint40 nonce = ICanonicalTransactionChain(ovmCanonicalTransactionChain).getQueueLength();
-
-        bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
-            _target,
-            msg.sender,
-            _message,
-            nonce
-        );
-
-        // slither-disable-next-line reentrancy-events
-        _sendXDomainMessage(ovmCanonicalTransactionChain, xDomainCalldata, _gasLimit);
-
-        // slither-disable-next-line reentrancy-events
-        emit SentMessage(_target, msg.sender, _message, nonce, _gasLimit);
+    ) public override {
+        // refund gas and restore state
+        revert("Sending via this messenger is disabled");
     }
+
+    /********************
+     * Public Functions *
+     ********************/
 
     /**
      * Relays a cross domain message to a contract.
      * @inheritdoc IL1CrossDomainMessenger
      */
-    // slither-disable-next-line external-function
     function relayMessage(
         address _target,
         address _sender,
         bytes memory _message,
         uint256 _messageNonce,
         L2MessageInclusionProof memory _proof
-    ) public nonReentrant whenNotPaused {
+    ) public override onlyRelayer nonReentrant whenNotPaused {
+        // generate calldata from params
         bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
             _target,
             _sender,
@@ -189,6 +182,7 @@ contract L1CrossDomainMessenger is
             _messageNonce
         );
 
+        // verify message state from xDomainCalldata and _proof
         require(
             _verifyXDomainMessage(xDomainCalldata, _proof) == true,
             "Provided message could not be verified."
@@ -212,28 +206,23 @@ contract L1CrossDomainMessenger is
         );
 
         xDomainMsgSender = _sender;
-        // slither-disable-next-line reentrancy-no-eth, reentrancy-events, reentrancy-benign
+        // direct call from _message
         (bool success, ) = _target.call(_message);
-        // slither-disable-next-line reentrancy-benign
         xDomainMsgSender = Lib_DefaultValues.DEFAULT_XDOMAIN_SENDER;
 
         // Mark the message as received if the call was successful. Ensures that a message can be
         // relayed multiple times in the case that the call reverted.
         if (success == true) {
-            // slither-disable-next-line reentrancy-no-eth
             successfulMessages[xDomainCalldataHash] = true;
-            // slither-disable-next-line reentrancy-events
             emit RelayedMessage(xDomainCalldataHash);
         } else {
-            // slither-disable-next-line reentrancy-events
-            failedMessages[xDomainCalldataHash] = true;
+            failedMessages[xDomainCalldataHash] == true;
             emit FailedRelayedMessage(xDomainCalldataHash);
         }
 
         // Store an identifier that can be used to prove that the given message was relayed by some
         // user. Gives us an easy way to pay relayers for their work.
         bytes32 relayId = keccak256(abi.encodePacked(xDomainCalldata, msg.sender, block.number));
-        // slither-disable-next-line reentrancy-benign
         relayedMessages[relayId] = true;
     }
 
@@ -241,7 +230,6 @@ contract L1CrossDomainMessenger is
      * Replays a cross domain message to the target messenger.
      * @inheritdoc IL1CrossDomainMessenger
      */
-    // slither-disable-next-line external-function
     function replayMessage(
         address _target,
         address _sender,
@@ -249,39 +237,8 @@ contract L1CrossDomainMessenger is
         uint256 _queueIndex,
         uint32 _oldGasLimit,
         uint32 _newGasLimit
-    ) public {
-        // Verify that the message is in the queue:
-        address canonicalTransactionChain = resolve("CanonicalTransactionChain");
-        Lib_OVMCodec.QueueElement memory element = ICanonicalTransactionChain(
-            canonicalTransactionChain
-        ).getQueueElement(_queueIndex);
-
-        // Compute the calldata that was originally used to send the message.
-        bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
-            _target,
-            _sender,
-            _message,
-            _queueIndex
-        );
-
-        // Compute the transactionHash
-        bytes32 transactionHash = keccak256(
-            abi.encode(
-                AddressAliasHelper.applyL1ToL2Alias(address(this)),
-                Lib_PredeployAddresses.L2_CROSS_DOMAIN_MESSENGER,
-                _oldGasLimit,
-                xDomainCalldata
-            )
-        );
-
-        // Now check that the provided message data matches the one in the queue element.
-        require(
-            transactionHash == element.transactionHash,
-            "Provided message has not been enqueued."
-        );
-
-        // Send the same message but with the new gas limit.
-        _sendXDomainMessage(canonicalTransactionChain, xDomainCalldata, _newGasLimit);
+    ) public override {
+        revert("Sending via this messenger is disabled");
     }
 
     /**********************
@@ -315,13 +272,14 @@ contract L1CrossDomainMessenger is
             resolve("StateCommitmentChain")
         );
 
-        return (ovmStateCommitmentChain.insideFraudProofWindow(_proof.stateRootBatchHeader) ==
-            false &&
+        // not check time after challenge period
+        return (
             ovmStateCommitmentChain.verifyStateCommitment(
                 _proof.stateRoot,
                 _proof.stateRootBatchHeader,
                 _proof.stateRootProof
-            ));
+            )
+        );
     }
 
     /**
@@ -371,26 +329,8 @@ contract L1CrossDomainMessenger is
     }
 
     /**
-     * Sends a cross domain message.
-     * @param _canonicalTransactionChain Address of the CanonicalTransactionChain instance.
-     * @param _message Message to send.
-     * @param _gasLimit OVM gas limit for the message.
-     */
-    function _sendXDomainMessage(
-        address _canonicalTransactionChain,
-        bytes memory _message,
-        uint256 _gasLimit
-    ) internal {
-        // slither-disable-next-line reentrancy-events
-        ICanonicalTransactionChain(_canonicalTransactionChain).enqueue(
-            Lib_PredeployAddresses.L2_CROSS_DOMAIN_MESSENGER,
-            _gasLimit,
-            _message
-        );
-    }
-
-    /**
-     * @notice Forwards multiple cross domain messages to the L1 Cross Domain Messenger for relaying
+     * @notice Forwards multiple cross domain messages to the
+     * L1 Cross Domain Messenger Fast for relaying
      * @param _messages An array of L2 to L1 messages
      */
     function batchRelayMessages(L2ToL1Message[] calldata _messages) external onlyRelayer {

@@ -80,6 +80,28 @@ function blockedMessages(bytes32) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### failedMessages
+
+```solidity
+function failedMessages(bytes32) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
 ### initialize
 
 ```solidity

@@ -6,7 +6,7 @@
 
 
 
-*The L1 Cross Domain Messenger contract sends messages from L1 to L2, and relays messages from L2 onto L1. In the event that a message sent from L1 to L2 is rejected for exceeding the L2 epoch gas limit, it can be resubmitted via this contract&#39;s replay function.*
+*The L1 Cross Domain Messenger contract sends messages from L1 to L2, and relays messages  from L2 onto L1. In the event that a message sent from L1 to L2 is rejected for exceeding the L2 epoch gas limit, it can be resubmitted via this contract&#39;s replay function.*
 
 ## Methods
 
@@ -25,6 +25,22 @@ Allow a message.
 | Name | Type | Description |
 |---|---|---|
 | _xDomainCalldataHash | bytes32 | Hash of the message to block.
+
+### batchRelayMessages
+
+```solidity
+function batchRelayMessages(IL1CrossDomainMessenger.L2ToL1Message[] _messages) external nonpayable
+```
+
+Forwards multiple cross domain messages to the L1 Cross Domain Messenger Fast for relaying
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messages | IL1CrossDomainMessenger.L2ToL1Message[] | An array of L2 to L1 messages
 
 ### blockMessage
 

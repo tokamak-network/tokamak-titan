@@ -16,6 +16,7 @@ import {
   CHAIN_BLOCK_TIMES,
 } from '@eth-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
+
 import 'dotenv/config'
 
 type MessageRelayerOptions = {
@@ -33,7 +34,6 @@ type MessageRelayerOptions = {
   maxWaitTxTimeS: number
   fromL2TransactionIndex?: number
   pollingInterval?: number
-  l1StartOffset?: number
   addressManagerAddress?: Address
   maxGasPriceInGwei?: number
 }
@@ -135,11 +135,6 @@ export class MessageRelayerService extends BaseServiceV2<
           validator: validators.num,
           desc: 'The polling interval of relayer service',
           default: 1000,
-        },
-        l1StartOffset: {
-          validator: validators.num,
-          desc: 'The starting offset of the L1 block',
-          default: 1,
         },
         addressManagerAddress: {
           validator: validators.str,
@@ -319,12 +314,41 @@ export class MessageRelayerService extends BaseServiceV2<
           console.log('Buffer timeout: flushing')
         }
 
-        //const newMB = []
+        // clean up the array
+        const newMB = []
 
-        // TODO: push message to newMB depending on the message status of cur
-        // TODO: finalize message in the newMB
-        // for (const cur of this.state.messageBuffer) {
-        // }
+        // push cur to newMB depending on the message status
+        for (const cur of this.state.messageBuffer) {
+          const status =
+            await this.state.messenger.getMessageStatusFromContracts(cur)
+          if (
+            // STATE_ROOT_NOT_PUBLISHED, IN_CHALLENGE_PERIOD, READY_FOR_RELAY
+            status !== MessageStatus.RELAYED &&
+            status !== MessageStatus.RELAYED_FAILED
+          ) {
+            newMB.push(cur)
+          }
+        }
+        // update state.messageBuffer
+        this.state.messageBuffer = newMB
+
+        // empty
+        if (this.state.messageBuffer.length === 0) {
+          this.state.timeOfLastPendingRelay = false
+        } else {
+          // slice to subBuffer
+          const subBuffer = this.state.messageBuffer.slice(
+            0,
+            this.options.multiRelayLimit
+          )
+          this.logger.info('Prepared message subBuffer', {
+            subLen: subBuffer.length,
+            bufLen: this.state.messageBuffer.length,
+            limit: this.options.multiRelayLimit,
+          })
+
+          // TODO: finalize message in the newMB
+        }
       } else {
         console.log('Current gas price is unacceptable')
         this.state.timeOfLastPendingRelay = Date.now()
