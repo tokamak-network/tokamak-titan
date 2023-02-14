@@ -450,6 +450,7 @@ export class MessageRelayerService extends BaseServiceV2<
         const l2BlockNumber =
           await this.state.messenger.l2Provider.getBlockNumber()
 
+        // loop until highestCheckedL2Tx > l2BlockNumber
         while (this.state.highestCheckedL2Tx <= l2BlockNumber) {
           this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
@@ -464,10 +465,11 @@ export class MessageRelayerService extends BaseServiceV2<
             )
           }
 
+          // get the messages triggered SentMessage
+          // Finished to send messages in cross-domain (before it finalized)
           const messages = await this.state.messenger.getMessagesByTransaction(
             block.transactions[0].hash
           )
-
           if (messages.length === 0) {
             this.state.highestCheckedL2Tx++
             continue
