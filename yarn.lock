@@ -638,6 +638,13 @@
   resolved "https://registry.npmjs.org/@eth-optimism/contracts-periphery/-/contracts-periphery-1.0.1.tgz"
   integrity sha512-XLJlaOgLojhxehEYz8cxWIx687BRWa8tQO71FMAQ2qMVv2x8hnNQMe5ES0SUiDzvH1kfC/xDSgajCXg9cj5OpA==
 
+"@eth-optimism/ynatm@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/ynatm/-/ynatm-0.2.2.tgz#b1f165c3149188f184b66329228746260ae18677"
+  integrity sha512-R/hIAFWEj2sjf3inNEGCffmGofqMFY/7PS/Hh4A/62Kg0wMM8rsyMyW8pXngMnD/EQAjR8WTtKDutq/L5vSMTQ==
+  dependencies:
+    bluebird "^3.7.2"
+
 "@ethereum-waffle/chai@^3.4.4":
   version "3.4.4"
   resolved "https://registry.npmjs.org/@ethereum-waffle/chai/-/chai-3.4.4.tgz"
@@ -5229,7 +5236,7 @@ blakejs@^1.1.0:
   resolved "https://registry.npmjs.org/blakejs/-/blakejs-1.1.1.tgz"
   integrity sha512-bLG6PHOCZJKNshTjGRBvET0vTciwQE6zFKOKKXPDJfwFBd4Ac0yBfPZqcGvGJap50l7ktvlpFqc2jGVaUgbJgg==
 
-bluebird@^3.5.0, bluebird@^3.5.2, bluebird@^3.5.3, bluebird@^3.5.5:
+bluebird@^3.5.0, bluebird@^3.5.2, bluebird@^3.5.3, bluebird@^3.5.5, bluebird@^3.7.2:
   version "3.7.2"
   resolved "https://registry.npmjs.org/bluebird/-/bluebird-3.7.2.tgz"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
