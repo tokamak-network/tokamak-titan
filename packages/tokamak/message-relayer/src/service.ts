@@ -286,312 +286,300 @@ export class MessageRelayerService extends BaseServiceV2<
     // get filter
     await this._getFilter()
 
-    try {
-      // Batch flushing logic
-      const secondsElapsed = Math.floor(
-        (Date.now() - this.state.timeOfLastRelayS) / 1000
+    // Batch flushing logic
+    const secondsElapsed = Math.floor(
+      (Date.now() - this.state.timeOfLastRelayS) / 1000
+    )
+    console.log('Seconds elapsed since last batch push:', secondsElapsed)
+
+    const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
+
+    let pendingTXTimeOut = true
+    if (this.state.timeOfLastPendingRelay !== false) {
+      const pendingTXSecondsElapsed = Math.floor(
+        (Date.now() - this.state.timeOfLastPendingRelay) / 1000
       )
-      console.log('Seconds elapsed since last batch push:', secondsElapsed)
+      console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
+      pendingTXTimeOut =
+        pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
+    }
 
-      const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
+    const bufferFull =
+      this.state.messageBuffer.length >= this.options.minBatchSize
+        ? true
+        : false
 
-      let pendingTXTimeOut = true
-      if (this.state.timeOfLastPendingRelay !== false) {
-        const pendingTXSecondsElapsed = Math.floor(
-          (Date.now() - this.state.timeOfLastPendingRelay) / 1000
-        )
-        console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
-        pendingTXTimeOut =
-          pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
-      }
+    // check gas price
+    const gasPrice = await this.state.wallet.getGasPrice()
+    const gasPriceGwei = Number(utils.formatUnits(gasPrice, 'gwei'))
+    const gasPriceAcceptable =
+      gasPriceGwei < this.options.maxGasPriceInGwei ? true : false
 
-      const bufferFull =
-        this.state.messageBuffer.length >= this.options.minBatchSize
-          ? true
-          : false
+    if (
+      this.state.messageBuffer.length !== 0 &&
+      (bufferFull || timeOut) &&
+      pendingTXTimeOut
+    ) {
+      if (gasPriceAcceptable) {
+        if (bufferFull) {
+          console.log('Buffer full: flushing')
+        }
+        if (timeOut) {
+          console.log('Buffer timeout: flushing')
+        }
 
-      // check gas price
-      const gasPrice = await this.state.wallet.getGasPrice()
-      const gasPriceGwei = Number(utils.formatUnits(gasPrice, 'gwei'))
-      const gasPriceAcceptable =
-        gasPriceGwei < this.options.maxGasPriceInGwei ? true : false
+        // clean up the array
+        const newMB = []
 
-      if (
-        this.state.messageBuffer.length !== 0 &&
-        (bufferFull || timeOut) &&
-        pendingTXTimeOut
-      ) {
-        if (gasPriceAcceptable) {
-          if (bufferFull) {
-            console.log('Buffer full: flushing')
+        // push cur to newMB depending on the message status
+        for (const cur of this.state.messageBuffer) {
+          const status =
+            await this.state.messenger.getMessageStatusFromContracts(cur)
+          if (
+            // STATE_ROOT_NOT_PUBLISHED, IN_CHALLENGE_PERIOD, READY_FOR_RELAY
+            status !== MessageStatus.RELAYED &&
+            status !== MessageStatus.RELAYED_FAILED
+          ) {
+            newMB.push(cur)
           }
-          if (timeOut) {
-            console.log('Buffer timeout: flushing')
-          }
+        }
+        // update state.messageBuffer
+        this.state.messageBuffer = newMB
 
-          // clean up the array
-          const newMB = []
-
-          // push cur to newMB depending on the message status
-          for (const cur of this.state.messageBuffer) {
-            const status =
-              await this.state.messenger.getMessageStatusFromContracts(cur)
-            if (
-              // STATE_ROOT_NOT_PUBLISHED, IN_CHALLENGE_PERIOD, READY_FOR_RELAY
-              status !== MessageStatus.RELAYED &&
-              status !== MessageStatus.RELAYED_FAILED
-            ) {
-              newMB.push(cur)
-            }
-          }
-          // update state.messageBuffer
-          this.state.messageBuffer = newMB
-
-          // empty
-          if (this.state.messageBuffer.length === 0) {
-            this.state.timeOfLastPendingRelay = false
-          } else {
-            // slice to subBuffer
-            const subBuffer = this.state.messageBuffer.slice(
-              0,
-              this.options.multiRelayLimit
-            )
-            this.logger.info('Prepared message subBuffer', {
-              subLen: subBuffer.length,
-              bufLen: this.state.messageBuffer.length,
-              limit: this.options.multiRelayLimit,
-            })
-
-            // ynatm logic
-            const sendTxAndWaitForReceipt = async (
-              _gasPrice: BigNumber
-            ): Promise<any> => {
-              // Generate the transaction we will repeatedly submit
-
-              // nonce 조회
-              const nonce = await this.options.l1Wallet.getTransactionCount()
-              const txResponse =
-                await this.state.messenger.finalizeBatchMessage(subBuffer, {
-                  overrides: {
-                    gasPrice: _gasPrice,
-                    nonce,
-                  },
-                })
-              const txReceipt = await txResponse.wait(
-                this.options.numConfirmations
-              )
-              return txReceipt
-            }
-
-            const minGasPrice = await this._getGasPriceInGwei(
-              this.options.l1Wallet
-            )
-            let receipt
-            try {
-              // Gradually keeps trying a transaction with an incremental amount of gas
-              // while keeping the same nonce.
-              receipt = await ynatm.send({
-                sendTransactionFunction: sendTxAndWaitForReceipt,
-                minGasPrice: ynatm.toGwei(minGasPrice),
-                maxGasPrice: ynatm.toGwei(this.options.maxGasPriceInGwei),
-                gasPriceScalingFunction: ynatm.LINEAR(
-                  this.options.gasRetryIncrement
-                ),
-                delay: this.options.resubmissionTimeout,
-              })
-              this.logger.info('Relay transaction sent')
-              this.metrics.numBatchTx.inc()
-            } catch (err) {
-              this.logger.error('Relay attempt failed, skipping', {
-                message: err.toString(),
-                stack: err.stack,
-                code: err.code,
-              })
-            }
-
-            if (!receipt) {
-              this.logger.error('No receipt for relayMultiMessage transaction')
-            } else if (receipt.status === 1) {
-              this.logger.info('Sucessful relayMultiMessage', {
-                blockNumber: receipt.blockNumber,
-                transactionIndex: receipt.transactionIndex,
-                status: receipt.status,
-                msgCount: subBuffer.length,
-                gasUsed: receipt.gasUsed.toString(),
-                effectiveGasPrice: receipt.effectiveGasPrice.toString(),
-              })
-            } else {
-              this.logger.warning('Unsuccessful relayMultiMessage', {
-                blockNumber: receipt.blockNumber,
-                transactionIndex: receipt.transactionIndex,
-                status: receipt.status,
-                msgCount: subBuffer.length,
-                gasUsed: receipt.gasUsed.toString(),
-                effectiveGasPrice: receipt.effectiveGasPrice.toString(),
-              })
-            }
-
-            this.state.timeOfLastPendingRelay = Date.now()
-          }
+        // empty
+        if (this.state.messageBuffer.length === 0) {
+          this.state.timeOfLastPendingRelay = false
         } else {
-          console.log('Current gas price is unacceptable')
+          // slice to subBuffer
+          const subBuffer = this.state.messageBuffer.slice(
+            0,
+            this.options.multiRelayLimit
+          )
+          this.logger.info('Prepared message subBuffer', {
+            subLen: subBuffer.length,
+            bufLen: this.state.messageBuffer.length,
+            limit: this.options.multiRelayLimit,
+          })
+
+          // ynatm logic
+          const sendTxAndWaitForReceipt = async (
+            _gasPrice: BigNumber
+          ): Promise<any> => {
+            // Generate the transaction we will repeatedly submit
+
+            // nonce 조회
+            const nonce = await this.options.l1Wallet.getTransactionCount()
+            const txResponse = await this.state.messenger.finalizeBatchMessage(
+              subBuffer,
+              {
+                overrides: {
+                  gasPrice: _gasPrice,
+                  nonce,
+                },
+              }
+            )
+            const txReceipt = await txResponse.wait(
+              this.options.numConfirmations
+            )
+            return txReceipt
+          }
+
+          const minGasPrice = await this._getGasPriceInGwei(
+            this.options.l1Wallet
+          )
+          let receipt
+          try {
+            // Gradually keeps trying a transaction with an incremental amount of gas
+            // while keeping the same nonce.
+            receipt = await ynatm.send({
+              sendTransactionFunction: sendTxAndWaitForReceipt,
+              minGasPrice: ynatm.toGwei(minGasPrice),
+              maxGasPrice: ynatm.toGwei(this.options.maxGasPriceInGwei),
+              gasPriceScalingFunction: ynatm.LINEAR(
+                this.options.gasRetryIncrement
+              ),
+              delay: this.options.resubmissionTimeout,
+            })
+            this.logger.info('Relay transaction sent')
+            this.metrics.numBatchTx.inc()
+          } catch (err) {
+            this.logger.error('Relay attempt failed, skipping', {
+              message: err.toString(),
+              stack: err.stack,
+              code: err.code,
+            })
+          }
+
+          if (!receipt) {
+            this.logger.error('No receipt for relayMultiMessage transaction')
+          } else if (receipt.status === 1) {
+            this.logger.info('Sucessful relayMultiMessage', {
+              blockNumber: receipt.blockNumber,
+              transactionIndex: receipt.transactionIndex,
+              status: receipt.status,
+              msgCount: subBuffer.length,
+              gasUsed: receipt.gasUsed.toString(),
+              effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+            })
+          } else {
+            this.logger.warning('Unsuccessful relayMultiMessage', {
+              blockNumber: receipt.blockNumber,
+              transactionIndex: receipt.transactionIndex,
+              status: receipt.status,
+              msgCount: subBuffer.length,
+              gasUsed: receipt.gasUsed.toString(),
+              effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+            })
+          }
+
           this.state.timeOfLastPendingRelay = Date.now()
         }
-        this.state.timeOfLastRelayS = Date.now()
       } else {
-        console.log(
-          'Buffer still too small - current buffer length: ',
-          this.state.messageBuffer.length
-        )
-        console.log('Buffer flush size set to: ', this.options.minBatchSize)
+        console.log('Current gas price is unacceptable')
+        this.state.timeOfLastPendingRelay = Date.now()
       }
+      this.state.timeOfLastRelayS = Date.now()
+    } else {
+      console.log(
+        'Buffer still too small - current buffer length: ',
+        this.state.messageBuffer.length
+      )
+      console.log('Buffer flush size set to: ', this.options.minBatchSize)
+    }
 
-      if (this.state.timeOfLastPendingRelay === false) {
-        const l2BlockNumber =
-          await this.state.messenger.l2Provider.getBlockNumber()
+    if (this.state.timeOfLastPendingRelay === false) {
+      const l2BlockNumber =
+        await this.state.messenger.l2Provider.getBlockNumber()
 
-        // loop until highestCheckedL2Tx > l2BlockNumber
-        while (this.state.highestCheckedL2Tx <= l2BlockNumber) {
-          this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
+      // loop until highestCheckedL2Tx > l2BlockNumber
+      while (this.state.highestCheckedL2Tx <= l2BlockNumber) {
+        this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
-          const block =
-            await this.state.messenger.l2Provider.getBlockWithTransactions(
-              this.state.highestCheckedL2Tx
-            )
-
-          if (block.transactions.length !== 1) {
-            throw new Error(
-              `got an unexpected number of transactions in block: ${block.number}`
-            )
-          }
-
-          // get the messages triggered SentMessage
-          // Finished to send messages in cross-domain (before it finalized)
-          const messages = await this.state.messenger.getMessagesByTransaction(
-            block.transactions[0].hash
+        const block =
+          await this.state.messenger.l2Provider.getBlockWithTransactions(
+            this.state.highestCheckedL2Tx
           )
-          if (messages.length === 0) {
-            this.state.highestCheckedL2Tx++
-            continue
-          }
 
-          // Make sure that all messages sent within the transaction are finalized.
-          // If any messages are not finalized, then we're going to break the loop
-          // which will trigger the sleep and wait for a few seconds
-          // before we check again to see if this transaction is finalized.
-          let isFinalized = true
-          for (const message of messages) {
-            const status =
-              await this.state.messenger.getMessageStatusFromContracts(message)
-            if (
-              status === MessageStatus.IN_CHALLENGE_PERIOD ||
-              status === MessageStatus.STATE_ROOT_NOT_PUBLISHED
-            ) {
-              isFinalized = false
-            }
-          }
+        if (block.transactions.length !== 1) {
+          this.logger.error(
+            `got an unexpected number of transactions in block: ${block.number}`
+          )
+        }
 
-          if (!isFinalized) {
-            this.logger.info(
-              `tx not yet finalized, waiting: ${this.state.highestCheckedL2Tx}`
-            )
-            break
-          } else {
-            this.logger.info(
-              `tx is finalized, attempting to add to pending buffer: ${this.state.highestCheckedL2Tx}`
-            )
-          }
+        // get the messages triggered SentMessage
+        // Finished to send messages in cross-domain (before it finalized)
+        const messages = await this.state.messenger.getMessagesByTransaction(
+          block.transactions[0].hash
+        )
+        if (messages.length === 0) {
+          this.state.highestCheckedL2Tx++
+          continue
+        }
 
-          // skip messages since thay are not allowed an to avoid top level relay fails
-          const canonicalTransactionChain =
-            this.state.messenger.contracts.l1.CanonicalTransactionChain.address
-
-          for (const message of messages) {
-            const isFastRelayerMessage = this.state.fastRelayerFilter.includes(
-              message.target
-            )
-            const isRelayerMessage = this.state.relayerFilter.includes(
-              message.target
-            )
-            if (this.options.isFastRelayer) {
-              if (!isFastRelayerMessage) {
-                this.logger.info('Message not intended for target, skipping.')
-                continue
-              } else {
-                if (!isRelayerMessage) {
-                  this.logger.info('Message not intended for target, skipping')
-                  continue
-                }
-              }
-
-              const status =
-                await this.state.messenger.getMessageStatusFromContracts(
-                  message
-                )
-              if (status === MessageStatus.RELAYED) {
-                this.logger.info('Message has already been relayed, skipping')
-                continue
-              }
-
-              if (status === MessageStatus.RELAYED_FAILED) {
-                this.logger.info('Last messsage was failed, skipping')
-                continue
-              }
-
-              if (message.target === canonicalTransactionChain) {
-                this.logger.info('Message target is CTC, skipping')
-                continue
-              }
-
-              this.state.messageBuffer.push(message)
-              this.logger.info('added message to pending buffer')
-            }
-            // All messages have been relayed so we can move on to the next block.
-            this.state.highestCheckedL2Tx++
+        // Make sure that all messages sent within the transaction are finalized.
+        // If any messages are not finalized, then we're going to break the loop
+        // which will trigger the sleep and wait for a few seconds
+        // before we check again to see if this transaction is finalized.
+        let isFinalized = true
+        for (const message of messages) {
+          const status =
+            await this.state.messenger.getMessageStatusFromContracts(message)
+          if (
+            status === MessageStatus.IN_CHALLENGE_PERIOD ||
+            status === MessageStatus.STATE_ROOT_NOT_PUBLISHED
+          ) {
+            isFinalized = false
           }
         }
-      } else {
-        this.logger.info('Waiting for the current pending tx to be finalized')
+
+        if (!isFinalized) {
+          this.logger.info(
+            `tx not yet finalized, waiting: ${this.state.highestCheckedL2Tx}`
+          )
+          break
+        } else {
+          this.logger.info(
+            `tx is finalized, attempting to add to pending buffer: ${this.state.highestCheckedL2Tx}`
+          )
+        }
+
+        // skip messages since thay are not allowed an to avoid top level relay fails
+        const canonicalTransactionChain =
+          this.state.messenger.contracts.l1.CanonicalTransactionChain.address
+
+        for (const message of messages) {
+          const isFastRelayerMessage = this.state.fastRelayerFilter.includes(
+            message.target
+          )
+          const isRelayerMessage = this.state.relayerFilter.includes(
+            message.target
+          )
+          if (this.options.isFastRelayer) {
+            if (!isFastRelayerMessage) {
+              this.logger.info('Message not intended for target, skipping.')
+              continue
+            } else {
+              if (!isRelayerMessage) {
+                this.logger.info('Message not intended for target, skipping')
+                continue
+              }
+            }
+
+            const status =
+              await this.state.messenger.getMessageStatusFromContracts(message)
+            if (status === MessageStatus.RELAYED) {
+              this.logger.info('Message has already been relayed, skipping')
+              continue
+            }
+
+            if (status === MessageStatus.RELAYED_FAILED) {
+              this.logger.info('Last messsage was failed, skipping')
+              continue
+            }
+
+            if (message.target === canonicalTransactionChain) {
+              this.logger.info('Message target is CTC, skipping')
+              continue
+            }
+
+            this.state.messageBuffer.push(message)
+            this.logger.info('added message to pending buffer')
+          }
+          // All messages have been relayed so we can move on to the next block.
+          this.state.highestCheckedL2Tx++
+        }
       }
-    } catch (err) {
-      this.logger.error('Caught an unhandled error', {
-        message: err.toString(),
-        stack: err.stack,
-        code: err.code,
-      })
+    } else {
+      this.logger.info('Waiting for the current pending tx to be finalized')
     }
   }
 
   private async _getFilter(): Promise<void> {
-    try {
-      if (
-        this.state.lastFilterPollingTimestamp === 0 ||
-        new Date().getTime() >
-          this.state.lastFilterPollingTimestamp +
-            this.options.filterPollingInterval
-      ) {
-        const addressManager = getContractFactory('Lib_AddressManager')
-          .connect(this.state.wallet)
-          .attach(this.options.addressManagerAddress)
-        const L1LiquidityPool = await addressManager.getAddress(
-          'Proxy__L1LiquidityPool'
-        )
-        const L1StandardBridge = await addressManager.getAddress(
-          'Proxy__OVM_L1StandardBridge'
-        )
-        const fastRelayerFilterSelect = [L1LiquidityPool]
-        const relayerFilterSelect = [L1StandardBridge]
+    if (
+      this.state.lastFilterPollingTimestamp === 0 ||
+      new Date().getTime() >
+        this.state.lastFilterPollingTimestamp +
+          this.options.filterPollingInterval
+    ) {
+      const addressManager = getContractFactory('Lib_AddressManager')
+        .connect(this.state.wallet)
+        .attach(this.options.addressManagerAddress)
+      const L1LiquidityPool = await addressManager.getAddress(
+        'Proxy__L1LiquidityPool'
+      )
+      const L1StandardBridge = await addressManager.getAddress(
+        'Proxy__OVM_L1StandardBridge'
+      )
+      const fastRelayerFilterSelect = [L1LiquidityPool]
+      const relayerFilterSelect = [L1StandardBridge]
 
-        this.state.lastFilterPollingTimestamp = new Date().getTime()
-        this.state.fastRelayerFilter = fastRelayerFilterSelect
-        this.state.relayerFilter = relayerFilterSelect
-        this.logger.info('Found the two filters', {
-          relayerFilterSelect,
-          fastRelayerFilterSelect,
-        })
-      }
-    } catch {
-      this.logger.error('CRITICAL ERROR: Failed to fetch the Filter')
+      this.state.lastFilterPollingTimestamp = new Date().getTime()
+      this.state.fastRelayerFilter = fastRelayerFilterSelect
+      this.state.relayerFilter = relayerFilterSelect
+      this.logger.info('Found the two filters', {
+        relayerFilterSelect,
+        fastRelayerFilterSelect,
+      })
     }
   }
 
