@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - 'main'
-      - OR-509_auto-update-images
 
 jobs:
   l2geth:
@@ -703,5 +702,5 @@ jobs:
         with:
           default_author: github_actions
           github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          message: '[AUTO] Update tokamak-optimism image tag of nightly'
+          message: '[AUTO] Update tokamak-optimism images tag for nightly'
           cwd: 'tokamak-optimism-infra/'
