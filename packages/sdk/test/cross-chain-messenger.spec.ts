@@ -308,6 +308,7 @@ describe('CrossChainMessenger', () => {
                 return DUMMY_MESSAGE
               })
 
+              // trigger SentMessage event in messages
               const tx = await l1Messenger.triggerSentMessageEvents(messages)
               const found = await messenger.getMessagesByTransaction(tx, {
                 direction: MessageDirection.L1_TO_L2,

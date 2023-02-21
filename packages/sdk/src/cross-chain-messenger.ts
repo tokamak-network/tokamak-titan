@@ -307,6 +307,7 @@ export class CrossChainMessenger {
         ? this.contracts.l1.L1CrossDomainMessenger
         : this.contracts.l2.L2CrossDomainMessenger
 
+    // Filter in order
     return receipt.logs
       .filter((log) => {
         // Only look at logs emitted by the messenger address
@@ -315,6 +316,8 @@ export class CrossChainMessenger {
       .filter((log) => {
         // Only look at SentMessage logs specifically
         const parsed = messenger.interface.parseLog(log)
+        // Event RelayedMessage is triggered by L2CrossDomainMessenger.relayMessage
+        // Event SentMessage is triggered by L2CrossDomainMessenger.sendMessage
         return parsed.name === 'SentMessage'
       })
       .map((log) => {

@@ -287,7 +287,6 @@ export class MessageRelayerService extends BaseServiceV2<
     await this._getFilter()
 
     // Batch flushing logic
-
     const secondsElapsed = Math.floor(
       (Date.now() - this.state.timeOfLastRelayS) / 1000
     )
@@ -448,108 +447,139 @@ export class MessageRelayerService extends BaseServiceV2<
       console.log('Buffer flush size set to: ', this.options.minBatchSize)
     }
 
-    // TODO: scanning the new messages only if
-    // the pending messages are relayed to l1
+    if (this.state.timeOfLastPendingRelay === false) {
+      const l2BlockNumber =
+        await this.state.messenger.l2Provider.getBlockNumber()
 
-    this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
+      // loop until highestCheckedL2Tx > l2BlockNumber
+      while (this.state.highestCheckedL2Tx <= l2BlockNumber) {
+        this.logger.info(`checking L2 block ${this.state.highestCheckedL2Tx}`)
 
-    const block =
-      await this.state.messenger.l2Provider.getBlockWithTransactions(
-        this.state.highestCheckedL2Tx
-      )
+        const block =
+          await this.state.messenger.l2Provider.getBlockWithTransactions(
+            this.state.highestCheckedL2Tx
+          )
 
-    // Should never happen.
-    if (block.transactions.length !== 1) {
-      throw new Error(
-        `got an unexpected number of transactions in block: ${block.number}`
-      )
-    }
+        if (block.transactions.length !== 1) {
+          this.logger.error(
+            `got an unexpected number of transactions in block: ${block.number}`
+          )
+        }
 
-    const messages = await this.state.messenger.getMessagesByTransaction(
-      block.transactions[0].hash
-    )
+        // get the messages triggered SentMessage
+        // Finished to send messages in cross-domain (before it finalized)
+        const messages = await this.state.messenger.getMessagesByTransaction(
+          block.transactions[0].hash
+        )
+        if (messages.length === 0) {
+          this.state.highestCheckedL2Tx++
+          continue
+        }
 
-    // No messages in this transaction so we can move on to the next one.
-    if (messages.length === 0) {
-      this.state.highestCheckedL2Tx++
-      return
-    }
+        // Make sure that all messages sent within the transaction are finalized.
+        // If any messages are not finalized, then we're going to break the loop
+        // which will trigger the sleep and wait for a few seconds
+        // before we check again to see if this transaction is finalized.
+        let isFinalized = true
+        for (const message of messages) {
+          const status =
+            await this.state.messenger.getMessageStatusFromContracts(message)
+          if (
+            status === MessageStatus.IN_CHALLENGE_PERIOD ||
+            status === MessageStatus.STATE_ROOT_NOT_PUBLISHED
+          ) {
+            isFinalized = false
+          }
+        }
 
-    // Make sure that all messages sent within the transaction are finalized. If any messages
-    // are not finalized, then we're going to break the loop which will trigger the sleep and
-    // wait for a few seconds before we check again to see if this transaction is finalized.
-    let isFinalized = true
-    for (const message of messages) {
-      const status = await this.state.messenger.getMessageStatus(message)
-      if (
-        status === MessageStatus.IN_CHALLENGE_PERIOD ||
-        status === MessageStatus.STATE_ROOT_NOT_PUBLISHED
-      ) {
-        isFinalized = false
-      }
-    }
-
-    if (!isFinalized) {
-      this.logger.info(
-        `tx not yet finalized, waiting: ${this.state.highestCheckedL2Tx}`
-      )
-      return
-    } else {
-      this.logger.info(
-        `tx is finalized, relaying: ${this.state.highestCheckedL2Tx}`
-      )
-    }
-
-    // If we got here then all messages in the transaction are finalized. Now we can relay
-    // each message to L1.
-    for (const message of messages) {
-      try {
-        const tx = await this.state.messenger.finalizeMessage(message)
-        this.logger.info(`relayer sent tx: ${tx.hash}`)
-      } catch (err) {
-        if (err.message.includes('message has already been received')) {
-          // It's fine, the message was relayed by someone else
+        if (!isFinalized) {
+          this.logger.info(
+            `tx not yet finalized, waiting: ${this.state.highestCheckedL2Tx}`
+          )
+          break
         } else {
-          throw err
+          this.logger.info(
+            `tx is finalized, attempting to add to pending buffer: ${this.state.highestCheckedL2Tx}`
+          )
+        }
+
+        // skip messages since thay are not allowed an to avoid top level relay fails
+        const canonicalTransactionChain =
+          this.state.messenger.contracts.l1.CanonicalTransactionChain.address
+
+        for (const message of messages) {
+          const isFastRelayerMessage = this.state.fastRelayerFilter.includes(
+            message.target
+          )
+          const isRelayerMessage = this.state.relayerFilter.includes(
+            message.target
+          )
+          if (this.options.isFastRelayer) {
+            if (!isFastRelayerMessage) {
+              this.logger.info('Message not intended for target, skipping.')
+              continue
+            } else {
+              if (!isRelayerMessage) {
+                this.logger.info('Message not intended for target, skipping')
+                continue
+              }
+            }
+
+            const status =
+              await this.state.messenger.getMessageStatusFromContracts(message)
+            if (status === MessageStatus.RELAYED) {
+              this.logger.info('Message has already been relayed, skipping')
+              continue
+            }
+
+            if (status === MessageStatus.RELAYED_FAILED) {
+              this.logger.info('Last messsage was failed, skipping')
+              continue
+            }
+
+            if (message.target === canonicalTransactionChain) {
+              this.logger.info('Message target is CTC, skipping')
+              continue
+            }
+
+            this.state.messageBuffer.push(message)
+            this.logger.info('added message to pending buffer')
+          }
+          // All messages have been relayed so we can move on to the next block.
+          this.state.highestCheckedL2Tx++
         }
       }
-      await this.state.messenger.waitForMessageReceipt(message)
+    } else {
+      this.logger.info('Waiting for the current pending tx to be finalized')
     }
-
-    // All messages have been relayed so we can move on to the next block.
-    this.state.highestCheckedL2Tx++
   }
 
   private async _getFilter(): Promise<void> {
-    try {
-      if (
-        this.state.lastFilterPollingTimestamp === 0 ||
-        new Date().getTime() >
-          this.state.lastFilterPollingTimestamp +
-            this.options.filterPollingInterval
-      ) {
-        const addressManager = getContractFactory('Lib_AddressManager')
-          .connect(this.state.wallet)
-          .attach(this.options.addressManagerAddress)
-        const L1LiquidityPool = await addressManager.getAddress(
-          'Proxy__L1LiquidityPool'
-        )
-        const L1StandardBridge = await addressManager.getAddress(
-          'Proxy__OVM_L1StandardBridge'
-        )
-        const fastRelayerFilterSelect = [L1LiquidityPool]
-        const relayerFilterSelect = [L1StandardBridge]
+    if (
+      this.state.lastFilterPollingTimestamp === 0 ||
+      new Date().getTime() >
+        this.state.lastFilterPollingTimestamp +
+          this.options.filterPollingInterval
+    ) {
+      const addressManager = getContractFactory('Lib_AddressManager')
+        .connect(this.state.wallet)
+        .attach(this.options.addressManagerAddress)
+      const L1LiquidityPool = await addressManager.getAddress(
+        'Proxy__L1LiquidityPool'
+      )
+      const L1StandardBridge = await addressManager.getAddress(
+        'Proxy__OVM_L1StandardBridge'
+      )
+      const fastRelayerFilterSelect = [L1LiquidityPool]
+      const relayerFilterSelect = [L1StandardBridge]
 
-        this.state.lastFilterPollingTimestamp = new Date().getTime()
-        this.state.fastRelayerFilter = fastRelayerFilterSelect
-        this.state.relayerFilter = relayerFilterSelect
-        this.logger.info('Found the two filters', {
-          relayerFilterSelect,
-          fastRelayerFilterSelect,
-        })
-      }
-    } catch {
-      this.logger.error('CRITICAL ERROR: Failed to fetch the Filter')
+      this.state.lastFilterPollingTimestamp = new Date().getTime()
+      this.state.fastRelayerFilter = fastRelayerFilterSelect
+      this.state.relayerFilter = relayerFilterSelect
+      this.logger.info('Found the two filters', {
+        relayerFilterSelect,
+        fastRelayerFilterSelect,
+      })
     }
   }
 
