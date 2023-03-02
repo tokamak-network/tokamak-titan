@@ -69,6 +69,7 @@ const getL1ContractsByNetworkName = (network: string): OEL1ContractsLike => {
     L1CrossDomainMessenger: getDeployedAddress(
       'Proxy__OVM_L1CrossDomainMessenger'
     ),
+    // TODO: mainnet
     // L1CrossDomainMessengerFast: getDeployedAddress(
     //   'Proxy__L1CrossDomainMessengerFast'
     // ),

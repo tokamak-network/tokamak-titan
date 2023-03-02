@@ -70,6 +70,12 @@ export const getOEContract = (
     iface = getContractInterface(name)
   }
 
+  // we changed some part of L1CrossDomainMessenger
+  // get the interface of L1CrossDomainMessenger (not use getContractInterfaceBedrock)
+  if (name === 'L1CrossDomainMessenger') {
+    iface = getContractInterface(name)
+  }
+
   return new Contract(
     toAddress(
       opts.address || addresses.l1[contractName] || addresses.l2[contractName]
@@ -119,6 +125,16 @@ export const getAllOEContracts = (
   // Attach all L1 contracts.
   const l1Contracts = {} as OEL1Contracts
   for (const [contractName, contractAddress] of Object.entries(addresses.l1)) {
+    // Now we do not support Bedrock
+    // if (
+    //   contractName === 'OptimismPortal' ||
+    //   contractName === 'L2OutputOracle' ||
+    //   contractName === 'L2ToL1MessagePasser'
+    // ) {
+    //   continue
+    // }
+    // console.log('getAllOEContracts / contractName: ' + contractName)
+
     l1Contracts[contractName] = getOEContract(
       contractName as keyof OEL1Contracts,
       l2ChainId,

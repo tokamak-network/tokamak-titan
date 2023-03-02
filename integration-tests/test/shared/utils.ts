@@ -1,4 +1,5 @@
 /* Imports: External */
+import * as request from 'request-promise-native'
 import { Wallet, providers, BigNumber, utils } from 'ethers'
 import { predeploys } from '@eth-optimism/contracts'
 import { remove0x } from '@eth-optimism/core-utils'
@@ -122,6 +123,9 @@ const procEnv = cleanEnv(process.env, {
   L1_CROSS_DOMAIN_MESSENGER: addressValidator({
     default: '',
   }),
+  L1_CROSS_DOMAIN_MESSENGER_FAST: addressValidator({
+    default: '',
+  }),
   L1_STANDARD_BRIDGE: addressValidator({
     default: '',
   }),
@@ -169,6 +173,21 @@ export const gasPriceOracleWallet = new Wallet(
   procEnv.GAS_PRICE_ORACLE_PRIVATE_KEY,
   l2Provider
 )
+
+if (!process.env.TOKAMAK_CONTRACTS_URL) {
+  console.log(`!!You did not set process.env.TOKAMAK_CONTRACTS_URL!!`)
+  console.log(
+    `Setting to default value of http://127.0.0.1:8082/tokamak-addr.json`
+  )
+} else {
+  console.log(
+    `process.env.TOKAMAK_CONTRACTS_URL set to:`,
+    process.env.TOKAMAK_CONTRACTS_URL
+  )
+}
+
+export const TOKAMAK_CONTRACTS_URL =
+  process.env.TOKAMAK_CONTRACTS_URL || 'http://127.0.0.1:8082/tokamak-addr.json'
 
 // Predeploys
 export const OVM_ETH_ADDRESS = predeploys.OVM_ETH
@@ -277,4 +296,12 @@ export const die = (...args) => {
 
 export const logStderr = (msg: string) => {
   process.stderr.write(`${msg}\n`)
+}
+
+export const getTokamakContractAddresses = async () => {
+  const options = {
+    uri: TOKAMAK_CONTRACTS_URL,
+  }
+  const result = await request.get(options)
+  return JSON.parse(result)
 }
