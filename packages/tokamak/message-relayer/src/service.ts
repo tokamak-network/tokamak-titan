@@ -159,7 +159,7 @@ export class MessageRelayerService extends BaseServiceV2<
         resubmissionTimeout: {
           validator: validators.num,
           desc: 'Timeout in resubmission for relay tx',
-          default: 60,
+          default: 60000, // default: 60,000ms
         },
       },
       metricsSpec: {
@@ -300,17 +300,18 @@ export class MessageRelayerService extends BaseServiceV2<
 
       let pendingTXTimeOut = true
       if (this.state.timeOfLastPendingRelay !== false) {
-        // console.log(
-        //   'timeOfLastPendingRelay: ',
-        //   this.state.timeOfLastPendingRelay
-        // )
+        console.log(
+          'timeOfLastPendingRelay: ',
+          this.state.timeOfLastPendingRelay
+        )
         const pendingTXSecondsElapsed = Math.floor(
           (Date.now() - this.state.timeOfLastPendingRelay) / 1000
         )
         console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
         pendingTXTimeOut =
           pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
-        // console.log('pendingTXTimeOut: ', pendingTXTimeOut)
+        // maxWaitTxTimeS = 180
+        console.log('pendingTXTimeOut: ', pendingTXTimeOut)
       }
 
       // used to determine whether the buffer is full or not
@@ -318,6 +319,7 @@ export class MessageRelayerService extends BaseServiceV2<
         this.state.messageBuffer.length >= this.options.minBatchSize
           ? true
           : false
+      console.log('bufferFull: ', bufferFull)
 
       // check gas price
       const gasPrice = await this.state.wallet.getGasPrice()
@@ -446,6 +448,7 @@ export class MessageRelayerService extends BaseServiceV2<
                 effectiveGasPrice: receipt.effectiveGasPrice.toString(),
               })
             }
+            // timeOfLastPendingRelay is Date.now after batch tx
             this.state.timeOfLastPendingRelay = Date.now()
           }
         } else {
@@ -453,6 +456,7 @@ export class MessageRelayerService extends BaseServiceV2<
           this.state.timeOfLastPendingRelay = Date.now()
         }
         this.state.timeOfLastRelayS = Date.now()
+        // buffer still too small
       } else {
         console.log(
           'Buffer still too small - current buffer length: ',
