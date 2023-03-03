@@ -1,9 +1,9 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { Contract } from 'ethers'
-// Message Contracts for test comms
-import L2MessageJson from '@tokamak-optimism/contracts/artifacts/contracts/test-helpers/Message/L2Message.sol/L2Message.json'
 
+// Message Contracts for test comms
+import L2MessageJson from '../artifacts/contracts/Message/L2Message.sol/L2Message.json'
 import { OptimismEnv } from './shared/env'
 
 chai.use(chaiAsPromised)

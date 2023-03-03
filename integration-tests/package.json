@@ -33,7 +33,6 @@
     "@eth-optimism/contracts-periphery": "^1.0.1",
     "@eth-optimism/core-utils": "0.10.1",
     "@eth-optimism/sdk": "1.6.6",
-    "@tokamak-optimism/contracts": "0.0.1",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",
     "@ethersproject/transactions": "^5.7.0",
@@ -68,9 +67,9 @@
     "lint-staged": "11.0.0",
     "mocha": "^8.4.0",
     "node-fetch": "^2.6.7",
+    "request-promise-native": "^1.0.5",
     "rimraf": "^3.0.2",
     "typescript": "^4.3.5",
-    "uniswap-v3-deploy-plugin": "^0.1.0",
-    "request-promise-native": "^1.0.5"
+    "uniswap-v3-deploy-plugin": "^0.1.0"
   }
 }
