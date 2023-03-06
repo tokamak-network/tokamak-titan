@@ -297,21 +297,14 @@ export class MessageRelayerService extends BaseServiceV2<
       // timeOut is true if the time since the last relay (secondsElapsed) is greater than options.maxWaitTimeS
       // default of maxWaitTimeS: 60s
       const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
-
       let pendingTXTimeOut = true
       if (this.state.timeOfLastPendingRelay !== false) {
-        console.log(
-          'timeOfLastPendingRelay: ',
-          this.state.timeOfLastPendingRelay
-        )
         const pendingTXSecondsElapsed = Math.floor(
           (Date.now() - this.state.timeOfLastPendingRelay) / 1000
         )
         console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
         pendingTXTimeOut =
           pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
-        // maxWaitTxTimeS = 180
-        console.log('pendingTXTimeOut: ', pendingTXTimeOut)
       }
 
       // used to determine whether the buffer is full or not
@@ -319,7 +312,6 @@ export class MessageRelayerService extends BaseServiceV2<
         this.state.messageBuffer.length >= this.options.minBatchSize
           ? true
           : false
-      console.log('bufferFull: ', bufferFull)
 
       // check gas price
       const gasPrice = await this.state.wallet.getGasPrice()
@@ -394,7 +386,6 @@ export class MessageRelayerService extends BaseServiceV2<
                     nonce,
                   },
                 })
-              console.log('txResponse: ', txResponse)
               const txReceipt = await txResponse.wait(
                 this.options.numConfirmations
               )
