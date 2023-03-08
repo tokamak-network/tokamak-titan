@@ -185,7 +185,6 @@ export class OptimismEnv {
     const resolved = await this.messengerFast.toCrossChainMessage(tx)
     console.log('resolved: ', resolved.transactionHash)
 
-    // timeout error
     const messageReceipt = await this.messengerFast.waitForMessageReceipt(tx)
     console.log(
       'messageReceipt: ',
@@ -222,6 +221,7 @@ export class OptimismEnv {
     tx = await tx
     await tx.wait()
 
+    // get messages triggered "SentMessage" event
     const messages = await this.messenger.getMessagesByTransaction(tx)
     if (messages.length === 0) {
       return
