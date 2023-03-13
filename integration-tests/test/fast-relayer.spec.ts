@@ -18,11 +18,11 @@ describe('Fast Messenge Relayer Test', async () => {
     // set new environment
     env = await OptimismEnv.new()
 
-    L2Message = new Contract(
-      env.addressesTOKAMAK.L2Message,
-      L2MessageJson.abi,
-      env.l2Wallet
-    )
+    const L2MessageAddress =
+      await env.messengerFast.contracts.l1.AddressManager.getAddress(
+        'L2Message'
+      )
+    L2Message = new Contract(L2MessageAddress, L2MessageJson.abi, env.l2Wallet)
   })
 
   // Test to send message from L2 to L1 using fast relayer

@@ -25,7 +25,6 @@ import {
   l2Wallet,
   fundUser,
   envConfig,
-  getTokamakContractAddresses,
 } from './utils'
 
 export interface CrossDomainMessagePair {
@@ -37,7 +36,6 @@ export interface CrossDomainMessagePair {
 
 /// Helper class for instantiating a test environment with a funded account
 export class OptimismEnv {
-  addressesTOKAMAK
   // The wallets
   l1Wallet: Wallet
   l2Wallet: Wallet
@@ -51,7 +49,6 @@ export class OptimismEnv {
   verifierProvider: providers.JsonRpcProvider
 
   constructor(args: any) {
-    this.addressesTOKAMAK = args.addressesTOKAMAK
     this.l1Wallet = args.l1Wallet
     this.l2Wallet = args.l2Wallet
     this.messenger = args.messenger
@@ -63,7 +60,6 @@ export class OptimismEnv {
   }
 
   static async new(): Promise<OptimismEnv> {
-    const addressesTOKAMAK = await getTokamakContractAddresses()
     let bridgeOverrides: BridgeAdapterData
     if (envConfig.L1_STANDARD_BRIDGE) {
       bridgeOverrides = {
@@ -129,7 +125,6 @@ export class OptimismEnv {
     }
 
     return new OptimismEnv({
-      addressesTOKAMAK,
       l1Wallet,
       l2Wallet,
       messenger,

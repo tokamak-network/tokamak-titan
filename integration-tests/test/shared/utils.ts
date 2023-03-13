@@ -1,5 +1,4 @@
 /* Imports: External */
-import * as request from 'request-promise-native'
 import { Wallet, providers, BigNumber, utils } from 'ethers'
 import { predeploys } from '@eth-optimism/contracts'
 import { remove0x } from '@eth-optimism/core-utils'
@@ -296,12 +295,4 @@ export const die = (...args) => {
 
 export const logStderr = (msg: string) => {
   process.stderr.write(`${msg}\n`)
-}
-
-export const getTokamakContractAddresses = async () => {
-  const options = {
-    uri: TOKAMAK_CONTRACTS_URL,
-  }
-  const result = await request.get(options)
-  return JSON.parse(result)
 }
