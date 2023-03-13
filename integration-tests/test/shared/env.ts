@@ -42,6 +42,7 @@ export class OptimismEnv {
 
   // The providers
   messenger: CrossChainMessenger
+  messengerFast: CrossChainMessenger
   l1Provider: providers.JsonRpcProvider
   l2Provider: providers.JsonRpcProvider
   replicaProvider: providers.JsonRpcProvider
@@ -51,6 +52,7 @@ export class OptimismEnv {
     this.l1Wallet = args.l1Wallet
     this.l2Wallet = args.l2Wallet
     this.messenger = args.messenger
+    this.messengerFast = args.messengerFast
     this.l1Provider = args.l1Provider
     this.l2Provider = args.l2Provider
     this.replicaProvider = args.replicaProvider
@@ -83,6 +85,7 @@ export class OptimismEnv {
         l1: {
           AddressManager: envConfig.ADDRESS_MANAGER,
           L1CrossDomainMessenger: envConfig.L1_CROSS_DOMAIN_MESSENGER,
+          L1CrossDomainMessengerFast: envConfig.L1_CROSS_DOMAIN_MESSENGER_FAST,
           L1StandardBridge: envConfig.L1_STANDARD_BRIDGE,
           StateCommitmentChain: envConfig.STATE_COMMITMENT_CHAIN,
           CanonicalTransactionChain: envConfig.CANONICAL_TRANSACTION_CHAIN,
@@ -90,6 +93,27 @@ export class OptimismEnv {
         },
       },
       bridges: bridgeOverrides,
+      fastRelayer: false,
+    })
+
+    const messengerFast = new CrossChainMessenger({
+      l1SignerOrProvider: l1Wallet,
+      l2SignerOrProvider: l2Wallet,
+      l1ChainId: await getChainId(l1Provider),
+      l2ChainId: await getChainId(l2Provider),
+      contracts: {
+        l1: {
+          AddressManager: envConfig.ADDRESS_MANAGER,
+          L1CrossDomainMessenger: envConfig.L1_CROSS_DOMAIN_MESSENGER,
+          L1CrossDomainMessengerFast: envConfig.L1_CROSS_DOMAIN_MESSENGER_FAST,
+          L1StandardBridge: envConfig.L1_STANDARD_BRIDGE,
+          StateCommitmentChain: envConfig.STATE_COMMITMENT_CHAIN,
+          CanonicalTransactionChain: envConfig.CANONICAL_TRANSACTION_CHAIN,
+          BondManager: envConfig.BOND_MANAGER,
+        },
+      },
+      bridges: bridgeOverrides,
+      fastRelayer: true,
     })
 
     // fund the user if needed
@@ -104,6 +128,7 @@ export class OptimismEnv {
       l1Wallet,
       l2Wallet,
       messenger,
+      messengerFast,
       l1Provider,
       l2Provider,
       verifierProvider,
@@ -120,6 +145,7 @@ export class OptimismEnv {
     const receipt = await tx.wait()
     const resolved = await this.messenger.toCrossChainMessage(tx)
     const messageReceipt = await this.messenger.waitForMessageReceipt(tx)
+
     let fullTx: any
     let remoteTx: any
     if (resolved.direction === MessageDirection.L1_TO_L2) {
@@ -132,6 +158,44 @@ export class OptimismEnv {
       remoteTx = await this.messenger.l1Provider.getTransaction(
         messageReceipt.transactionReceipt.transactionHash
       )
+    }
+
+    return {
+      tx: fullTx,
+      receipt,
+      remoteTx,
+      remoteReceipt: messageReceipt.transactionReceipt,
+    }
+  }
+
+  async waitForXDomainTransactionFast(
+    tx: Promise<TransactionResponse> | TransactionResponse
+  ): Promise<CrossDomainMessagePair> {
+    tx = await tx
+    console.log('done waiting for tx:', tx.hash)
+
+    const receipt = await tx.wait()
+    console.log('receipt: ', receipt.transactionHash)
+
+    const resolved = await this.messengerFast.toCrossChainMessage(tx)
+    console.log('resolved: ', resolved.transactionHash)
+
+    // timeout error
+    const messageReceipt = await this.messengerFast.waitForMessageReceipt(tx)
+    console.log(
+      'messageReceipt: ',
+      messageReceipt.transactionReceipt.transactionHash
+    )
+
+    let fullTx: any
+    let remoteTx: any
+    if (resolved.direction === MessageDirection.L2_TO_L1) {
+      fullTx = await this.messengerFast.l1Provider.getTransaction(tx.hash)
+      remoteTx = await this.messengerFast.l2Provider.getTransaction(
+        messageReceipt.transactionReceipt.transactionHash
+      )
+    } else {
+      console.log('We cannot use L1CrossMessengerFast.sendMessage to deposit')
     }
 
     return {

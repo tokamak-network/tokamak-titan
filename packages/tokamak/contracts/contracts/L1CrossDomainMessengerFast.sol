@@ -35,7 +35,6 @@ import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.so
 import "@eth-optimism/contracts/contracts/L2/messaging/L2CrossDomainMessenger.sol";
 import "@eth-optimism/contracts/contracts/test-helpers/TestERC20.sol";
 
-
 /**
  * @title L1CrossDomainMessengerFast
  * @dev The L1 Cross Domain Messenger contract sends messages from L1 to L2, and relays messages from L2 onto L1.
@@ -87,7 +86,7 @@ contract L1CrossDomainMessengerFast is
     modifier onlyRelayer() {
         require(
             msg.sender == resolve("MessageRelayer"),
-            "L1CrossDomainMessenger: Function can only be called by the MessageRelayer"
+            "L1CrossDomainMessengerFast: Function can only be called by the MessageRelayer"
         );
         _;
     }

@@ -21,7 +21,6 @@ import {
   toRpcHexString,
   hashWithdrawal,
   encodeCrossDomainMessageV0,
-  hashCrossDomainMessage,
   L2OutputOracleParameters,
   BedrockOutputData,
   BedrockCrossChainMessageProof,
@@ -302,10 +301,14 @@ export class CrossChainMessenger {
     }
 
     // By this point opts.direction will always be defined.
-    const messenger =
+    let messenger =
       opts.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l1.L1CrossDomainMessenger
         : this.contracts.l2.L2CrossDomainMessenger
+
+    if (opts.direction === MessageDirection.L1_TO_L2 && this.fastRelayer) {
+      messenger = this.contracts.l1.L1CrossDomainMessengerFast
+    }
 
     // Filter in order
     return receipt.logs
@@ -316,7 +319,6 @@ export class CrossChainMessenger {
       .filter((log) => {
         // Only look at SentMessage logs specifically
         const parsed = messenger.interface.parseLog(log)
-        // Event RelayedMessage is triggered by L2CrossDomainMessenger.relayMessage
         // Event SentMessage is triggered by L2CrossDomainMessenger.sendMessage
         return parsed.name === 'SentMessage'
       })
@@ -604,12 +606,10 @@ export class CrossChainMessenger {
     } else {
       // get state root
       const stateRoot = await this.getMessageStateRoot(resolved)
-      // stateRoot가 null이면 MessageStatus.STATE_ROOT_NOT_PUBLISHED
       if (stateRoot === null) {
         return MessageStatus.STATE_ROOT_NOT_PUBLISHED
       } else {
         // for the fast relayer this should be zero
-        // fast relayer: return 0
         const challengePeriod = await this.getChallengePeriodSeconds()
         const targetBlock = await this.l1Provider.getBlock(
           stateRoot.batch.blockNumber
@@ -621,6 +621,7 @@ export class CrossChainMessenger {
           // get status (success or fail)
           let successStatus: boolean
           let failedStatus: boolean
+
           if (this.fastRelayer) {
             successStatus =
               await this.contracts.l1.L1CrossDomainMessengerFast.successfulMessages(
@@ -631,6 +632,7 @@ export class CrossChainMessenger {
                 messageHash
               )
           } else {
+            // check contract
             successStatus =
               await this.contracts.l1.L1CrossDomainMessenger.successfulMessages(
                 messageHash
@@ -663,21 +665,18 @@ export class CrossChainMessenger {
     message: MessageLike
   ): Promise<MessageReceipt> {
     const resolved = await this.toCrossChainMessage(message)
-    const messageHash = hashCrossDomainMessage(
-      resolved.messageNonce,
-      resolved.sender,
-      resolved.target,
-      resolved.value,
-      resolved.minGasLimit,
-      resolved.message
-    )
+    const messageHash = hashCrossChainMessage(resolved)
 
     // Here we want the messenger that will receive the message, not the one that sent it.
-    const messenger =
+    let messenger =
       resolved.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l2.L2CrossDomainMessenger
         : this.contracts.l1.L1CrossDomainMessenger
 
+    if (resolved.direction === MessageDirection.L2_TO_L1 && this.fastRelayer) {
+      messenger = this.contracts.l1.L1CrossDomainMessengerFast
+      console.log('SDK-fast: waiting for MessageReceipt...')
+    }
     const relayedMessageEvents = await messenger.queryFilter(
       messenger.filters.RelayedMessage(messageHash)
     )
@@ -1675,6 +1674,7 @@ export class CrossChainMessenger {
         overrides?: Overrides
       }
     ): Promise<TransactionRequest> => {
+      // we should not use L1CrossDomainMessengerFast for L1_TO_L2
       if (message.direction === MessageDirection.L1_TO_L2) {
         return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.sendMessage(
           message.target,
@@ -1723,6 +1723,7 @@ export class CrossChainMessenger {
           },
         })
       } else {
+        // we should not use L1CrossDomainMessengerFast for resendMessage
         const legacyL1XDM = new ethers.Contract(
           this.contracts.l1.L1CrossDomainMessenger.address,
           getContractInterface('L1CrossDomainMessenger'),
@@ -1785,25 +1786,28 @@ export class CrossChainMessenger {
           proof.withdrawalProof,
           opts?.overrides || {}
         )
-      } else {
-        // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
-        // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
-        // should be able to remove this code.
-        const proof = await this.getMessageProof(resolved)
-        const legacyL1XDM = new ethers.Contract(
-          this.contracts.l1.L1CrossDomainMessenger.address,
-          getContractInterface('L1CrossDomainMessenger'),
-          this.l1SignerOrProvider
-        )
-        return legacyL1XDM.populateTransaction.relayMessage(
-          resolved.target,
-          resolved.sender,
-          resolved.message,
-          resolved.messageNonce,
-          proof,
-          opts?.overrides || {}
-        )
       }
+      // we should not use finalizeMessage for relay
+
+      // } else {
+      //   // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
+      //   // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
+      //   // should be able to remove this code.
+      //   const proof = await this.getMessageProof(resolved)
+      //   const legacyL1XDM = new ethers.Contract(
+      //     this.contracts.l1.L1CrossDomainMessenger.address,
+      //     getContractInterface('L1CrossDomainMessenger'),
+      //     this.l1SignerOrProvider
+      //   )
+      //   return legacyL1XDM.populateTransaction.relayMessage(
+      //     resolved.target,
+      //     resolved.sender,
+      //     resolved.message,
+      //     resolved.messageNonce,
+      //     proof,
+      //     opts?.overrides || {}
+      //   )
+      // }
     },
 
     finalizeBatchMessage: async (
