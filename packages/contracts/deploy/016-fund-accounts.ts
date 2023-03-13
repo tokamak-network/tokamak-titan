@@ -65,7 +65,7 @@ const deployFn: DeployFunction = async (hre) => {
         )
         // const balance = await wallet.getBalance()
         // const depositAmount = balance.div(2) // Deposit half of the wallet's balance into L2.
-        const depositAmount = hre.ethers.utils.parseEther('10')
+        const depositAmount = hre.ethers.utils.parseEther('20')
         await L1StandardBridge.connect(wallet).depositETH(8_000_000, '0x', {
           value: depositAmount,
           gasLimit: 2_000_000, // Idk, gas estimation was broken and this fixes it.
