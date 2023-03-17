@@ -28,20 +28,20 @@ describe('Fast Messenge Relayer Test', async () => {
   })
 
   // Test to send message from L2 to L1 using fast relayer
-  // it('should QUICKLY send message from L2 to L1 using the fast relayer', async () => {
-  //   const result = await env.waitForXDomainTransactionFast(
-  //     L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
-  //   )
+  it('should QUICKLY send message from L2 to L1 using the fast relayer', async () => {
+    const result = await env.waitForXDomainTransactionFast(
+      L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
+    )
 
-  //   // decode result.remoteReceipt.logs[0].data
-  //   const decodedData = utils.defaultAbiCoder.decode(
-  //     ['string'], // set type
-  //     result.remoteReceipt.logs[0].data
-  //   )[0]
+    // decode result.remoteReceipt.logs[0].data
+    const decodedData = utils.defaultAbiCoder.decode(
+      ['string'], // set type
+      result.remoteReceipt.logs[0].data
+    )[0]
 
-  //   // compare decodeData and "messageFromL2"
-  //   expect(decodedData).to.equal('messageFromL2')
-  // })
+    // compare decodeData and "messageFromL2"
+    expect(decodedData).to.equal('messageFromL2')
+  })
 
 
   // Test to send multiple message from L2 to L1 using fast relayer
