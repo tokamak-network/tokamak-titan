@@ -1788,26 +1788,47 @@ export class CrossChainMessenger {
         )
       }
       // we should not use finalizeMessage for relay
-
-      // } else {
-      //   // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
-      //   // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
-      //   // should be able to remove this code.
-      //   const proof = await this.getMessageProof(resolved)
-      //   const legacyL1XDM = new ethers.Contract(
-      //     this.contracts.l1.L1CrossDomainMessenger.address,
-      //     getContractInterface('L1CrossDomainMessenger'),
-      //     this.l1SignerOrProvider
-      //   )
-      //   return legacyL1XDM.populateTransaction.relayMessage(
-      //     resolved.target,
-      //     resolved.sender,
-      //     resolved.message,
-      //     resolved.messageNonce,
-      //     proof,
-      //     opts?.overrides || {}
-      //   )
-      // }
+      // only for test purposes
+      else {
+        // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
+        // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
+        // should be able to remove this code.
+        const proof = await this.getMessageProof(resolved)
+        // const legacyL1XDM = new ethers.Contract(
+        //   this.contracts.l1.L1CrossDomainMessenger.address,
+        //   getContractInterface('L1CrossDomainMessenger'),
+        //   this.l1SignerOrProvider
+        // )
+        // return legacyL1XDM.populateTransaction.relayMessage(
+        //   resolved.target,
+        //   resolved.sender,
+        //   resolved.message,
+        //   resolved.messageNonce,
+        //   proof,
+        //   opts?.overrides || {}
+        // )
+        if (this.fastRelayer) {
+          return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
+            'relayMessage(address,address,bytes,uint256,(bytes32,(uint256,bytes32,uint256,uint256,bytes),(uint256,bytes32[]),bytes,bytes))'
+          ](
+            resolved.target,
+            resolved.sender,
+            resolved.message,
+            resolved.messageNonce,
+            proof,
+            opts?.overrides || {}
+          )
+        } else {
+          return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.relayMessage(
+            resolved.target,
+            resolved.sender,
+            resolved.message,
+            resolved.messageNonce,
+            proof,
+            opts?.overrides || {}
+          )
+        }
+      }
     },
 
     finalizeBatchMessage: async (

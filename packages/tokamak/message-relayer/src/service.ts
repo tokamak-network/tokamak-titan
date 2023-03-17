@@ -192,6 +192,7 @@ export class MessageRelayerService extends BaseServiceV2<
       minBatchSize: this.options.minBatchSize,
       maxWaitTimeS: this.options.maxWaitTimeS,
       isFastRelayer: this.options.isFastRelayer,
+      enableRelayerFilter: this.options.enableRelayerFilter,
     })
 
     this.state.wallet = this.options.l1Wallet.connect(
