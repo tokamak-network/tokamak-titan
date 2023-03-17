@@ -26,18 +26,52 @@ describe('Fast Messenge Relayer Test', async () => {
   })
 
   // Test to send message from L2 to L1 using fast relayer
-  it('should QUICKLY send message from L2 to L1 using the fast relayer', async () => {
-    const result = await env.waitForXDomainTransactionFast(
-      L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
-    )
+  // it('should QUICKLY send message from L2 to L1 using the fast relayer', async () => {
+  //   const result = await env.waitForXDomainTransactionFast(
+  //     L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
+  //   )
 
-    // decode result.remoteReceipt.logs[0].data
-    const decodedData = utils.defaultAbiCoder.decode(
-      ['string'], // set type
-      result.remoteReceipt.logs[0].data
-    )[0]
+  //   // decode result.remoteReceipt.logs[0].data
+  //   const decodedData = utils.defaultAbiCoder.decode(
+  //     ['string'], // set type
+  //     result.remoteReceipt.logs[0].data
+  //   )[0]
 
-    // compare decodeData and "messageFromL2"
-    expect(decodedData).to.equal('messageFromL2')
+  //   // compare decodeData and "messageFromL2"
+  //   expect(decodedData).to.equal('messageFromL2')
+  // })
+
+  // Test to send multiple message from L2 to L1 using fast relayer
+  it('should send multiple messages from L2 to L1 using the fast relayer', async () => {
+    // Define the number of times to send the message
+    const numTries = 11
+    const sendPromises = []
+
+    // Loop through and send the message multiple times
+    for (let i = 0; i < numTries; i++) {
+      // Push each send promise into an array
+      sendPromises.push(
+        env.waitForXDomainTransactionFast(
+          L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
+        ).then(result => {
+          // decode result.remoteReceipt.logs[0].data
+          const decodedData = utils.defaultAbiCoder.decode(
+            ['string'], // set type
+            result.remoteReceipt.logs[0].data
+          )[0]
+
+          // compare decodeData and "messageFromL2"
+          expect(decodedData).to.equal('messageFromL2')
+        })
+      )
+
+      // Delay for 1 second before sending the next message
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    // Wait for all send promises to resolve
+    await Promise.all(sendPromises)
+
+    console.log(`${sendPromises.length} messages were successfully relayed.`)
   })
 })
