@@ -191,6 +191,8 @@ export class MessageRelayerService extends BaseServiceV2<
       filterPollingInterval: this.options.filterPollingInterval,
       minBatchSize: this.options.minBatchSize,
       maxWaitTimeS: this.options.maxWaitTimeS,
+      maxWaitTxTimeS: this.options.maxWaitTxTimeS,
+      multiRelayLimit: this.options.multiRelayLimit,
       isFastRelayer: this.options.isFastRelayer,
       enableRelayerFilter: this.options.enableRelayerFilter,
     })
@@ -320,10 +322,7 @@ export class MessageRelayerService extends BaseServiceV2<
       const gasPriceAcceptable =
         gasPriceGwei < this.options.maxGasPriceInGwei ? true : false
 
-      // 1. if messageBuffer has a non-zero length
-      // 2. if bufferFull or timeOut is true.
-      // 3. if pendingTXTimeOut is true.
-      // the statement is true if any of the above three conditions are true.
+      // In situations where the message buffer is not empty, the buffer is full or has timed out, and a waiting transaction has timed out, the priority is to add new messages to the buffer and process all previously queued messages.
       if (
         this.state.messageBuffer.length !== 0 &&
         (bufferFull || timeOut) &&

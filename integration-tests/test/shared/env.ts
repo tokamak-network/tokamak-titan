@@ -141,9 +141,14 @@ export class OptimismEnv {
   ): Promise<CrossDomainMessagePair> {
     // await it if needed
     tx = await tx
+    console.log('done waiting for tx:', tx.hash)
 
     const receipt = await tx.wait()
+    console.log('receipt: ', receipt.transactionHash)
+
     const resolved = await this.messenger.toCrossChainMessage(tx)
+    console.log('resolved: ', resolved.transactionHash)
+
     const messageReceipt = await this.messenger.waitForMessageReceipt(tx)
 
     let fullTx: any
@@ -181,10 +186,6 @@ export class OptimismEnv {
     console.log('resolved: ', resolved.transactionHash)
 
     const messageReceipt = await this.messengerFast.waitForMessageReceipt(tx)
-    console.log(
-      'messageReceipt: ',
-      messageReceipt.transactionReceipt.transactionHash
-    )
 
     let fullTx: any
     let remoteTx: any

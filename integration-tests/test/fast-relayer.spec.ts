@@ -9,6 +9,8 @@ import { expect } from './shared/setup'
 
 chai.use(chaiAsPromised)
 
+const CONST_NUM_TXS = 11
+
 describe('Fast Messenge Relayer Test', async () => {
   let L2Message: Contract
 
@@ -41,14 +43,14 @@ describe('Fast Messenge Relayer Test', async () => {
   //   expect(decodedData).to.equal('messageFromL2')
   // })
 
+
   // Test to send multiple message from L2 to L1 using fast relayer
-  it('should send multiple messages from L2 to L1 using the fast relayer', async () => {
+  it('should send multiple messages from L2 to L1', async () => {
     // Define the number of times to send the message
-    const numTries = 11
     const sendPromises = []
 
     // Loop through and send the message multiple times
-    for (let i = 0; i < numTries; i++) {
+    for (let i = 0; i < CONST_NUM_TXS; i++) {
       // Push each send promise into an array
       sendPromises.push(
         env.waitForXDomainTransactionFast(
