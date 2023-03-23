@@ -144,10 +144,8 @@ export class OptimismEnv {
     console.log('done waiting for tx:', tx.hash)
 
     const receipt = await tx.wait()
-    console.log('receipt: ', receipt.transactionHash)
 
     const resolved = await this.messenger.toCrossChainMessage(tx)
-    console.log('resolved: ', resolved.transactionHash)
 
     const messageReceipt = await this.messenger.waitForMessageReceipt(tx)
 
@@ -180,18 +178,16 @@ export class OptimismEnv {
     console.log('done waiting for tx:', tx.hash)
 
     const receipt = await tx.wait()
-    console.log('receipt: ', receipt.transactionHash)
 
     const resolved = await this.messengerFast.toCrossChainMessage(tx)
-    console.log('resolved: ', resolved.transactionHash)
 
     const messageReceipt = await this.messengerFast.waitForMessageReceipt(tx)
 
     let fullTx: any
     let remoteTx: any
     if (resolved.direction === MessageDirection.L2_TO_L1) {
-      fullTx = await this.messengerFast.l1Provider.getTransaction(tx.hash)
-      remoteTx = await this.messengerFast.l2Provider.getTransaction(
+      fullTx = await this.messengerFast.l2Provider.getTransaction(tx.hash)
+      remoteTx = await this.messengerFast.l1Provider.getTransaction(
         messageReceipt.transactionReceipt.transactionHash
       )
     } else {

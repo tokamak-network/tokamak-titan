@@ -526,21 +526,19 @@ export class MessageRelayerService extends BaseServiceV2<
             )
             // add message to buffer when msg.target is filtered
             if (this.options.isFastRelayer) {
-              if (!isFastRelayerMessage) {
+              if (this.options.enableRelayerFilter && !isFastRelayerMessage) {
                 this.logger.info('Message not intended for target, skipping.')
                 continue
               }
             } else {
-              if (
-                (this.options.enableRelayerFilter && !isRelayerMessage) ||
-                isFastRelayerMessage
-              ) {
+              if (this.options.enableRelayerFilter && !isRelayerMessage) {
                 this.logger.info('Message not intended for target, skipping.')
                 continue
               }
             }
             const status =
               await this.state.messenger.getMessageStatusFromContracts(message)
+
             if (status === MessageStatus.RELAYED) {
               this.logger.info('Message has already been relayed, skipping')
               continue
