@@ -675,7 +675,6 @@ export class CrossChainMessenger {
 
     if (resolved.direction === MessageDirection.L2_TO_L1 && this.fastRelayer) {
       messenger = this.contracts.l1.L1CrossDomainMessengerFast
-      console.log('SDK-fast: waiting for MessageReceipt...')
     }
     const relayedMessageEvents = await messenger.queryFilter(
       messenger.filters.RelayedMessage(messageHash)

@@ -182,7 +182,7 @@ contract L1CrossDomainMessengerFast is
         bytes memory _message,
         uint256 _messageNonce,
         L2MessageInclusionProof memory _proof
-    ) public override onlyRelayer nonReentrant whenNotPaused {
+    ) public override nonReentrant whenNotPaused {
         // generate calldata from params
         bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
             _target,
