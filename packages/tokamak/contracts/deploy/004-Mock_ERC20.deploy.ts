@@ -9,8 +9,6 @@ require('dotenv').config()
 
 import { registerAddress } from './000-L1MessengerFast.deploy'
 import L1ERC20Json from '../artifacts/contracts/test-helpers/L1ERC20.sol/L1ERC20.json'
-import L1LiquidityPoolJson from '../artifacts/contracts/LP/L1LiquidityPool.sol/L1LiquidityPool.json'
-import L2LiquidityPoolJson from '../artifacts/contracts/LP/L2LiquidityPool.sol/L2LiquidityPool.json'
 
 let Factory__L1ERC20: ContractFactory
 let Factory__L2ERC20: ContractFactory
@@ -18,30 +16,12 @@ let Factory__L2ERC20: ContractFactory
 let L1TON: Contract
 let L2TON: Contract
 
-let Proxy__L1LiquidityPool: Contract
-let Proxy__L2LiquidityPool: Contract
-
 const initialSupply_18 = utils.parseEther('10000000000')
 
 const deployFn: DeployFunction = async (hre) => {
   // check whether we use Hardhat node
   const isHardhatNode = async (hre) => {
     return (await getChainId(hre.ethers.provider)) === 31337
-  }
-
-  // register token pool in LPs
-  const registerLPToken = async (L1TokenAddress, L2TokenAddress) => {
-    const registerL1LP = await Proxy__L1LiquidityPool.registerPool(
-      L1TokenAddress,
-      L2TokenAddress
-    )
-    await registerL1LP.wait()
-
-    const registerL2LP = await Proxy__L2LiquidityPool.registerPool(
-      L1TokenAddress,
-      L2TokenAddress
-    )
-    await registerL2LP.wait()
   }
 
   if (await isHardhatNode(hre)) {
@@ -108,29 +88,6 @@ const deployFn: DeployFunction = async (hre) => {
     await registerAddress(addressManager, 'L2TON', L2TON.address)
     console.log(`L2TON was deployed to ${L2TON.address}`)
 
-    // check deployment of LPs
-    const Proxy__L1LiquidityPoolDeployment = await hre.deployments.getOrNull(
-      'Proxy__L1LiquidityPool'
-    )
-    const Proxy__L2LiquidityPoolDeployment = await hre.deployments.getOrNull(
-      'Proxy__L2LiquidityPool'
-    )
-
-    // get LPs
-    Proxy__L1LiquidityPool = new Contract(
-      Proxy__L1LiquidityPoolDeployment.address,
-      L1LiquidityPoolJson.abi,
-      (hre as any).deployConfig.deployer_l1
-    )
-    Proxy__L2LiquidityPool = new Contract(
-      Proxy__L2LiquidityPoolDeployment.address,
-      L2LiquidityPoolJson.abi,
-      (hre as any).deployConfig.deployer_l2
-    )
-
-    // Register tokens in LPs
-    await registerLPToken(L1TON.address, L2TON.address)
-    console.log(`TON was registered in LPs`)
   }
 }
 
