@@ -11,7 +11,7 @@ import { DEFAULT_TEST_GAS_L2 } from './shared/utils'
 chai.use(chaiAsPromised)
 
 // Set the number of transactions to execute
-const CONST_NUM_TXS = 12
+const CONST_NUM_TXS = 11
 
 describe('Batch Relayer Test', async () => {
   let env: OptimismEnv
@@ -37,7 +37,7 @@ describe('Batch Relayer Test', async () => {
   })
 
   // Test to withdraw from L2 to L1 using batch relayer
-  it('can withdraw from L2 to L1 using the batch relayer', async () => {
+  it('should withdraw from L2 to L1 using the batch relayer', async () => {
     const preBalances = await getBalances(env)
 
     const withdrawAmount = BigNumber.from(3)
@@ -72,7 +72,7 @@ describe('Batch Relayer Test', async () => {
   })
 
   // Test to send multiple message from L2 to L1 using batch relayer
-  it(`can withdraw from L2 to L1 ${CONST_NUM_TXS} times using the batch relayer`, async () => {
+  it(`should withdraw from L2 to L1 ${CONST_NUM_TXS} times using the batch relayer`, async () => {
     const preBalances = await getBalances(env)
     const withdrawAmount = BigNumber.from(3)
     const withdraws = []

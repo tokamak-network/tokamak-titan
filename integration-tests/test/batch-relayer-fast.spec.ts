@@ -28,7 +28,7 @@ describe('Batch Relayer Fast Test', async () => {
   })
 
   // Test to send message from L2 to L1 using fast relayer
-  it('should QUICKLY send message from L2 to L1 using the batch relayer fast', async () => {
+  it('should send message from L2 to L1 using the batch relayer fast', async () => {
     const result = await env.waitForXDomainTransactionFast(
       L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
     )
@@ -43,7 +43,7 @@ describe('Batch Relayer Fast Test', async () => {
   })
 
   // Test to send multiple message from L2 to L1 using fast relayer
-  it('should send multiple messages from L2 to L1', async () => {
+  it('should send multiple messages from L2 to L1 using the batch relayer fast', async () => {
     // Define the number of times to send the message
     const sendPromises = []
 
