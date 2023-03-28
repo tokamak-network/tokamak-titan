@@ -576,14 +576,11 @@ export class MessageRelayerService extends BaseServiceV2<
       const addressManager = getContractFactory('Lib_AddressManager')
         .connect(this.state.wallet)
         .attach(this.options.addressManagerAddress)
-      const L1LiquidityPool = await addressManager.getAddress(
-        'Proxy__L1LiquidityPool'
-      )
       const L1Message = await addressManager.getAddress('L1Message')
       const L1StandardBridge = await addressManager.getAddress(
         'Proxy__OVM_L1StandardBridge'
       )
-      const fastRelayerFilterSelect = [L1LiquidityPool, L1Message]
+      const fastRelayerFilterSelect = [L1Message]
       const relayerFilterSelect = [L1StandardBridge]
 
       this.state.lastFilterPollingTimestamp = new Date().getTime()
