@@ -355,23 +355,6 @@ export class CrossChainMessenger {
       })
   }
 
-  // public async getMessagesByAddress(
-  //   address: AddressLike,
-  //   opts?: {
-  //     direction?: MessageDirection
-  //     fromBlock?: NumberLike
-  //     toBlock?: NumberLike
-  //   }
-  // ): Promise<CrossChainMessage[]> {
-  //   throw new Error(`
-  //     The function getMessagesByAddress is currently not enabled because the sender parameter of
-  //     the SentMessage event is not indexed within the CrossChainMessenger contracts.
-  //     getMessagesByAddress will be enabled by plugging in an Optimism Indexer (coming soon).
-  //     See the following issue on GitHub for additional context:
-  //     https://github.com/ethereum-optimism/optimism/issues/2129
-  //   `)
-  // }
-
   /**
    * Finds the appropriate bridge adapter for a given L1<>L2 token pair. Will throw if no bridges
    * support the token pair or if more than one bridge supports the token pair.
@@ -592,6 +575,12 @@ export class CrossChainMessenger {
     }
   }
 
+  /**
+   * Get Status of Message from L1CrossDomainMessenger/L1CrossDomainMessengerFast
+   *
+   * @param message Cross chain message to check the status of.
+   * @returns Status of the message.
+   */
   public async getMessageStatusFromContracts(
     message: MessageLike
   ): Promise<MessageStatus> {
@@ -1475,6 +1464,15 @@ export class CrossChainMessenger {
     )
   }
 
+  /**
+   * Finalizes a cross chain message that was sent from L2 to L1. Only applicable for L2 to L1 messages.
+   *
+   * @param messages Messages to finalize
+   * @param opts Additional options.
+   * @param opts.signer Optional signer to use to send the transaction.
+   * @param opts.overrides Optional transaction overrides.
+   * @returns Transaction response for the finalization transaction.
+   */
   public async finalizeBatchMessage(
     messages: Array<MessageLike>,
     opts?: {
@@ -1786,26 +1784,14 @@ export class CrossChainMessenger {
           opts?.overrides || {}
         )
       }
-      // we should not use finalizeMessage for relay
+      // Note: we should not use finalizeMessage for relay
       // only for test purposes
       else {
         // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
         // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
         // should be able to remove this code.
         const proof = await this.getMessageProof(resolved)
-        // const legacyL1XDM = new ethers.Contract(
-        //   this.contracts.l1.L1CrossDomainMessenger.address,
-        //   getContractInterface('L1CrossDomainMessenger'),
-        //   this.l1SignerOrProvider
-        // )
-        // return legacyL1XDM.populateTransaction.relayMessage(
-        //   resolved.target,
-        //   resolved.sender,
-        //   resolved.message,
-        //   resolved.messageNonce,
-        //   proof,
-        //   opts?.overrides || {}
-        // )
+
         if (this.fastRelayer) {
           return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
             'relayMessage(address,address,bytes,uint256,(bytes32,(uint256,bytes32,uint256,uint256,bytes),(uint256,bytes32[]),bytes,bytes))'
@@ -1830,6 +1816,13 @@ export class CrossChainMessenger {
       }
     },
 
+    /**
+     * Generates a message finalization transaction that can be signed and executed. Only applicable for L2 to L1 messages.
+     *
+     * @param messages Messages to generate the finalization transaction for.
+     * @param opts Additional options.
+     * @returns Transaction that can be signed and executed to finalize the message.
+     */
     finalizeBatchMessage: async (
       messages: Array<MessageLike>,
       opts?: {
@@ -2061,6 +2054,13 @@ export class CrossChainMessenger {
       )
     },
 
+    /**
+     * Estimates gas required to finalize a cross chain message in batch. Only applies to L2 to L1 messages.
+     *
+     * @param messages Messages to generate the finalization transaction for.
+     * @param opts Additional options.
+     * @returns Gas estimate for the transaction.
+     */
     finalizeBatchMessage: async (
       messages: Array<MessageLike>,
       opts?: {

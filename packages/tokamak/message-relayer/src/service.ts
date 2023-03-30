@@ -298,7 +298,6 @@ export class MessageRelayerService extends BaseServiceV2<
       console.log('Seconds elapsed since last batch push:', secondsElapsed)
 
       // timeOut is true if the time since the last relay (secondsElapsed) is greater than options.maxWaitTimeS
-      // default of maxWaitTimeS: 60s
       const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
       let pendingTXTimeOut = true
       if (this.state.timeOfLastPendingRelay !== false) {
@@ -395,7 +394,7 @@ export class MessageRelayerService extends BaseServiceV2<
             const minGasPrice = await this._getGasPriceInGwei(this.state.wallet)
             let receipt
 
-            // send transaction for batch-relay
+            // Send Transaction for Batch-Relay
             try {
               // Gradually keeps trying a transaction with an incremental amount of gas
               // while keeping the same nonce.
@@ -439,7 +438,6 @@ export class MessageRelayerService extends BaseServiceV2<
                 effectiveGasPrice: receipt.effectiveGasPrice.toString(),
               })
             }
-            // timeOfLastPendingRelay is Date.now after batch tx
             this.state.timeOfLastPendingRelay = Date.now()
           }
         } else {
@@ -447,7 +445,6 @@ export class MessageRelayerService extends BaseServiceV2<
           this.state.timeOfLastPendingRelay = Date.now()
         }
         this.state.timeOfLastRelayS = Date.now()
-        // buffer still too small
       } else {
         console.log(
           'Buffer still too small - current buffer length: ',
@@ -566,6 +563,9 @@ export class MessageRelayerService extends BaseServiceV2<
     }
   }
 
+  /**
+   * Get filter that can relay msg.target
+   */
   private async _getFilter(): Promise<void> {
     if (
       this.state.lastFilterPollingTimestamp === 0 ||
