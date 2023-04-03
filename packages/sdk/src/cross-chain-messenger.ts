@@ -113,7 +113,7 @@ export class CrossChainMessenger {
   public bedrock: boolean
 
   /**
-   * Whether or not fast relayer is enabled.
+   * Whether or not batch-relayer-fast is enabled.
    */
   public fastRelayer: boolean
 
@@ -598,7 +598,7 @@ export class CrossChainMessenger {
       if (stateRoot === null) {
         return MessageStatus.STATE_ROOT_NOT_PUBLISHED
       } else {
-        // for the fast relayer this should be zero
+        // for the batch-relayer-fast this should be zero
         const challengePeriod = await this.getChallengePeriodSeconds()
         const targetBlock = await this.l1Provider.getBlock(
           stateRoot.batch.blockNumber
