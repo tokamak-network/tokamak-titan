@@ -355,6 +355,23 @@ export class CrossChainMessenger {
       })
   }
 
+  // public async getMessagesByAddress(
+  //   address: AddressLike,
+  //   opts?: {
+  //     direction?: MessageDirection
+  //     fromBlock?: NumberLike
+  //     toBlock?: NumberLike
+  //   }
+  // ): Promise<CrossChainMessage[]> {
+  //   throw new Error(`
+  //     The function getMessagesByAddress is currently not enabled because the sender parameter of
+  //     the SentMessage event is not indexed within the CrossChainMessenger contracts.
+  //     getMessagesByAddress will be enabled by plugging in an Optimism Indexer (coming soon).
+  //     See the following issue on GitHub for additional context:
+  //     https://github.com/ethereum-optimism/optimism/issues/2129
+  //   `)
+  // }
+
   /**
    * Finds the appropriate bridge adapter for a given L1<>L2 token pair. Will throw if no bridges
    * support the token pair or if more than one bridge supports the token pair.
@@ -1791,6 +1808,20 @@ export class CrossChainMessenger {
         // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
         // should be able to remove this code.
         const proof = await this.getMessageProof(resolved)
+        // const legacyL1XDM = new ethers.Contract(
+        //   this.contracts.l1.L1CrossDomainMessenger.address,
+        //   getContractInterface('L1CrossDomainMessenger'),
+        //   this.l1SignerOrProvider
+        // )
+
+        // return legacyL1XDM.populateTransaction.relayMessage(
+        //   resolved.target,
+        //   resolved.sender,
+        //   resolved.message,
+        //   resolved.messageNonce,
+        //   proof,
+        //   opts?.overrides || {}
+        // )
 
         if (this.fastRelayer) {
           return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
