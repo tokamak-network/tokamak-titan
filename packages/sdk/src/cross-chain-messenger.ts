@@ -1824,9 +1824,7 @@ export class CrossChainMessenger {
         // )
 
         if (this.fastRelayer) {
-          return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
-            'relayMessage(address,address,bytes,uint256,(bytes32,(uint256,bytes32,uint256,uint256,bytes),(uint256,bytes32[]),bytes,bytes))'
-          ](
+          return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.relayMessage(
             resolved.target,
             resolved.sender,
             resolved.message,
@@ -1878,9 +1876,10 @@ export class CrossChainMessenger {
       }
       if (this.fastRelayer) {
         // ethers.js v5 does not handle overloading
-        return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction[
-          'batchRelayMessages((address,address,bytes,uint256,(bytes32,(uint256,bytes32,uint256,uint256,bytes),(uint256,bytes32[]),bytes,bytes))[])'
-        ](batchMessage, opts?.overrides || {})
+        return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.batchRelayMessages(
+          batchMessage,
+          opts?.overrides || {}
+        )
       } else {
         return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.batchRelayMessages(
           batchMessage,
