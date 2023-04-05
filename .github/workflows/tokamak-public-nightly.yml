@@ -148,7 +148,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: message-relayer
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
@@ -186,7 +185,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: tokamak-message-relayer
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.GITSHA }}
@@ -224,7 +222,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: fault-detector
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
@@ -262,7 +259,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: drippie-mon
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.GITSHA }}
@@ -300,7 +296,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: data-transport-layer
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
@@ -338,7 +333,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: deployer
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.deployer:${{ steps.extractver.outputs.GITSHA }}
@@ -376,7 +370,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: integration-tests
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.integration-tests:${{ steps.extractver.outputs.GITSHA }}
@@ -414,7 +407,6 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: replica-healthcheck
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
