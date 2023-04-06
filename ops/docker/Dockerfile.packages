@@ -46,6 +46,7 @@ COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/
 COPY packages/hardhat-deploy-config/package.json ./packages/hardhat-deploy-config/package.json
 COPY packages/tokamak/contracts/package.json ./packges/tokamak/contracts/package.json
 COPY packages/tokamak/message-relayer/package.json ./packages/tokamak/message-relayer/package.json
+COPY packages/tokamak/sdk/package.json ./packages/tokamak/sdk/package.json
 COPY packages/fault-detector/package.json ./packages/fault-detector/package.json
 COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/package.json
 COPY packages/drippie-mon/package.json ./packages/drippie-mon/package.json

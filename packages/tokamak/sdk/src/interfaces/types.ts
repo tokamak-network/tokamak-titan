@@ -6,7 +6,7 @@ import {
 import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, BigNumber } from 'ethers'
 
-import { CrossChainMessenger } from '../cross-chain-messenger'
+import { BatchCrossChainMessenger } from '../cross-chain-messenger'
 import { IBridgeAdapter } from './bridge-adapter'
 
 /**
@@ -38,6 +38,7 @@ export enum L2ChainID {
 export interface OEL1Contracts {
   AddressManager: Contract
   L1CrossDomainMessenger: Contract
+  L1CrossDomainMessengerFast: Contract
   L1StandardBridge: Contract
   StateCommitmentChain: Contract
   CanonicalTransactionChain: Contract
@@ -104,7 +105,7 @@ export interface OEContractsLike {
 export interface BridgeAdapterData {
   [name: string]: {
     Adapter: new (opts: {
-      messenger: CrossChainMessenger
+      messenger: BatchCrossChainMessenger
       l1Bridge: AddressLike
       l2Bridge: AddressLike
     }) => IBridgeAdapter
@@ -155,6 +156,10 @@ export enum MessageStatus {
    * Message has been relayed.
    */
   RELAYED,
+  /**
+   * Message has been relayed but failed in execution.
+   */
+  RELAYED_FAILED,
 }
 
 /**

@@ -4,7 +4,7 @@ import { ethers, Contract } from 'ethers'
 
 import { toAddress } from './coercion'
 import { DeepPartial } from './type-utils'
-import { CrossChainMessenger } from '../cross-chain-messenger'
+import { BatchCrossChainMessenger } from '../cross-chain-messenger'
 import { StandardBridgeAdapter, ETHBridgeAdapter } from '../adapters'
 import {
   CONTRACT_ADDRESSES,
@@ -70,6 +70,12 @@ export const getOEContract = (
     iface = getContractInterface(name)
   }
 
+  // we changed some part of L1CrossDomainMessenger
+  // get the interface of L1CrossDomainMessenger (not use getContractInterfaceBedrock)
+  if (name === 'L1CrossDomainMessenger') {
+    iface = getContractInterface(name)
+  }
+
   return new Contract(
     toAddress(
       opts.address || addresses.l1[contractName] || addresses.l2[contractName]
@@ -105,6 +111,7 @@ export const getAllOEContracts = (
     l1: {
       AddressManager: undefined,
       L1CrossDomainMessenger: undefined,
+      L1CrossDomainMessengerFast: undefined,
       L1StandardBridge: undefined,
       StateCommitmentChain: undefined,
       CanonicalTransactionChain: undefined,
@@ -118,6 +125,16 @@ export const getAllOEContracts = (
   // Attach all L1 contracts.
   const l1Contracts = {} as OEL1Contracts
   for (const [contractName, contractAddress] of Object.entries(addresses.l1)) {
+    // Now we do not support Bedrock
+    // if (
+    //   contractName === 'OptimismPortal' ||
+    //   contractName === 'L2OutputOracle' ||
+    //   contractName === 'L2ToL1MessagePasser'
+    // ) {
+    //   continue
+    // }
+    // console.log('getAllOEContracts / contractName: ' + contractName)
+
     l1Contracts[contractName] = getOEContract(
       contractName as keyof OEL1Contracts,
       l2ChainId,
@@ -158,7 +175,7 @@ export const getAllOEContracts = (
  */
 export const getBridgeAdapters = (
   l2ChainId: number,
-  messenger: CrossChainMessenger,
+  messenger: BatchCrossChainMessenger,
   opts?: {
     overrides?: BridgeAdapterData
   }

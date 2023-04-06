@@ -21,7 +21,7 @@ describe('Batch Relayer Fast Test', async () => {
     env = await OptimismEnv.new()
 
     const L2MessageAddress =
-      await env.messengerFast.contracts.l1.AddressManager.getAddress(
+      await env.batchMessengerFast.contracts.l1.AddressManager.getAddress(
         'L2Message'
       )
     L2Message = new Contract(L2MessageAddress, L2MessageJson.abi, env.l2Wallet)
@@ -29,7 +29,7 @@ describe('Batch Relayer Fast Test', async () => {
 
   // Test to send message from L2 to L1 using batch relayer fast
   it('should send message from L2 to L1 using the batch relayer fast', async () => {
-    const result = await env.waitForXDomainTransactionFast(
+    const result = await env.waitForXDomainTransactionBatchFast(
       L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
     )
     // decode result.remoteReceipt.logs[0].data
@@ -45,14 +45,14 @@ describe('Batch Relayer Fast Test', async () => {
   // Test to send multiple message from L2 to L1 using batch relayer fast
   it('should send multiple messages from L2 to L1 using the batch relayer fast', async () => {
     // Define the number of times to send the message
-    const sendPromises = []
+    const fastWithdraws = []
 
     // Loop through and send the message multiple times
     for (let i = 0; i < CONST_NUM_TXS; i++) {
       // Push each send promise into an array
-      sendPromises.push(
+      fastWithdraws.push(
         env
-          .waitForXDomainTransactionFast(
+          .waitForXDomainTransactionBatchFast(
             L2Message.sendMessageL2ToL1({ gasLimit: 800000, gasPrice: 0 })
           )
           .then((result) => {
@@ -70,10 +70,9 @@ describe('Batch Relayer Fast Test', async () => {
       // Delay for 1 second before sending the next message
       await new Promise((resolve) => setTimeout(resolve, 1000))
     }
-
     // Wait for all send promises to resolve
-    await Promise.all(sendPromises)
+    await Promise.all(fastWithdraws)
 
-    console.log(`${sendPromises.length} messages were successfully relayed.`)
+    console.log(`${fastWithdraws.length} messages were successfully relayed.`)
   })
 })

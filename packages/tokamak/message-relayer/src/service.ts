@@ -10,12 +10,12 @@ import {
 } from '@eth-optimism/common-ts'
 import * as ynatm from '@eth-optimism/ynatm'
 import {
-  CrossChainMessenger,
+  BatchCrossChainMessenger,
   MessageStatus,
   NumberLike,
   DEPOSIT_CONFIRMATION_BLOCKS,
   CHAIN_BLOCK_TIMES,
-} from '@eth-optimism/sdk'
+} from '@tokamak-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
 import 'dotenv/config'
@@ -50,7 +50,7 @@ type MessageRelayerMetrics = {
 
 type MessageRelayerState = {
   wallet: Signer
-  messenger: CrossChainMessenger
+  messenger: BatchCrossChainMessenger
   highestCheckedL2Tx: number
   highestKnownL2Tx: number
   //filter
@@ -246,7 +246,7 @@ export class MessageRelayerService extends BaseServiceV2<
       DEPOSIT_CONFIRMATION_BLOCKS[l2ChainId]
     const l1BlockTimeSeconds: NumberLike = CHAIN_BLOCK_TIMES[l1ChainId]
 
-    this.state.messenger = new CrossChainMessenger({
+    this.state.messenger = new BatchCrossChainMessenger({
       l1SignerOrProvider: this.state.wallet,
       l2SignerOrProvider: this.options.l2RpcProvider,
       l1ChainId,
