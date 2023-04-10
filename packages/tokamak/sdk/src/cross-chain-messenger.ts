@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Provider,
-  BlockTag,
   TransactionReceipt,
   TransactionResponse,
   TransactionRequest,
@@ -18,50 +17,47 @@ import {
   sleep,
   remove0x,
   toHexString,
+  L2OutputOracleParameters,
   toRpcHexString,
   hashWithdrawal,
   encodeCrossDomainMessageV0,
-  L2OutputOracleParameters,
   BedrockOutputData,
   BedrockCrossChainMessageProof,
 } from '@eth-optimism/core-utils'
 import { getContractInterface, predeploys } from '@eth-optimism/contracts'
 import * as rlp from 'rlp'
-
 import {
   CoreCrossChainMessage,
-  OEContracts,
-  OEContractsLike,
   MessageLike,
   MessageRequestLike,
   TransactionLike,
-  AddressLike,
   NumberLike,
+  AddressLike,
   SignerOrProviderLike,
   CrossChainMessage,
   CrossChainMessageRequest,
   CrossChainMessageProof,
   MessageDirection,
-  MessageStatus,
   TokenBridgeMessage,
   MessageReceipt,
   MessageReceiptStatus,
   BridgeAdapterData,
   BridgeAdapters,
-  StateRoot,
-  StateRootBatch,
   IBridgeAdapter,
-} from './interfaces'
-import {
   toSignerOrProvider,
   toNumber,
   toTransactionHash,
   DeepPartial,
-  getAllOEContracts,
-  getBridgeAdapters,
+  StateRoot,
+  StateRootBatch,
   makeMerkleTreeProof,
   makeStateTrieProof,
+} from '@eth-optimism/sdk'
+
+import { OEContracts, MessageStatus, OEContractsLike } from './interfaces'
+import {
   hashCrossChainMessage,
+  getAllOEContracts,
   DEPOSIT_CONFIRMATION_BLOCKS,
   CHAIN_BLOCK_TIMES,
 } from './utils'
@@ -179,10 +175,6 @@ export class BatchCrossChainMessenger {
       l1SignerOrProvider: this.l1SignerOrProvider,
       l2SignerOrProvider: this.l2SignerOrProvider,
       overrides: opts.contracts,
-    })
-
-    this.bridges = getBridgeAdapters(this.l2ChainId, this, {
-      overrides: opts.bridges,
     })
   }
 
@@ -355,23 +347,6 @@ export class BatchCrossChainMessenger {
       })
   }
 
-  // public async getMessagesByAddress(
-  //   address: AddressLike,
-  //   opts?: {
-  //     direction?: MessageDirection
-  //     fromBlock?: NumberLike
-  //     toBlock?: NumberLike
-  //   }
-  // ): Promise<CrossChainMessage[]> {
-  //   throw new Error(`
-  //     The function getMessagesByAddress is currently not enabled because the sender parameter of
-  //     the SentMessage event is not indexed within the BatchCrossChainMessenger contracts.
-  //     getMessagesByAddress will be enabled by plugging in an Optimism Indexer (coming soon).
-  //     See the following issue on GitHub for additional context:
-  //     https://github.com/ethereum-optimism/optimism/issues/2129
-  //   `)
-  // }
-
   /**
    * Finds the appropriate bridge adapter for a given L1<>L2 token pair. Will throw if no bridges
    * support the token pair or if more than one bridge supports the token pair.
@@ -400,74 +375,6 @@ export class BatchCrossChainMessenger {
     }
 
     return bridges[0]
-  }
-
-  /**
-   * Gets all deposits for a given address.
-   *
-   * @param address Address to search for messages from.
-   * @param opts Options object.
-   * @param opts.fromBlock Block to start searching for messages from. If not provided, will start
-   * from the first block (block #0).
-   * @param opts.toBlock Block to stop searching for messages at. If not provided, will stop at the
-   * latest known block ("latest").
-   * @returns All deposit token bridge messages sent by the given address.
-   */
-  public async getDepositsByAddress(
-    address: AddressLike,
-    opts: {
-      fromBlock?: BlockTag
-      toBlock?: BlockTag
-    } = {}
-  ): Promise<TokenBridgeMessage[]> {
-    return (
-      await Promise.all(
-        Object.values(this.bridges).map(async (bridge) => {
-          return bridge.getDepositsByAddress(address, opts)
-        })
-      )
-    )
-      .reduce((acc, val) => {
-        return acc.concat(val)
-      }, [])
-      .sort((a, b) => {
-        // Sort descending by block number
-        return b.blockNumber - a.blockNumber
-      })
-  }
-
-  /**
-   * Gets all withdrawals for a given address.
-   *
-   * @param address Address to search for messages from.
-   * @param opts Options object.
-   * @param opts.fromBlock Block to start searching for messages from. If not provided, will start
-   * from the first block (block #0).
-   * @param opts.toBlock Block to stop searching for messages at. If not provided, will stop at the
-   * latest known block ("latest").
-   * @returns All withdrawal token bridge messages sent by the given address.
-   */
-  public async getWithdrawalsByAddress(
-    address: AddressLike,
-    opts: {
-      fromBlock?: BlockTag
-      toBlock?: BlockTag
-    } = {}
-  ): Promise<TokenBridgeMessage[]> {
-    return (
-      await Promise.all(
-        Object.values(this.bridges).map(async (bridge) => {
-          return bridge.getWithdrawalsByAddress(address, opts)
-        })
-      )
-    )
-      .reduce((acc, val) => {
-        return acc.concat(val)
-      }, [])
-      .sort((a, b) => {
-        // Sort descending by block number
-        return b.blockNumber - a.blockNumber
-      })
   }
 
   /**
@@ -886,74 +793,6 @@ export class BatchCrossChainMessenger {
     // Return the estimate plus a buffer of 20% just in case.
     const bufferPercent = opts?.bufferPercent || 20
     return estimate.mul(100 + bufferPercent).div(100)
-  }
-
-  /**
-   * Returns the estimated amount of time before the message can be executed. When this is a
-   * message being sent to L1, this will return the estimated time until the message will complete
-   * its challenge period. When this is a message being sent to L2, this will return the estimated
-   * amount of time until the message will be picked up and executed on L2.
-   *
-   * @param message Message to estimate the time remaining for.
-   * @returns Estimated amount of time remaining (in seconds) before the message can be executed.
-   */
-  public async estimateMessageWaitTimeSeconds(
-    message: MessageLike
-  ): Promise<number> {
-    const resolved = await this.toCrossChainMessage(message)
-    const status = await this.getMessageStatus(resolved)
-    if (resolved.direction === MessageDirection.L1_TO_L2) {
-      if (
-        status === MessageStatus.RELAYED ||
-        status === MessageStatus.FAILED_L1_TO_L2_MESSAGE
-      ) {
-        // Transactions that are relayed or failed are considered completed, so the wait time is 0.
-        return 0
-      } else {
-        // Otherwise we need to estimate the number of blocks left until the transaction will be
-        // considered confirmed by the Layer 2 system. Then we multiply this by the estimated
-        // average L1 block time.
-        const receipt = await this.l1Provider.getTransactionReceipt(
-          resolved.transactionHash
-        )
-        const blocksLeft = Math.max(
-          this.depositConfirmationBlocks - receipt.confirmations,
-          0
-        )
-        return blocksLeft * this.l1BlockTimeSeconds
-      }
-    } else {
-      if (
-        status === MessageStatus.RELAYED ||
-        status === MessageStatus.READY_FOR_RELAY
-      ) {
-        // Transactions that are relayed or ready for relay are considered complete.
-        return 0
-      } else if (status === MessageStatus.STATE_ROOT_NOT_PUBLISHED) {
-        // If the state root hasn't been published yet, just assume it'll be published relatively
-        // quickly and return the challenge period for now. In the future we could use more
-        // advanced techniques to figure out average time between transaction execution and
-        // state root publication.
-        return this.getChallengePeriodSeconds()
-      } else if (status === MessageStatus.IN_CHALLENGE_PERIOD) {
-        // If the message is still within the challenge period, then we need to estimate exactly
-        // the amount of time left until the challenge period expires. The challenge period starts
-        // when the state root is published.
-        const stateRoot = await this.getMessageStateRoot(resolved)
-        const challengePeriod = await this.getChallengePeriodSeconds()
-        const targetBlock = await this.l1Provider.getBlock(
-          stateRoot.batch.blockNumber
-        )
-        const latestBlock = await this.l1Provider.getBlock('latest')
-        return Math.max(
-          challengePeriod - (latestBlock.timestamp - targetBlock.timestamp),
-          0
-        )
-      } else {
-        // Should not happen
-        throw new Error(`unexpected message status`)
-      }
-    }
   }
 
   /**
@@ -2101,7 +1940,6 @@ export class BatchCrossChainMessenger {
         await this.populateTransaction.finalizeBatchMessage(messages, opts)
       )
     },
-
     /**
      * Estimates gas required to deposit some ETH into the L2 chain.
      *

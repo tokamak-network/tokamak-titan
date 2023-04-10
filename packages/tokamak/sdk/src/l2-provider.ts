@@ -5,9 +5,14 @@ import { serialize } from '@ethersproject/transactions'
 import { Contract, BigNumber } from 'ethers'
 import { predeploys, getContractInterface } from '@eth-optimism/contracts'
 import cloneDeep from 'lodash/cloneDeep'
-
-import { L2Provider, ProviderLike, NumberLike } from './interfaces'
-import { toProvider, toNumber, toBigNumber } from './utils'
+import {
+  L2Provider,
+  ProviderLike,
+  NumberLike,
+  toProvider,
+  toNumber,
+  toBigNumber,
+} from '@eth-optimism/sdk'
 
 type ProviderTypeIsWrong = any
 

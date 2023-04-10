@@ -3,16 +3,16 @@ import {
   getDeployedContractDefinition,
 } from '@eth-optimism/contracts'
 import { predeploys as bedrockPredeploys } from '@eth-optimism/contracts-bedrock'
-
 import {
   L1ChainID,
   L2ChainID,
-  OEContractsLike,
-  OEL1ContractsLike,
+  StandardBridgeAdapter,
+  DAIBridgeAdapter,
   OEL2ContractsLike,
   BridgeAdapterData,
-} from '../interfaces'
-import { StandardBridgeAdapter, DAIBridgeAdapter } from '../adapters'
+} from '@eth-optimism/sdk'
+
+import { OEContractsLike, OEL1ContractsLike } from '../interfaces'
 
 export const DEPOSIT_CONFIRMATION_BLOCKS: {
   [ChainID in L2ChainID]: number
