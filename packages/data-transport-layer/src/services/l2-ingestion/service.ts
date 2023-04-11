@@ -108,20 +108,13 @@ export class L2IngestionService extends BaseService<L2IngestionServiceOptions> {
   }
 
   protected async ensure(): Promise<void> {
-    let retries = 0
     while (true) {
       try {
         await this.state.l2RpcProvider.getNetwork()
         break
       } catch (e) {
-        retries++
-        this.logger.info(`Cannot connect to L2, retrying ${retries}/20`)
-        if (retries >= 20) {
-          this.logger.info('Cannot connect to L2, shutting down')
-          await this.stop()
-          process.exit()
-        }
-        await sleep(1000 * retries)
+        this.logger.info(`Cannot connect to L2, retrying...`)
+        await sleep(5000)
       }
     }
   }
