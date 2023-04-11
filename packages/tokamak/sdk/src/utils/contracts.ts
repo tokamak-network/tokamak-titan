@@ -1,25 +1,15 @@
-import { getContractInterface, predeploys } from '@eth-optimism/contracts'
+import { getContractInterface } from '@eth-optimism/contracts'
 import { getContractInterface as getContractInterfaceBedrock } from '@eth-optimism/contracts-bedrock'
 import { ethers, Contract } from 'ethers'
+import { toAddress, DeepPartial, AddressLike } from '@eth-optimism/sdk'
 
-import { toAddress } from './coercion'
-import { DeepPartial } from './type-utils'
-import { CrossChainMessenger } from '../cross-chain-messenger'
-import { StandardBridgeAdapter, ETHBridgeAdapter } from '../adapters'
-import {
-  CONTRACT_ADDRESSES,
-  DEFAULT_L2_CONTRACT_ADDRESSES,
-  BRIDGE_ADAPTER_DATA,
-} from './chain-constants'
 import {
   OEContracts,
   OEL1Contracts,
   OEL2Contracts,
   OEContractsLike,
-  AddressLike,
-  BridgeAdapters,
-  BridgeAdapterData,
 } from '../interfaces'
+import { CONTRACT_ADDRESSES, DEFAULT_L2_CONTRACT_ADDRESSES } from '../utils'
 
 /**
  * We've changed some contract names in this SDK to be a bit nicer. Here we remap these nicer names
@@ -70,6 +60,12 @@ export const getOEContract = (
     iface = getContractInterface(name)
   }
 
+  // we changed some part of L1CrossDomainMessenger
+  // get the interface of L1CrossDomainMessenger (not use getContractInterfaceBedrock)
+  if (name === 'L1CrossDomainMessenger') {
+    iface = getContractInterface(name)
+  }
+
   return new Contract(
     toAddress(
       opts.address || addresses.l1[contractName] || addresses.l2[contractName]
@@ -105,6 +101,7 @@ export const getAllOEContracts = (
     l1: {
       AddressManager: undefined,
       L1CrossDomainMessenger: undefined,
+      L1CrossDomainMessengerFast: undefined,
       L1StandardBridge: undefined,
       StateCommitmentChain: undefined,
       CanonicalTransactionChain: undefined,
@@ -118,6 +115,16 @@ export const getAllOEContracts = (
   // Attach all L1 contracts.
   const l1Contracts = {} as OEL1Contracts
   for (const [contractName, contractAddress] of Object.entries(addresses.l1)) {
+    // Now we do not support Bedrock
+    // if (
+    //   contractName === 'OptimismPortal' ||
+    //   contractName === 'L2OutputOracle' ||
+    //   contractName === 'L2ToL1MessagePasser'
+    // ) {
+    //   continue
+    // }
+    // console.log('getAllOEContracts / contractName: ' + contractName)
+
     l1Contracts[contractName] = getOEContract(
       contractName as keyof OEL1Contracts,
       l2ChainId,
@@ -145,51 +152,4 @@ export const getAllOEContracts = (
     l1: l1Contracts,
     l2: l2Contracts,
   }
-}
-
-/**
- * Gets a series of bridge adapters for the given L2 chain ID.
- *
- * @param l2ChainId Chain ID for the L2 network.
- * @param messenger Cross chain messenger to connect to the bridge adapters
- * @param opts Additional options for connecting to the custom bridges.
- * @param opts.overrides Custom bridge adapters.
- * @returns An object containing all bridge adapters
- */
-export const getBridgeAdapters = (
-  l2ChainId: number,
-  messenger: CrossChainMessenger,
-  opts?: {
-    overrides?: BridgeAdapterData
-  }
-): BridgeAdapters => {
-  const adapterData: BridgeAdapterData = {
-    ...(CONTRACT_ADDRESSES[l2ChainId]
-      ? {
-          Standard: {
-            Adapter: StandardBridgeAdapter,
-            l1Bridge: CONTRACT_ADDRESSES[l2ChainId].l1.L1StandardBridge,
-            l2Bridge: predeploys.L2StandardBridge,
-          },
-          ETH: {
-            Adapter: ETHBridgeAdapter,
-            l1Bridge: CONTRACT_ADDRESSES[l2ChainId].l1.L1StandardBridge,
-            l2Bridge: predeploys.L2StandardBridge,
-          },
-        }
-      : {}),
-    ...(BRIDGE_ADAPTER_DATA[l2ChainId] || {}),
-    ...(opts?.overrides || {}),
-  }
-
-  const adapters: BridgeAdapters = {}
-  for (const [bridgeName, bridgeData] of Object.entries(adapterData)) {
-    adapters[bridgeName] = new bridgeData.Adapter({
-      messenger,
-      l1Bridge: bridgeData.l1Bridge,
-      l2Bridge: bridgeData.l2Bridge,
-    })
-  }
-
-  return adapters
 }

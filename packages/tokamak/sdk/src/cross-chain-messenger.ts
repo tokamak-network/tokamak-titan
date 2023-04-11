@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Provider,
-  BlockTag,
   TransactionReceipt,
   TransactionResponse,
   TransactionRequest,
@@ -18,55 +17,52 @@ import {
   sleep,
   remove0x,
   toHexString,
+  L2OutputOracleParameters,
   toRpcHexString,
   hashWithdrawal,
   encodeCrossDomainMessageV0,
-  hashCrossDomainMessage,
-  L2OutputOracleParameters,
   BedrockOutputData,
   BedrockCrossChainMessageProof,
 } from '@eth-optimism/core-utils'
 import { getContractInterface, predeploys } from '@eth-optimism/contracts'
 import * as rlp from 'rlp'
-
 import {
   CoreCrossChainMessage,
-  OEContracts,
-  OEContractsLike,
   MessageLike,
   MessageRequestLike,
   TransactionLike,
-  AddressLike,
   NumberLike,
+  AddressLike,
   SignerOrProviderLike,
   CrossChainMessage,
   CrossChainMessageRequest,
   CrossChainMessageProof,
   MessageDirection,
-  MessageStatus,
   TokenBridgeMessage,
   MessageReceipt,
   MessageReceiptStatus,
   BridgeAdapterData,
   BridgeAdapters,
-  StateRoot,
-  StateRootBatch,
   IBridgeAdapter,
-} from './interfaces'
-import {
   toSignerOrProvider,
   toNumber,
   toTransactionHash,
   DeepPartial,
-  getAllOEContracts,
-  getBridgeAdapters,
+  StateRoot,
+  StateRootBatch,
   makeMerkleTreeProof,
   makeStateTrieProof,
+} from '@eth-optimism/sdk'
+
+import { OEContracts, MessageStatus, OEContractsLike } from './interfaces'
+import {
+  hashCrossChainMessage,
+  getAllOEContracts,
   DEPOSIT_CONFIRMATION_BLOCKS,
   CHAIN_BLOCK_TIMES,
 } from './utils'
 
-export class CrossChainMessenger {
+export class BatchCrossChainMessenger {
   /**
    * Provider connected to the L1 chain.
    */
@@ -113,6 +109,11 @@ export class CrossChainMessenger {
   public bedrock: boolean
 
   /**
+   * Whether or not batch-relayer-fast is enabled.
+   */
+  public fastRelayer: boolean
+
+  /**
    * Parameters for the L2OutputOracle contract.
    */
   private _l2OutputOracleParameters: L2OutputOracleParameters
@@ -141,8 +142,10 @@ export class CrossChainMessenger {
     contracts?: DeepPartial<OEContractsLike>
     bridges?: BridgeAdapterData
     bedrock?: boolean
+    fastRelayer?: boolean
   }) {
     this.bedrock = opts.bedrock ?? false
+    this.fastRelayer = opts.fastRelayer
     this.l1SignerOrProvider = toSignerOrProvider(opts.l1SignerOrProvider)
     this.l2SignerOrProvider = toSignerOrProvider(opts.l2SignerOrProvider)
 
@@ -172,10 +175,6 @@ export class CrossChainMessenger {
       l1SignerOrProvider: this.l1SignerOrProvider,
       l2SignerOrProvider: this.l2SignerOrProvider,
       overrides: opts.contracts,
-    })
-
-    this.bridges = getBridgeAdapters(this.l2ChainId, this, {
-      overrides: opts.bridges,
     })
   }
 
@@ -294,11 +293,16 @@ export class CrossChainMessenger {
     }
 
     // By this point opts.direction will always be defined.
-    const messenger =
+    let messenger =
       opts.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l1.L1CrossDomainMessenger
         : this.contracts.l2.L2CrossDomainMessenger
 
+    if (opts.direction === MessageDirection.L1_TO_L2 && this.fastRelayer) {
+      messenger = this.contracts.l1.L1CrossDomainMessengerFast
+    }
+
+    // Filter in order
     return receipt.logs
       .filter((log) => {
         // Only look at logs emitted by the messenger address
@@ -307,6 +311,7 @@ export class CrossChainMessenger {
       .filter((log) => {
         // Only look at SentMessage logs specifically
         const parsed = messenger.interface.parseLog(log)
+        // Event SentMessage is triggered by L2CrossDomainMessenger.sendMessage
         return parsed.name === 'SentMessage'
       })
       .map((log) => {
@@ -342,23 +347,6 @@ export class CrossChainMessenger {
       })
   }
 
-  // public async getMessagesByAddress(
-  //   address: AddressLike,
-  //   opts?: {
-  //     direction?: MessageDirection
-  //     fromBlock?: NumberLike
-  //     toBlock?: NumberLike
-  //   }
-  // ): Promise<CrossChainMessage[]> {
-  //   throw new Error(`
-  //     The function getMessagesByAddress is currently not enabled because the sender parameter of
-  //     the SentMessage event is not indexed within the CrossChainMessenger contracts.
-  //     getMessagesByAddress will be enabled by plugging in an Optimism Indexer (coming soon).
-  //     See the following issue on GitHub for additional context:
-  //     https://github.com/ethereum-optimism/optimism/issues/2129
-  //   `)
-  // }
-
   /**
    * Finds the appropriate bridge adapter for a given L1<>L2 token pair. Will throw if no bridges
    * support the token pair or if more than one bridge supports the token pair.
@@ -387,74 +375,6 @@ export class CrossChainMessenger {
     }
 
     return bridges[0]
-  }
-
-  /**
-   * Gets all deposits for a given address.
-   *
-   * @param address Address to search for messages from.
-   * @param opts Options object.
-   * @param opts.fromBlock Block to start searching for messages from. If not provided, will start
-   * from the first block (block #0).
-   * @param opts.toBlock Block to stop searching for messages at. If not provided, will stop at the
-   * latest known block ("latest").
-   * @returns All deposit token bridge messages sent by the given address.
-   */
-  public async getDepositsByAddress(
-    address: AddressLike,
-    opts: {
-      fromBlock?: BlockTag
-      toBlock?: BlockTag
-    } = {}
-  ): Promise<TokenBridgeMessage[]> {
-    return (
-      await Promise.all(
-        Object.values(this.bridges).map(async (bridge) => {
-          return bridge.getDepositsByAddress(address, opts)
-        })
-      )
-    )
-      .reduce((acc, val) => {
-        return acc.concat(val)
-      }, [])
-      .sort((a, b) => {
-        // Sort descending by block number
-        return b.blockNumber - a.blockNumber
-      })
-  }
-
-  /**
-   * Gets all withdrawals for a given address.
-   *
-   * @param address Address to search for messages from.
-   * @param opts Options object.
-   * @param opts.fromBlock Block to start searching for messages from. If not provided, will start
-   * from the first block (block #0).
-   * @param opts.toBlock Block to stop searching for messages at. If not provided, will stop at the
-   * latest known block ("latest").
-   * @returns All withdrawal token bridge messages sent by the given address.
-   */
-  public async getWithdrawalsByAddress(
-    address: AddressLike,
-    opts: {
-      fromBlock?: BlockTag
-      toBlock?: BlockTag
-    } = {}
-  ): Promise<TokenBridgeMessage[]> {
-    return (
-      await Promise.all(
-        Object.values(this.bridges).map(async (bridge) => {
-          return bridge.getWithdrawalsByAddress(address, opts)
-        })
-      )
-    )
-      .reduce((acc, val) => {
-        return acc.concat(val)
-      }, [])
-      .sort((a, b) => {
-        // Sort descending by block number
-        return b.blockNumber - a.blockNumber
-      })
   }
 
   /**
@@ -580,6 +500,74 @@ export class CrossChainMessenger {
   }
 
   /**
+   * Get Status of Message from L1CrossDomainMessenger/L1CrossDomainMessengerFast
+   *
+   * @param message Cross chain message to check the status of.
+   * @returns Status of the message.
+   */
+  public async getMessageStatusFromContracts(
+    message: MessageLike
+  ): Promise<MessageStatus> {
+    // check message type
+    const resolved = await this.toCrossChainMessage(message)
+
+    // hashing the message (keccak256)
+    // messageHash is equal to xDomainCalldata in L1CrossDomainMessengerFast
+    const messageHash = hashCrossChainMessage(resolved)
+    if (resolved.direction === MessageDirection.L1_TO_L2) {
+      throw new Error(`can only determine for L2 to L1 messages`)
+    } else {
+      // get state root
+      const stateRoot = await this.getMessageStateRoot(resolved)
+      if (stateRoot === null) {
+        return MessageStatus.STATE_ROOT_NOT_PUBLISHED
+      } else {
+        // for the batch-relayer-fast this should be zero
+        const challengePeriod = await this.getChallengePeriodSeconds()
+        const targetBlock = await this.l1Provider.getBlock(
+          stateRoot.batch.blockNumber
+        )
+        const latestBlock = await this.l1Provider.getBlock('latest')
+        if (targetBlock.timestamp + challengePeriod > latestBlock.timestamp) {
+          return MessageStatus.IN_CHALLENGE_PERIOD
+        } else {
+          // get status (success or fail)
+          let successStatus: boolean
+          let failedStatus: boolean
+
+          if (this.fastRelayer) {
+            successStatus =
+              await this.contracts.l1.L1CrossDomainMessengerFast.successfulMessages(
+                messageHash
+              )
+            failedStatus =
+              await this.contracts.l1.L1CrossDomainMessengerFast.failedMessages(
+                messageHash
+              )
+          } else {
+            // check contract
+            successStatus =
+              await this.contracts.l1.L1CrossDomainMessenger.successfulMessages(
+                messageHash
+              )
+            failedStatus =
+              await this.contracts.l1.L1CrossDomainMessenger.failedMessages(
+                messageHash
+              )
+          }
+          if (successStatus) {
+            return MessageStatus.RELAYED
+          } else if (failedStatus) {
+            return MessageStatus.RELAYED_FAILED
+          } else {
+            return MessageStatus.READY_FOR_RELAY
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Finds the receipt of the transaction that executed a particular cross chain message.
    *
    * @param message Message to find the receipt of.
@@ -590,21 +578,17 @@ export class CrossChainMessenger {
     message: MessageLike
   ): Promise<MessageReceipt> {
     const resolved = await this.toCrossChainMessage(message)
-    const messageHash = hashCrossDomainMessage(
-      resolved.messageNonce,
-      resolved.sender,
-      resolved.target,
-      resolved.value,
-      resolved.minGasLimit,
-      resolved.message
-    )
+    const messageHash = hashCrossChainMessage(resolved)
 
     // Here we want the messenger that will receive the message, not the one that sent it.
-    const messenger =
+    let messenger =
       resolved.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l2.L2CrossDomainMessenger
         : this.contracts.l1.L1CrossDomainMessenger
 
+    if (resolved.direction === MessageDirection.L2_TO_L1 && this.fastRelayer) {
+      messenger = this.contracts.l1.L1CrossDomainMessengerFast
+    }
     const relayedMessageEvents = await messenger.queryFilter(
       messenger.filters.RelayedMessage(messageHash)
     )
@@ -812,79 +796,14 @@ export class CrossChainMessenger {
   }
 
   /**
-   * Returns the estimated amount of time before the message can be executed. When this is a
-   * message being sent to L1, this will return the estimated time until the message will complete
-   * its challenge period. When this is a message being sent to L2, this will return the estimated
-   * amount of time until the message will be picked up and executed on L2.
-   *
-   * @param message Message to estimate the time remaining for.
-   * @returns Estimated amount of time remaining (in seconds) before the message can be executed.
-   */
-  public async estimateMessageWaitTimeSeconds(
-    message: MessageLike
-  ): Promise<number> {
-    const resolved = await this.toCrossChainMessage(message)
-    const status = await this.getMessageStatus(resolved)
-    if (resolved.direction === MessageDirection.L1_TO_L2) {
-      if (
-        status === MessageStatus.RELAYED ||
-        status === MessageStatus.FAILED_L1_TO_L2_MESSAGE
-      ) {
-        // Transactions that are relayed or failed are considered completed, so the wait time is 0.
-        return 0
-      } else {
-        // Otherwise we need to estimate the number of blocks left until the transaction will be
-        // considered confirmed by the Layer 2 system. Then we multiply this by the estimated
-        // average L1 block time.
-        const receipt = await this.l1Provider.getTransactionReceipt(
-          resolved.transactionHash
-        )
-        const blocksLeft = Math.max(
-          this.depositConfirmationBlocks - receipt.confirmations,
-          0
-        )
-        return blocksLeft * this.l1BlockTimeSeconds
-      }
-    } else {
-      if (
-        status === MessageStatus.RELAYED ||
-        status === MessageStatus.READY_FOR_RELAY
-      ) {
-        // Transactions that are relayed or ready for relay are considered complete.
-        return 0
-      } else if (status === MessageStatus.STATE_ROOT_NOT_PUBLISHED) {
-        // If the state root hasn't been published yet, just assume it'll be published relatively
-        // quickly and return the challenge period for now. In the future we could use more
-        // advanced techniques to figure out average time between transaction execution and
-        // state root publication.
-        return this.getChallengePeriodSeconds()
-      } else if (status === MessageStatus.IN_CHALLENGE_PERIOD) {
-        // If the message is still within the challenge period, then we need to estimate exactly
-        // the amount of time left until the challenge period expires. The challenge period starts
-        // when the state root is published.
-        const stateRoot = await this.getMessageStateRoot(resolved)
-        const challengePeriod = await this.getChallengePeriodSeconds()
-        const targetBlock = await this.l1Provider.getBlock(
-          stateRoot.batch.blockNumber
-        )
-        const latestBlock = await this.l1Provider.getBlock('latest')
-        return Math.max(
-          challengePeriod - (latestBlock.timestamp - targetBlock.timestamp),
-          0
-        )
-      } else {
-        // Should not happen
-        throw new Error(`unexpected message status`)
-      }
-    }
-  }
-
-  /**
    * Queries the current challenge period in seconds from the StateCommitmentChain.
    *
    * @returns Current challenge period in seconds.
    */
   public async getChallengePeriodSeconds(): Promise<number> {
+    if (this.fastRelayer) {
+      return 0
+    }
     const challengePeriod = this.bedrock
       ? await this.contracts.l1.OptimismPortal.FINALIZATION_PERIOD_SECONDS()
       : await this.contracts.l1.StateCommitmentChain.FRAUD_PROOF_WINDOW()
@@ -1402,6 +1321,27 @@ export class CrossChainMessenger {
   }
 
   /**
+   * Finalizes a cross chain message that was sent from L2 to L1. Only applicable for L2 to L1 messages.
+   *
+   * @param messages Messages to finalize
+   * @param opts Additional options.
+   * @param opts.signer Optional signer to use to send the transaction.
+   * @param opts.overrides Optional transaction overrides.
+   * @returns Transaction response for the finalization transaction.
+   */
+  public async finalizeBatchMessage(
+    messages: Array<MessageLike>,
+    opts?: {
+      signer?: Signer
+      overrides?: Overrides
+    }
+  ): Promise<TransactionResponse> {
+    return (opts?.signer || this.l1Signer).sendTransaction(
+      await this.populateTransaction.finalizeBatchMessage(messages, opts)
+    )
+  }
+
+  /**
    * Deposits some ETH into the L2 chain.
    *
    * @param amount Amount of ETH to deposit (in wei).
@@ -1587,6 +1527,7 @@ export class CrossChainMessenger {
         overrides?: Overrides
       }
     ): Promise<TransactionRequest> => {
+      // we should not use L1CrossDomainMessengerFast for L1_TO_L2
       if (message.direction === MessageDirection.L1_TO_L2) {
         return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.sendMessage(
           message.target,
@@ -1635,6 +1576,7 @@ export class CrossChainMessenger {
           },
         })
       } else {
+        // we should not use L1CrossDomainMessengerFast for resendMessage
         const legacyL1XDM = new ethers.Contract(
           this.contracts.l1.L1CrossDomainMessenger.address,
           getContractInterface('L1CrossDomainMessenger'),
@@ -1697,22 +1639,89 @@ export class CrossChainMessenger {
           proof.withdrawalProof,
           opts?.overrides || {}
         )
-      } else {
+      }
+      // Note: we should not use finalizeMessage for relay
+      // only for test purposes
+      else {
         // L1CrossDomainMessenger relayMessage is the only method that isn't fully backwards
         // compatible, so we need to use the legacy interface. When we fully upgrade to Bedrock we
         // should be able to remove this code.
         const proof = await this.getMessageProof(resolved)
-        const legacyL1XDM = new ethers.Contract(
-          this.contracts.l1.L1CrossDomainMessenger.address,
-          getContractInterface('L1CrossDomainMessenger'),
-          this.l1SignerOrProvider
-        )
-        return legacyL1XDM.populateTransaction.relayMessage(
-          resolved.target,
-          resolved.sender,
-          resolved.message,
-          resolved.messageNonce,
+        // const legacyL1XDM = new ethers.Contract(
+        //   this.contracts.l1.L1CrossDomainMessenger.address,
+        //   getContractInterface('L1CrossDomainMessenger'),
+        //   this.l1SignerOrProvider
+        // )
+
+        // return legacyL1XDM.populateTransaction.relayMessage(
+        //   resolved.target,
+        //   resolved.sender,
+        //   resolved.message,
+        //   resolved.messageNonce,
+        //   proof,
+        //   opts?.overrides || {}
+        // )
+
+        if (this.fastRelayer) {
+          return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.relayMessage(
+            resolved.target,
+            resolved.sender,
+            resolved.message,
+            resolved.messageNonce,
+            proof,
+            opts?.overrides || {}
+          )
+        } else {
+          return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.relayMessage(
+            resolved.target,
+            resolved.sender,
+            resolved.message,
+            resolved.messageNonce,
+            proof,
+            opts?.overrides || {}
+          )
+        }
+      }
+    },
+
+    /**
+     * Generates a message finalization transaction that can be signed and executed. Only applicable for L2 to L1 messages.
+     *
+     * @param messages Messages to generate the finalization transaction for.
+     * @param opts Additional options.
+     * @returns Transaction that can be signed and executed to finalize the message.
+     */
+    finalizeBatchMessage: async (
+      messages: Array<MessageLike>,
+      opts?: {
+        overrides?: Overrides
+      }
+    ): Promise<TransactionRequest> => {
+      const batchMessage = []
+      for (const message of messages) {
+        const resolved = await this.toCrossChainMessage(message)
+
+        if (resolved.direction === MessageDirection.L1_TO_L2) {
+          throw new Error('cannot finalize L1 to L2 message')
+        }
+        const proof = await this.getMessageProof(resolved)
+        batchMessage.push({
+          target: resolved.target,
+          sender: resolved.sender,
+          message: resolved.message,
+          messageNonce: resolved.messageNonce,
           proof,
+        })
+      }
+      if (this.fastRelayer) {
+        // ethers.js v5 does not handle overloading
+        return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.batchRelayMessages(
+          batchMessage,
+          opts?.overrides || {}
+        )
+      } else {
+        return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.batchRelayMessages(
+          batchMessage,
           opts?.overrides || {}
         )
       }
@@ -1914,6 +1923,23 @@ export class CrossChainMessenger {
       )
     },
 
+    /**
+     * Estimates gas required to finalize a cross chain message in batch. Only applies to L2 to L1 messages.
+     *
+     * @param messages Messages to generate the finalization transaction for.
+     * @param opts Additional options.
+     * @returns Gas estimate for the transaction.
+     */
+    finalizeBatchMessage: async (
+      messages: Array<MessageLike>,
+      opts?: {
+        overrides?: Overrides
+      }
+    ): Promise<BigNumber> => {
+      return this.l1Provider.estimateGas(
+        await this.populateTransaction.finalizeBatchMessage(messages, opts)
+      )
+    },
     /**
      * Estimates gas required to deposit some ETH into the L2 chain.
      *

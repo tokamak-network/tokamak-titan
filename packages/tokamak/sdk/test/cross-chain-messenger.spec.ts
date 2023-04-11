@@ -1,25 +1,23 @@
 import { Provider } from '@ethersproject/abstract-provider'
-import { expectApprox, hashCrossDomainMessage } from '@eth-optimism/core-utils'
-import { predeploys } from '@eth-optimism/contracts'
+import { hashCrossDomainMessage } from '@eth-optimism/core-utils'
 import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
-
-import { expect } from './setup'
 import {
   MessageDirection,
   CONTRACT_ADDRESSES,
   omit,
   MessageStatus,
   CrossChainMessage,
-  CrossChainMessenger,
   StandardBridgeAdapter,
-  ETHBridgeAdapter,
   L1ChainID,
   L2ChainID,
-} from '../src'
+} from '@eth-optimism/sdk'
+
+import { expect } from './setup'
+import { BatchCrossChainMessenger } from '../src'
 import { DUMMY_MESSAGE, DUMMY_EXTENDED_MESSAGE } from './helpers'
 
-describe('CrossChainMessenger', () => {
+describe('BatchCrossChainMessenger', () => {
   let l1Signer: any
   let l2Signer: any
   before(async () => {
@@ -29,7 +27,7 @@ describe('CrossChainMessenger', () => {
   describe('construction', () => {
     describe('when given an ethers provider for the L1 provider', () => {
       it('should use the provider as the L1 provider', () => {
-        const messenger = new CrossChainMessenger({
+        const messenger = new BatchCrossChainMessenger({
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
@@ -42,7 +40,7 @@ describe('CrossChainMessenger', () => {
 
     describe('when given an ethers provider for the L2 provider', () => {
       it('should use the provider as the L2 provider', () => {
-        const messenger = new CrossChainMessenger({
+        const messenger = new BatchCrossChainMessenger({
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
@@ -55,7 +53,7 @@ describe('CrossChainMessenger', () => {
 
     describe('when given a string as the L1 provider', () => {
       it('should create a JSON-RPC provider for the L1 provider', () => {
-        const messenger = new CrossChainMessenger({
+        const messenger = new BatchCrossChainMessenger({
           l1SignerOrProvider: 'https://localhost:8545',
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
@@ -68,7 +66,7 @@ describe('CrossChainMessenger', () => {
 
     describe('when given a string as the L2 provider', () => {
       it('should create a JSON-RPC provider for the L2 provider', () => {
-        const messenger = new CrossChainMessenger({
+        const messenger = new BatchCrossChainMessenger({
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: 'https://localhost:8545',
           l1ChainId: L1ChainID.MAINNET,
@@ -82,7 +80,7 @@ describe('CrossChainMessenger', () => {
     describe('when given a bad L1 chain ID', () => {
       it('should throw an error', () => {
         expect(() => {
-          new CrossChainMessenger({
+          new BatchCrossChainMessenger({
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: ethers.provider,
             l1ChainId: undefined as any,
@@ -95,7 +93,7 @@ describe('CrossChainMessenger', () => {
     describe('when given a bad L2 chain ID', () => {
       it('should throw an error', () => {
         expect(() => {
-          new CrossChainMessenger({
+          new BatchCrossChainMessenger({
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: ethers.provider,
             l1ChainId: L1ChainID.MAINNET,
@@ -108,7 +106,7 @@ describe('CrossChainMessenger', () => {
     describe('when no custom contract addresses are provided', () => {
       describe('when given a known chain ID', () => {
         it('should use the contract addresses for the known chain ID', () => {
-          const messenger = new CrossChainMessenger({
+          const messenger = new BatchCrossChainMessenger({
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: 'https://localhost:8545',
             l1ChainId: L1ChainID.MAINNET,
@@ -134,7 +132,7 @@ describe('CrossChainMessenger', () => {
       describe('when given an unknown L2 chain ID', () => {
         it('should throw an error', () => {
           expect(() => {
-            new CrossChainMessenger({
+            new BatchCrossChainMessenger({
               l1SignerOrProvider: ethers.provider,
               l2SignerOrProvider: 'https://localhost:8545',
               l1ChainId: L1ChainID.MAINNET,
@@ -156,7 +154,7 @@ describe('CrossChainMessenger', () => {
               L2CrossDomainMessenger: '0x' + '22'.repeat(20),
             },
           }
-          const messenger = new CrossChainMessenger({
+          const messenger = new BatchCrossChainMessenger({
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: 'https://localhost:8545',
             l1ChainId: L1ChainID.MAINNET,
@@ -197,6 +195,7 @@ describe('CrossChainMessenger', () => {
               l1: {
                 AddressManager: '0x' + '11'.repeat(20),
                 L1CrossDomainMessenger: '0x' + '12'.repeat(20),
+                L1CrossDomainMessengerFast: '0x' + '19'.repeat(20),
                 L1StandardBridge: '0x' + '13'.repeat(20),
                 StateCommitmentChain: '0x' + '14'.repeat(20),
                 CanonicalTransactionChain: '0x' + '15'.repeat(20),
@@ -209,7 +208,7 @@ describe('CrossChainMessenger', () => {
               },
             }
 
-            const messenger = new CrossChainMessenger({
+            const messenger = new BatchCrossChainMessenger({
               l1SignerOrProvider: ethers.provider,
               l2SignerOrProvider: 'https://localhost:8545',
               l1ChainId: L1ChainID.MAINNET,
@@ -246,7 +245,7 @@ describe('CrossChainMessenger', () => {
         describe('when not all L1 addresses are provided', () => {
           it('should throw an error', () => {
             expect(() => {
-              new CrossChainMessenger({
+              new BatchCrossChainMessenger({
                 l1SignerOrProvider: ethers.provider,
                 l2SignerOrProvider: 'https://localhost:8545',
                 l1ChainId: L1ChainID.MAINNET,
@@ -273,7 +272,7 @@ describe('CrossChainMessenger', () => {
   describe('getMessagesByTransaction', () => {
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l1Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
@@ -282,7 +281,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockMessenger')
       ).deploy()) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -307,6 +306,7 @@ describe('CrossChainMessenger', () => {
                 return DUMMY_MESSAGE
               })
 
+              // trigger SentMessage event in messages
               const tx = await l1Messenger.triggerSentMessageEvents(messages)
               const found = await messenger.getMessagesByTransaction(tx, {
                 direction: MessageDirection.L1_TO_L2,
@@ -457,7 +457,7 @@ describe('CrossChainMessenger', () => {
     let l2Bridge: Contract
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l1Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
@@ -472,7 +472,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockBridge')
       ).deploy(l2Messenger.address)) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -507,36 +507,6 @@ describe('CrossChainMessenger', () => {
         expect(await messenger.toCrossChainMessage(message)).to.deep.equal(
           message
         )
-      })
-    })
-
-    describe('when the input is a TokenBridgeMessage', () => {
-      // TODO: There are some edge cases here with custom bridges that conform to the interface but
-      // not to the behavioral spec. Possibly worth testing those. For now this is probably
-      // sufficient.
-      it('should return the sent message event that came after the deposit or withdrawal', async () => {
-        const from = '0x' + '99'.repeat(20)
-        const deposit = {
-          l1Token: '0x' + '11'.repeat(20),
-          l2Token: '0x' + '22'.repeat(20),
-          from,
-          to: '0x' + '44'.repeat(20),
-          amount: ethers.BigNumber.from(1234),
-          data: '0x1234',
-        }
-
-        const tx = await l1Bridge.emitERC20DepositInitiated(deposit)
-
-        const foundCrossChainMessages =
-          await messenger.getMessagesByTransaction(tx)
-        const foundTokenBridgeMessages = await messenger.getDepositsByAddress(
-          from
-        )
-        const resolved = await messenger.toCrossChainMessage(
-          foundTokenBridgeMessages[0]
-        )
-
-        expect(resolved).to.deep.equal(foundCrossChainMessages[0])
       })
     })
 
@@ -579,7 +549,7 @@ describe('CrossChainMessenger', () => {
     let scc: Contract
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       // TODO: Get rid of the nested awaits here. Could be a good first issue for someone.
       scc = (await (await ethers.getContractFactory('MockSCC')).deploy()) as any
@@ -590,7 +560,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockMessenger')
       ).deploy()) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -808,7 +778,7 @@ describe('CrossChainMessenger', () => {
     let l2Bridge: Contract
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l1Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
@@ -823,7 +793,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockBridge')
       ).deploy(l2Messenger.address)) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -967,13 +937,13 @@ describe('CrossChainMessenger', () => {
 
   describe('waitForMessageReceipt', () => {
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l2Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
       ).deploy()) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -1068,278 +1038,10 @@ describe('CrossChainMessenger', () => {
     })
   })
 
-  describe('estimateL2MessageGasLimit', () => {
-    let messenger: CrossChainMessenger
-    beforeEach(async () => {
-      messenger = new CrossChainMessenger({
-        l1SignerOrProvider: ethers.provider,
-        l2SignerOrProvider: ethers.provider,
-        l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
-      })
-    })
-
-    describe('when the message is an L1 to L2 message', () => {
-      it('should return an accurate gas estimate plus a ~20% buffer', async () => {
-        const message = {
-          direction: MessageDirection.L1_TO_L2,
-          target: '0x' + '11'.repeat(20),
-          sender: '0x' + '22'.repeat(20),
-          message: '0x' + '33'.repeat(64),
-          messageNonce: 1234,
-          logIndex: 0,
-          blockNumber: 1234,
-          transactionHash: '0x' + '44'.repeat(32),
-        }
-
-        const estimate = await ethers.provider.estimateGas({
-          to: message.target,
-          from: message.sender,
-          data: message.message,
-        })
-
-        // Approximately 20% greater than the estimate, +/- 1%.
-        expectApprox(
-          await messenger.estimateL2MessageGasLimit(message),
-          estimate.mul(120).div(100),
-          {
-            percentUpperDeviation: 1,
-            percentLowerDeviation: 1,
-          }
-        )
-      })
-
-      it('should return an accurate gas estimate when a custom buffer is provided', async () => {
-        const message = {
-          direction: MessageDirection.L1_TO_L2,
-          target: '0x' + '11'.repeat(20),
-          sender: '0x' + '22'.repeat(20),
-          message: '0x' + '33'.repeat(64),
-          messageNonce: 1234,
-          logIndex: 0,
-          blockNumber: 1234,
-          transactionHash: '0x' + '44'.repeat(32),
-        }
-
-        const estimate = await ethers.provider.estimateGas({
-          to: message.target,
-          from: message.sender,
-          data: message.message,
-        })
-
-        // Approximately 30% greater than the estimate, +/- 1%.
-        expectApprox(
-          await messenger.estimateL2MessageGasLimit(message, {
-            bufferPercent: 30,
-          }),
-          estimate.mul(130).div(100),
-          {
-            percentUpperDeviation: 1,
-            percentLowerDeviation: 1,
-          }
-        )
-      })
-    })
-
-    describe('when the message is an L2 to L1 message', () => {
-      it('should throw an error', async () => {
-        const message = {
-          direction: MessageDirection.L2_TO_L1,
-          target: '0x' + '11'.repeat(20),
-          sender: '0x' + '22'.repeat(20),
-          message: '0x' + '33'.repeat(64),
-          messageNonce: 1234,
-          logIndex: 0,
-          blockNumber: 1234,
-          transactionHash: '0x' + '44'.repeat(32),
-        }
-
-        await expect(messenger.estimateL2MessageGasLimit(message)).to.be
-          .rejected
-      })
-    })
-  })
-
-  describe('estimateMessageWaitTimeSeconds', () => {
-    let scc: Contract
-    let l1Messenger: Contract
-    let l2Messenger: Contract
-    let messenger: CrossChainMessenger
-    beforeEach(async () => {
-      // TODO: Get rid of the nested awaits here. Could be a good first issue for someone.
-      scc = (await (await ethers.getContractFactory('MockSCC')).deploy()) as any
-      l1Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-      l2Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-
-      messenger = new CrossChainMessenger({
-        l1SignerOrProvider: ethers.provider,
-        l2SignerOrProvider: ethers.provider,
-        l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
-        contracts: {
-          l1: {
-            L1CrossDomainMessenger: l1Messenger.address,
-            StateCommitmentChain: scc.address,
-          },
-          l2: {
-            L2CrossDomainMessenger: l2Messenger.address,
-          },
-        },
-      })
-    })
-
-    const sendAndGetDummyMessage = async (direction: MessageDirection) => {
-      const mockMessenger =
-        direction === MessageDirection.L1_TO_L2 ? l1Messenger : l2Messenger
-      const tx = await mockMessenger.triggerSentMessageEvents([DUMMY_MESSAGE])
-      return (
-        await messenger.getMessagesByTransaction(tx, {
-          direction,
-        })
-      )[0]
-    }
-
-    const submitStateRootBatchForMessage = async (
-      message: CrossChainMessage
-    ) => {
-      await scc.setSBAParams({
-        batchIndex: 0,
-        batchRoot: ethers.constants.HashZero,
-        batchSize: 1,
-        prevTotalElements: message.blockNumber,
-        extraData: '0x',
-      })
-      await scc.appendStateBatch([ethers.constants.HashZero], 0)
-    }
-
-    describe('when the message is an L1 => L2 message', () => {
-      describe('when the message has not been executed on L2 yet', () => {
-        it('should return the estimated seconds until the message will be confirmed on L2', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L1_TO_L2
-          )
-
-          await l1Messenger.triggerSentMessageEvents([message])
-
-          expect(
-            await messenger.estimateMessageWaitTimeSeconds(message)
-          ).to.equal(1)
-        })
-      })
-
-      describe('when the message has been executed on L2', () => {
-        it('should return 0', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L1_TO_L2
-          )
-
-          await l1Messenger.triggerSentMessageEvents([message])
-          await l2Messenger.triggerRelayedMessageEvents([
-            hashCrossDomainMessage(
-              message.messageNonce,
-              message.sender,
-              message.target,
-              message.value,
-              message.minGasLimit,
-              message.message
-            ),
-          ])
-
-          expect(
-            await messenger.estimateMessageWaitTimeSeconds(message)
-          ).to.equal(0)
-        })
-      })
-    })
-
-    describe('when the message is an L2 => L1 message', () => {
-      describe('when the state root has not been published', () => {
-        it('should return the estimated seconds until the state root will be published and pass the challenge period', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L2_TO_L1
-          )
-
-          expect(
-            await messenger.estimateMessageWaitTimeSeconds(message)
-          ).to.equal(await messenger.getChallengePeriodSeconds())
-        })
-      })
-
-      describe('when the state root is within the challenge period', () => {
-        it('should return the estimated seconds until the state root passes the challenge period', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L2_TO_L1
-          )
-
-          await submitStateRootBatchForMessage(message)
-
-          const challengePeriod = await messenger.getChallengePeriodSeconds()
-          ethers.provider.send('evm_increaseTime', [challengePeriod / 2])
-          ethers.provider.send('evm_mine', [])
-
-          expectApprox(
-            await messenger.estimateMessageWaitTimeSeconds(message),
-            challengePeriod / 2,
-            {
-              percentUpperDeviation: 5,
-              percentLowerDeviation: 5,
-            }
-          )
-        })
-      })
-
-      describe('when the state root passes the challenge period', () => {
-        it('should return 0', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L2_TO_L1
-          )
-
-          await submitStateRootBatchForMessage(message)
-
-          const challengePeriod = await messenger.getChallengePeriodSeconds()
-          ethers.provider.send('evm_increaseTime', [challengePeriod + 1])
-          ethers.provider.send('evm_mine', [])
-
-          expect(
-            await messenger.estimateMessageWaitTimeSeconds(message)
-          ).to.equal(0)
-        })
-      })
-
-      describe('when the message has been executed', () => {
-        it('should return 0', async () => {
-          const message = await sendAndGetDummyMessage(
-            MessageDirection.L2_TO_L1
-          )
-
-          await l2Messenger.triggerSentMessageEvents([message])
-          await l1Messenger.triggerRelayedMessageEvents([
-            hashCrossDomainMessage(
-              message.messageNonce,
-              message.sender,
-              message.target,
-              message.value,
-              message.minGasLimit,
-              message.message
-            ),
-          ])
-
-          expect(
-            await messenger.estimateMessageWaitTimeSeconds(message)
-          ).to.equal(0)
-        })
-      })
-    })
-  })
-
   describe('sendMessage', () => {
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l1Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
@@ -1348,7 +1050,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockMessenger')
       ).deploy()) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -1435,7 +1137,7 @@ describe('CrossChainMessenger', () => {
   describe('resendMessage', () => {
     let l1Messenger: Contract
     let l2Messenger: Contract
-    let messenger: CrossChainMessenger
+    let messenger: BatchCrossChainMessenger
     beforeEach(async () => {
       l1Messenger = (await (
         await ethers.getContractFactory('MockMessenger')
@@ -1444,7 +1146,7 @@ describe('CrossChainMessenger', () => {
         await ethers.getContractFactory('MockMessenger')
       ).deploy()) as any
 
-      messenger = new CrossChainMessenger({
+      messenger = new BatchCrossChainMessenger({
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
@@ -1498,142 +1200,6 @@ describe('CrossChainMessenger', () => {
 
         await expect(messenger.resendMessage(sent, 10000)).to.be.rejected
       })
-    })
-  })
-
-  describe('finalizeMessage', () => {
-    describe('when the message being finalized exists', () => {
-      describe('when the message is ready to be finalized', () => {
-        it('should finalize the message')
-      })
-
-      describe('when the message is not ready to be finalized', () => {
-        it('should throw an error')
-      })
-
-      describe('when the message has already been finalized', () => {
-        it('should throw an error')
-      })
-    })
-
-    describe('when the message being finalized does not exist', () => {
-      it('should throw an error')
-    })
-  })
-
-  describe('depositETH', () => {
-    let l1Messenger: Contract
-    let l2Messenger: Contract
-    let l1Bridge: Contract
-    let l2Bridge: Contract
-    let messenger: CrossChainMessenger
-    beforeEach(async () => {
-      l1Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-      l1Bridge = (await (
-        await ethers.getContractFactory('MockBridge')
-      ).deploy(l1Messenger.address)) as any
-      l2Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-      l2Bridge = (await (
-        await ethers.getContractFactory('MockBridge')
-      ).deploy(l2Messenger.address)) as any
-
-      messenger = new CrossChainMessenger({
-        l1SignerOrProvider: l1Signer,
-        l2SignerOrProvider: l2Signer,
-        l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
-        contracts: {
-          l1: {
-            L1CrossDomainMessenger: l1Messenger.address,
-            L1StandardBridge: l1Bridge.address,
-          },
-          l2: {
-            L2CrossDomainMessenger: l2Messenger.address,
-            L2StandardBridge: l2Bridge.address,
-          },
-        },
-        bridges: {
-          ETH: {
-            Adapter: ETHBridgeAdapter,
-            l1Bridge: l1Bridge.address,
-            l2Bridge: l2Bridge.address,
-          },
-        },
-      })
-    })
-
-    it('should trigger the deposit ETH function with the given amount', async () => {
-      await expect(messenger.depositETH(100000))
-        .to.emit(l1Bridge, 'ETHDepositInitiated')
-        .withArgs(
-          await l1Signer.getAddress(),
-          await l1Signer.getAddress(),
-          100000,
-          '0x'
-        )
-    })
-  })
-
-  describe('withdrawETH', () => {
-    let l1Messenger: Contract
-    let l2Messenger: Contract
-    let l1Bridge: Contract
-    let l2Bridge: Contract
-    let messenger: CrossChainMessenger
-    beforeEach(async () => {
-      l1Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-      l1Bridge = (await (
-        await ethers.getContractFactory('MockBridge')
-      ).deploy(l1Messenger.address)) as any
-      l2Messenger = (await (
-        await ethers.getContractFactory('MockMessenger')
-      ).deploy()) as any
-      l2Bridge = (await (
-        await ethers.getContractFactory('MockBridge')
-      ).deploy(l2Messenger.address)) as any
-
-      messenger = new CrossChainMessenger({
-        l1SignerOrProvider: l1Signer,
-        l2SignerOrProvider: l2Signer,
-        l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
-        contracts: {
-          l1: {
-            L1CrossDomainMessenger: l1Messenger.address,
-            L1StandardBridge: l1Bridge.address,
-          },
-          l2: {
-            L2CrossDomainMessenger: l2Messenger.address,
-            L2StandardBridge: l2Bridge.address,
-          },
-        },
-        bridges: {
-          ETH: {
-            Adapter: ETHBridgeAdapter,
-            l1Bridge: l1Bridge.address,
-            l2Bridge: l2Bridge.address,
-          },
-        },
-      })
-    })
-
-    it('should trigger the withdraw ETH function with the given amount', async () => {
-      await expect(messenger.withdrawETH(100000))
-        .to.emit(l2Bridge, 'WithdrawalInitiated')
-        .withArgs(
-          ethers.constants.AddressZero,
-          predeploys.OVM_ETH,
-          await l2Signer.getAddress(),
-          await l2Signer.getAddress(),
-          100000,
-          '0x'
-        )
     })
   })
 })

@@ -38,7 +38,6 @@ export enum L2ChainID {
 export interface OEL1Contracts {
   AddressManager: Contract
   L1CrossDomainMessenger: Contract
-  L1CrossDomainMessengerFast: Contract
   L1StandardBridge: Contract
   StateCommitmentChain: Contract
   CanonicalTransactionChain: Contract
@@ -156,10 +155,6 @@ export enum MessageStatus {
    * Message has been relayed.
    */
   RELAYED,
-  /**
-   * Message has been relayed but failed in execution.
-   */
-  RELAYED_FAILED,
 }
 
 /**

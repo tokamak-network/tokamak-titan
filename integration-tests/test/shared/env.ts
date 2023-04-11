@@ -7,12 +7,12 @@ import {
 import { getChainId, sleep } from '@eth-optimism/core-utils'
 import {
   CrossChainMessenger,
-  MessageStatus,
   MessageDirection,
   StandardBridgeAdapter,
   ETHBridgeAdapter,
   BridgeAdapterData,
 } from '@eth-optimism/sdk'
+import { BatchCrossChainMessenger, MessageStatus } from '@tokamak-optimism/sdk'
 import { predeploys } from '@eth-optimism/contracts'
 
 /* Imports: Internal */
@@ -42,7 +42,8 @@ export class OptimismEnv {
 
   // The providers
   messenger: CrossChainMessenger
-  messengerFast: CrossChainMessenger
+  batchMessenger: BatchCrossChainMessenger
+  batchMessengerFast: BatchCrossChainMessenger
   l1Provider: providers.JsonRpcProvider
   l2Provider: providers.JsonRpcProvider
   replicaProvider: providers.JsonRpcProvider
@@ -52,7 +53,8 @@ export class OptimismEnv {
     this.l1Wallet = args.l1Wallet
     this.l2Wallet = args.l2Wallet
     this.messenger = args.messenger
-    this.messengerFast = args.messengerFast
+    this.batchMessenger = args.batchMessenger
+    this.batchMessengerFast = args.batchMessengerFast
     this.l1Provider = args.l1Provider
     this.l2Provider = args.l2Provider
     this.replicaProvider = args.replicaProvider
@@ -76,7 +78,27 @@ export class OptimismEnv {
       }
     }
 
+    // optimism
     const messenger = new CrossChainMessenger({
+      l1SignerOrProvider: l1Wallet,
+      l2SignerOrProvider: l2Wallet,
+      l1ChainId: await getChainId(l1Provider),
+      l2ChainId: await getChainId(l2Provider),
+      contracts: {
+        l1: {
+          AddressManager: envConfig.ADDRESS_MANAGER,
+          L1CrossDomainMessenger: envConfig.L1_CROSS_DOMAIN_MESSENGER,
+          L1StandardBridge: envConfig.L1_STANDARD_BRIDGE,
+          StateCommitmentChain: envConfig.STATE_COMMITMENT_CHAIN,
+          CanonicalTransactionChain: envConfig.CANONICAL_TRANSACTION_CHAIN,
+          BondManager: envConfig.BOND_MANAGER,
+        },
+      },
+      bridges: bridgeOverrides,
+    })
+
+    // tokamak: batch-relayer
+    const batchMessenger = new BatchCrossChainMessenger({
       l1SignerOrProvider: l1Wallet,
       l2SignerOrProvider: l2Wallet,
       l1ChainId: await getChainId(l1Provider),
@@ -96,7 +118,8 @@ export class OptimismEnv {
       fastRelayer: false,
     })
 
-    const messengerFast = new CrossChainMessenger({
+    // tokamak: batch-relayer-fast
+    const batchMessengerFast = new BatchCrossChainMessenger({
       l1SignerOrProvider: l1Wallet,
       l2SignerOrProvider: l2Wallet,
       l1ChainId: await getChainId(l1Provider),
@@ -128,7 +151,8 @@ export class OptimismEnv {
       l1Wallet,
       l2Wallet,
       messenger,
-      messengerFast,
+      batchMessenger,
+      batchMessengerFast,
       l1Provider,
       l2Provider,
       verifierProvider,
@@ -171,7 +195,42 @@ export class OptimismEnv {
     }
   }
 
-  async waitForXDomainTransactionFast(
+  async waitForXDomainTransactionBatch(
+    tx: Promise<TransactionResponse> | TransactionResponse
+  ): Promise<CrossDomainMessagePair> {
+    // await it if needed
+    tx = await tx
+    console.log('done waiting for tx:', tx.hash)
+
+    const receipt = await tx.wait()
+
+    const resolved = await this.batchMessenger.toCrossChainMessage(tx)
+
+    const messageReceipt = await this.batchMessenger.waitForMessageReceipt(tx)
+
+    let fullTx: any
+    let remoteTx: any
+    if (resolved.direction === MessageDirection.L1_TO_L2) {
+      fullTx = await this.batchMessenger.l1Provider.getTransaction(tx.hash)
+      remoteTx = await this.batchMessenger.l2Provider.getTransaction(
+        messageReceipt.transactionReceipt.transactionHash
+      )
+    } else {
+      fullTx = await this.batchMessenger.l2Provider.getTransaction(tx.hash)
+      remoteTx = await this.batchMessenger.l1Provider.getTransaction(
+        messageReceipt.transactionReceipt.transactionHash
+      )
+    }
+
+    return {
+      tx: fullTx,
+      receipt,
+      remoteTx,
+      remoteReceipt: messageReceipt.transactionReceipt,
+    }
+  }
+
+  async waitForXDomainTransactionBatchFast(
     tx: Promise<TransactionResponse> | TransactionResponse
   ): Promise<CrossDomainMessagePair> {
     tx = await tx
@@ -179,15 +238,17 @@ export class OptimismEnv {
 
     const receipt = await tx.wait()
 
-    const resolved = await this.messengerFast.toCrossChainMessage(tx)
+    const resolved = await this.batchMessengerFast.toCrossChainMessage(tx)
 
-    const messageReceipt = await this.messengerFast.waitForMessageReceipt(tx)
+    const messageReceipt = await this.batchMessengerFast.waitForMessageReceipt(
+      tx
+    )
 
     let fullTx: any
     let remoteTx: any
     if (resolved.direction === MessageDirection.L2_TO_L1) {
-      fullTx = await this.messengerFast.l2Provider.getTransaction(tx.hash)
-      remoteTx = await this.messengerFast.l1Provider.getTransaction(
+      fullTx = await this.batchMessengerFast.l2Provider.getTransaction(tx.hash)
+      remoteTx = await this.batchMessengerFast.l1Provider.getTransaction(
         messageReceipt.transactionReceipt.transactionHash
       )
     } else {

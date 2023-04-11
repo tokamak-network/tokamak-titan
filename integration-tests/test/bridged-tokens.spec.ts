@@ -112,8 +112,7 @@ describe('Bridged tokens', () => {
         MessageStatus.READY_FOR_RELAY
       )
 
-      // do not need to do this twice
-      // await env.messenger.finalizeMessage(tx)
+      await env.messenger.finalizeMessage(tx)
       await env.messenger.waitForMessageReceipt(tx)
 
       expect(await L1__ERC20.balanceOf(env.l1Wallet.address)).to.deep.equal(
@@ -141,8 +140,7 @@ describe('Bridged tokens', () => {
         tx,
         MessageStatus.READY_FOR_RELAY
       )
-      // do not need to do this twice
-      // await env.messenger.finalizeMessage(tx)
+      await env.messenger.finalizeMessage(tx)
       await env.messenger.waitForMessageReceipt(tx)
 
       expect(await L1__ERC20.balanceOf(otherWalletL1.address)).to.deep.equal(
@@ -202,8 +200,7 @@ describe('Bridged tokens', () => {
         MessageStatus.READY_FOR_RELAY
       )
 
-      // do not need to do this twice
-      // await env.messenger.finalizeMessage(withdrawalTx)
+      await env.messenger.finalizeMessage(withdrawalTx)
       await env.messenger.waitForMessageReceipt(withdrawalTx)
 
       // Ensure that the L1 recipient address has not received any additional L1 token balance.
