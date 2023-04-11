@@ -4,6 +4,12 @@ set -e
 
 RETRIES=${RETRIES:-60}
 
+# make symlink @tokamak-optimism/sdk
+cd ../sdk
+echo `yarn link`
+cd ../message-relayer
+echo `yarn link "@tokamak-optimism/sdk"`
+
 if [[ ! -z "$URL" ]]; then
     # get the addrs from the URL provided
     ADDRESSES=$(curl --fail --show-error --silent --retry-connrefused --retry $RETRIES --retry-delay 5 $URL)
