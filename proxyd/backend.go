@@ -225,10 +225,10 @@ func (b *Backend) Forward(ctx context.Context, reqs []*RPCReq, isBatch bool) ([]
 		RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOffline)
 		return nil, ErrBackendOffline
 	}
-	if b.IsRateLimited() {
-		RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOverCapacity)
-		return nil, ErrBackendOverCapacity
-	}
+	// if b.IsRateLimited() {
+	// 	RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOverCapacity)
+	// 	return nil, ErrBackendOverCapacity
+	// }
 
 	var lastError error
 	// <= to account for the first attempt not technically being
@@ -509,15 +509,15 @@ func (b *BackendGroup) Forward(ctx context.Context, rpcReqs []*RPCReq, isBatch b
 			)
 			continue
 		}
-		// if errors.Is(err, ErrBackendOverCapacity) {
-		// 	log.Warn(
-		// 		"skipping over-capacity backend",
-		// 		"name", back.Name,
-		// 		"auth", GetAuthCtx(ctx),
-		// 		"req_id", GetReqID(ctx),
-		// 	)
-		// 	continue
-		// }
+		if errors.Is(err, ErrBackendOverCapacity) {
+			log.Warn(
+				"skipping over-capacity backend",
+				"name", back.Name,
+				"auth", GetAuthCtx(ctx),
+				"req_id", GetReqID(ctx),
+			)
+			continue
+		}
 		if err != nil {
 			log.Error(
 				"error forwarding request to backend",
