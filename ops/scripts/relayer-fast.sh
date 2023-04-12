@@ -4,12 +4,6 @@ set -e
 
 RETRIES=${RETRIES:-60}
 
-# make symlink @tokamak-optimism/sdk
-cd ../sdk
-echo `yarn link`
-cd ../message-relayer
-echo `yarn link "@tokamak-optimism/sdk"`
-
 # wait for $URL
 until $(curl --silent --fail --output /dev/null "$URL"); do
   sleep 10
