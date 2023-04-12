@@ -509,15 +509,15 @@ func (b *BackendGroup) Forward(ctx context.Context, rpcReqs []*RPCReq, isBatch b
 			)
 			continue
 		}
-		if errors.Is(err, ErrBackendOverCapacity) {
-			log.Warn(
-				"skipping over-capacity backend",
-				"name", back.Name,
-				"auth", GetAuthCtx(ctx),
-				"req_id", GetReqID(ctx),
-			)
-			continue
-		}
+		// if errors.Is(err, ErrBackendOverCapacity) {
+		// 	log.Warn(
+		// 		"skipping over-capacity backend",
+		// 		"name", back.Name,
+		// 		"auth", GetAuthCtx(ctx),
+		// 		"req_id", GetReqID(ctx),
+		// 	)
+		// 	continue
+		// }
 		if err != nil {
 			log.Error(
 				"error forwarding request to backend",
