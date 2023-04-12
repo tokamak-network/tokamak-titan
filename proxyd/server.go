@@ -8,16 +8,17 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/sethvargo/go-limiter"
-	"github.com/sethvargo/go-limiter/memorystore"
-	"github.com/sethvargo/go-limiter/noopstore"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,27 +39,28 @@ const (
 var emptyArrayResponse = json.RawMessage("[]")
 
 type Server struct {
-	backendGroups        map[string]*BackendGroup
-	wsBackendGroup       *BackendGroup
-	wsMethodWhitelist    *StringSet
-	rpcMethodMappings    map[string]string
-	maxBodySize          int64
-	enableRequestLog     bool
-	maxRequestBodyLogLen int
-	authenticatedPaths   map[string]string
-	timeout              time.Duration
-	maxUpstreamBatchSize int
-	maxBatchSize         int
-	upgrader             *websocket.Upgrader
-	mainLim              limiter.Store
-	overrideLims         map[string]limiter.Store
-	limConfig            RateLimitConfig
-	limExemptOrigins     map[string]bool
-	limExemptUserAgents  map[string]bool
-	rpcServer            *http.Server
-	wsServer             *http.Server
-	cache                RPCCache
-	srvMu                sync.Mutex
+	backendGroups          map[string]*BackendGroup
+	wsBackendGroup         *BackendGroup
+	wsMethodWhitelist      *StringSet
+	rpcMethodMappings      map[string]string
+	maxBodySize            int64
+	enableRequestLog       bool
+	maxRequestBodyLogLen   int
+	authenticatedPaths     map[string]string
+	timeout                time.Duration
+	maxUpstreamBatchSize   int
+	maxBatchSize           int
+	upgrader               *websocket.Upgrader
+	mainLim                FrontendRateLimiter
+	overrideLims           map[string]FrontendRateLimiter
+	senderLim              FrontendRateLimiter
+	limExemptOrigins       []*regexp.Regexp
+	limExemptUserAgents    []*regexp.Regexp
+	globallyLimitedMethods map[string]bool
+	rpcServer              *http.Server
+	wsServer               *http.Server
+	cache                  RPCCache
+	srvMu                  sync.Mutex
 }
 
 type limiterFunc func(method string) bool
@@ -74,9 +76,11 @@ func NewServer(
 	maxUpstreamBatchSize int,
 	cache RPCCache,
 	rateLimitConfig RateLimitConfig,
+	senderRateLimitConfig SenderRateLimitConfig,
 	enableRequestLog bool,
 	maxRequestBodyLogLen int,
 	maxBatchSize int,
+	redisClient *redis.Client,
 ) (*Server, error) {
 	if cache == nil {
 		cache = &NoopRPCCache{}
@@ -98,39 +102,53 @@ func NewServer(
 		maxBatchSize = MaxBatchRPCCallsHardLimit
 	}
 
-	var mainLim limiter.Store
-	limExemptOrigins := make(map[string]bool)
-	limExemptUserAgents := make(map[string]bool)
-	if rateLimitConfig.RatePerSecond > 0 {
-		var err error
-		mainLim, err = memorystore.New(&memorystore.Config{
-			Tokens:   uint64(rateLimitConfig.RatePerSecond),
-			Interval: time.Second,
-		})
-		if err != nil {
-			return nil, err
+	limiterFactory := func(dur time.Duration, max int, prefix string) FrontendRateLimiter {
+		if rateLimitConfig.UseRedis {
+			return NewRedisFrontendRateLimiter(redisClient, dur, max, prefix)
 		}
 
-		for _, origin := range rateLimitConfig.ExemptOrigins {
-			limExemptOrigins[strings.ToLower(origin)] = true
-		}
-		for _, agent := range rateLimitConfig.ExemptUserAgents {
-			limExemptUserAgents[strings.ToLower(agent)] = true
-		}
-	} else {
-		mainLim, _ = noopstore.New()
+		return NewMemoryFrontendRateLimit(dur, max)
 	}
 
-	overrideLims := make(map[string]limiter.Store)
+	var mainLim FrontendRateLimiter
+	limExemptOrigins := make([]*regexp.Regexp, 0)
+	limExemptUserAgents := make([]*regexp.Regexp, 0)
+	if rateLimitConfig.BaseRate > 0 {
+		mainLim = limiterFactory(time.Duration(rateLimitConfig.BaseInterval), rateLimitConfig.BaseRate, "main")
+		for _, origin := range rateLimitConfig.ExemptOrigins {
+			pattern, err := regexp.Compile(origin)
+			if err != nil {
+				return nil, err
+			}
+			limExemptOrigins = append(limExemptOrigins, pattern)
+		}
+		for _, agent := range rateLimitConfig.ExemptUserAgents {
+			pattern, err := regexp.Compile(agent)
+			if err != nil {
+				return nil, err
+			}
+			limExemptUserAgents = append(limExemptUserAgents, pattern)
+		}
+	} else {
+		mainLim = NoopFrontendRateLimiter
+	}
+
+	overrideLims := make(map[string]FrontendRateLimiter)
+	globalMethodLims := make(map[string]bool)
 	for method, override := range rateLimitConfig.MethodOverrides {
 		var err error
-		overrideLims[method], err = memorystore.New(&memorystore.Config{
-			Tokens:   uint64(override.Limit),
-			Interval: time.Duration(override.Interval),
-		})
+		overrideLims[method] = limiterFactory(time.Duration(override.Interval), override.Limit, method)
 		if err != nil {
 			return nil, err
 		}
+
+		if override.Global {
+			globalMethodLims[method] = true
+		}
+	}
+	var senderLim FrontendRateLimiter
+	if senderRateLimitConfig.Enabled {
+		senderLim = limiterFactory(time.Duration(senderRateLimitConfig.Interval), senderRateLimitConfig.Limit, "senders")
 	}
 
 	return &Server{
@@ -149,11 +167,12 @@ func NewServer(
 		upgrader: &websocket.Upgrader{
 			HandshakeTimeout: 5 * time.Second,
 		},
-		mainLim:             mainLim,
-		overrideLims:        overrideLims,
-		limConfig:           rateLimitConfig,
-		limExemptOrigins:    limExemptOrigins,
-		limExemptUserAgents: limExemptUserAgents,
+		mainLim:                mainLim,
+		overrideLims:           overrideLims,
+		globallyLimitedMethods: globalMethodLims,
+		senderLim:              senderLim,
+		limExemptOrigins:       limExemptOrigins,
+		limExemptUserAgents:    limExemptUserAgents,
 	}, nil
 }
 
@@ -231,11 +250,12 @@ func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isLimited := func(method string) bool {
-		if isUnlimitedOrigin || isUnlimitedUserAgent {
+		isGloballyLimitedMethod := s.isGlobalLimit(method)
+		if !isGloballyLimitedMethod && (isUnlimitedOrigin || isUnlimitedUserAgent) {
 			return false
 		}
 
-		var lim limiter.Store
+		var lim FrontendRateLimiter
 		if method == "" {
 			lim = s.mainLim
 		} else {
@@ -246,7 +266,11 @@ func (s *Server) HandleRPC(w http.ResponseWriter, r *http.Request) {
 			return false
 		}
 
-		_, _, _, ok, _ := lim.Take(ctx, xff)
+		ok, err := lim.Take(ctx, xff)
+		if err != nil {
+			log.Warn("error taking rate limit", "err", err)
+			return true
+		}
 		return !ok
 	}
 
@@ -403,6 +427,17 @@ func (s *Server) handleBatchRPC(ctx context.Context, reqs []json.RawMessage, isL
 			continue
 		}
 
+		// Apply a sender-based rate limit if it is enabled. Note that sender-based rate
+		// limits apply regardless of origin or user-agent. As such, they don't use the
+		// isLimited method.
+		if parsedReq.Method == "eth_sendRawTransaction" && s.senderLim != nil {
+			if err := s.rateLimitSender(ctx, parsedReq); err != nil {
+				RecordRPCError(ctx, BackendProxyd, parsedReq.Method, err)
+				responses[i] = NewRPCErrorRes(parsedReq.ID, err)
+				continue
+			}
+		}
+
 		id := string(parsedReq.ID)
 		// If this is a duplicate Request ID, move the Request to a new batchGroup
 		ids[id]++
@@ -447,6 +482,7 @@ func (s *Server) handleBatchRPC(ctx context.Context, reqs []json.RawMessage, isL
 					"error forwarding RPC batch",
 					"batch_size", len(elems),
 					"backend_group", group,
+					"req_id", GetReqID(ctx),
 					"err", err,
 				)
 				res = nil
@@ -551,11 +587,74 @@ func (s *Server) populateContext(w http.ResponseWriter, r *http.Request) context
 }
 
 func (s *Server) isUnlimitedOrigin(origin string) bool {
-	return s.limExemptOrigins[strings.ToLower(origin)]
+	for _, pat := range s.limExemptOrigins {
+		if pat.MatchString(origin) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Server) isUnlimitedUserAgent(origin string) bool {
-	return s.limExemptUserAgents[strings.ToLower(origin)]
+	for _, pat := range s.limExemptUserAgents {
+		if pat.MatchString(origin) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) isGlobalLimit(method string) bool {
+	return s.globallyLimitedMethods[method]
+}
+
+func (s *Server) rateLimitSender(ctx context.Context, req *RPCReq) error {
+	var params []string
+	if err := json.Unmarshal(req.Params, &params); err != nil {
+		log.Debug("error unmarshaling raw transaction params", "err", err, "req_Id", GetReqID(ctx))
+		return ErrParseErr
+	}
+
+	if len(params) != 1 {
+		log.Debug("raw transaction request has invalid number of params", "req_id", GetReqID(ctx))
+		// The error below is identical to the one Geth responds with.
+		return ErrInvalidParams("missing value for required argument 0")
+	}
+
+	var data hexutil.Bytes
+	if err := data.UnmarshalText([]byte(params[0])); err != nil {
+		log.Debug("error decoding raw tx data", "err", err, "req_id", GetReqID(ctx))
+		// Geth returns the raw error from UnmarshalText.
+		return ErrInvalidParams(err.Error())
+	}
+
+	// Inflates a types.Transaction object from the transaction's raw bytes.
+	tx := new(types.Transaction)
+	if err := tx.UnmarshalBinary(data); err != nil {
+		log.Debug("could not unmarshal transaction", "err", err, "req_id", GetReqID(ctx))
+		return ErrInvalidParams(err.Error())
+	}
+
+	// Convert the transaction into a Message object so that we can get the
+	// sender. This method performs an ecrecover, which can be expensive.
+	msg, err := tx.AsMessage(types.LatestSignerForChainID(tx.ChainId()), nil)
+	if err != nil {
+		log.Debug("could not get message from transaction", "err", err, "req_id", GetReqID(ctx))
+		return ErrInvalidParams(err.Error())
+	}
+
+	ok, err := s.senderLim.Take(ctx, fmt.Sprintf("%s:%d", msg.From().Hex(), tx.Nonce()))
+	if err != nil {
+		log.Error("error taking from sender limiter", "err", err, "req_id", GetReqID(ctx))
+		return ErrInternal
+	}
+	if !ok {
+		log.Debug("sender rate limit exceeded", "sender", msg.From(), "req_id", GetReqID(ctx))
+		return ErrOverSenderRateLimit
+	}
+
+	return nil
 }
 
 func setCacheHeader(w http.ResponseWriter, cached bool) {
