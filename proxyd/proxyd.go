@@ -78,14 +78,14 @@ func Start(config *Config) (func(), error) {
 		ErrTooManyBatchRequests.Message = config.BatchConfig.ErrorMessage
 	}
 
-	if config.SenderRateLimit.Enabled {
-		if config.SenderRateLimit.Limit <= 0 {
-			return nil, errors.New("limit in sender_rate_limit must be > 0")
-		}
-		if time.Duration(config.SenderRateLimit.Interval) < time.Second {
-			return nil, errors.New("interval in sender_rate_limit must be >= 1s")
-		}
-	}
+	// if config.SenderRateLimit.Enabled {
+	// 	if config.SenderRateLimit.Limit <= 0 {
+	// 		return nil, errors.New("limit in sender_rate_limit must be > 0")
+	// 	}
+	// 	if time.Duration(config.SenderRateLimit.Interval) < time.Second {
+	// 		return nil, errors.New("interval in sender_rate_limit must be >= 1s")
+	// 	}
+	// }
 
 	maxConcurrentRPCs := config.Server.MaxConcurrentRPCs
 	if maxConcurrentRPCs == 0 {
