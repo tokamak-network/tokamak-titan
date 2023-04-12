@@ -1,5 +1,44 @@
 # @eth-optimism/proxyd
 
+## 3.14.1
+
+### Patch Changes
+
+- 5602deec7: chore(deps): bump github.com/prometheus/client_golang from 1.11.0 to 1.11.1 in /proxyd
+- 6b3cf2070: Remove useless logging
+
+## 3.14.0
+
+### Minor Changes
+
+- 9cc39bcfa: Add support for global method override rate limit
+- 30db32862: Include nonce in sender rate limit
+
+### Patch Changes
+
+- b9bb1a98a: proxyd: Add req_id to log
+
+## 3.13.0
+
+### Minor Changes
+
+- 6de891d3b: Add sender-based rate limiter
+
+## 3.12.0
+
+### Minor Changes
+
+- e9f2c701: Allow disabling backend rate limiter
+- ca45a85e: Support pattern matching in exempt origins/user agents
+- f4faa44c: adds server.log_level config
+
+## 3.11.0
+
+### Minor Changes
+
+- b3c5eeec: Fixed JSON-RPC 2.0 specification compliance by adding the optional data field on an RPCError
+- 01ae6625: Adds new Redis rate limiter
+
 ## 3.10.2
 
 ### Patch Changes

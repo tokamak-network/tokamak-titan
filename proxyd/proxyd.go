@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/semaphore"
 )
@@ -34,25 +35,33 @@ func Start(config *Config) (func(), error) {
 		}
 	}
 
-	var redisURL string
+	var redisClient *redis.Client
 	if config.Redis.URL != "" {
 		rURL, err := ReadFromEnvOrConfig(config.Redis.URL)
 		if err != nil {
 			return nil, err
 		}
-		redisURL = rURL
+		redisClient, err = NewRedisClient(rURL)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if redisClient == nil && config.RateLimit.UseRedis {
+		return nil, errors.New("must specify a Redis URL if UseRedis is true in rate limit config")
 	}
 
 	var lim BackendRateLimiter
 	var err error
-	if redisURL == "" {
-		log.Warn("redis is not configured, using local rate limiter")
-		lim = NewLocalBackendRateLimiter()
-	} else {
-		lim, err = NewRedisRateLimiter(redisURL)
-		if err != nil {
-			return nil, err
+	if config.RateLimit.EnableBackendRateLimiter {
+		if redisClient != nil {
+			lim = NewRedisRateLimiter(redisClient)
+		} else {
+			log.Warn("redis is not configured, using local rate limiter")
+			lim = NewLocalBackendRateLimiter()
 		}
+	} else {
+		lim = noopBackendRateLimiter
 	}
 
 	// While modifying shared globals is a bad practice, the alternative
@@ -68,6 +77,15 @@ func Start(config *Config) (func(), error) {
 	if config.BatchConfig.ErrorMessage != "" {
 		ErrTooManyBatchRequests.Message = config.BatchConfig.ErrorMessage
 	}
+
+	// if config.SenderRateLimit.Enabled {
+	// 	if config.SenderRateLimit.Limit <= 0 {
+	// 		return nil, errors.New("limit in sender_rate_limit must be > 0")
+	// 	}
+	// 	if time.Duration(config.SenderRateLimit.Interval) < time.Second {
+	// 		return nil, errors.New("interval in sender_rate_limit must be >= 1s")
+	// 	}
+	// }
 
 	maxConcurrentRPCs := config.Server.MaxConcurrentRPCs
 	if maxConcurrentRPCs == 0 {
@@ -206,13 +224,11 @@ func Start(config *Config) (func(), error) {
 			return nil, err
 		}
 
-		if redisURL != "" {
-			if cache, err = newRedisCache(redisURL); err != nil {
-				return nil, err
-			}
-		} else {
+		if redisClient == nil {
 			log.Warn("redis is not configured, using in-memory cache")
 			cache = newMemoryCache()
+		} else {
+			cache = newRedisCache(redisClient)
 		}
 		// Ideally, the BlocKSyncRPCURL should be the sequencer or a HA replica that's not far behind
 		ethClient, err := ethclient.Dial(blockSyncRPCURL)
@@ -237,9 +253,11 @@ func Start(config *Config) (func(), error) {
 		config.Server.MaxUpstreamBatchSize,
 		rpcCache,
 		config.RateLimit,
+		config.SenderRateLimit,
 		config.Server.EnableRequestLog,
 		config.Server.MaxRequestBodyLogLen,
 		config.BatchConfig.MaxSize,
+		redisClient,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating server: %w", err)

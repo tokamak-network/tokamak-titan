@@ -14,6 +14,7 @@ type ServerConfig struct {
 	WSPort            int    `toml:"ws_port"`
 	MaxBodySizeBytes  int64  `toml:"max_body_size_bytes"`
 	MaxConcurrentRPCs int64  `toml:"max_concurrent_rpcs"`
+	LogLevel          string `toml:"log_level"`
 
 	// TimeoutSeconds specifies the maximum time spent serving an HTTP request. Note that isn't used for websocket connections
 	TimeoutSeconds int `toml:"timeout_seconds"`
@@ -41,16 +42,20 @@ type MetricsConfig struct {
 }
 
 type RateLimitConfig struct {
-	RatePerSecond    int                                 `toml:"rate_per_second"`
-	ExemptOrigins    []string                            `toml:"exempt_origins"`
-	ExemptUserAgents []string                            `toml:"exempt_user_agents"`
-	ErrorMessage     string                              `toml:"error_message"`
-	MethodOverrides  map[string]*RateLimitMethodOverride `toml:"method_overrides"`
+	UseRedis                 bool                                `toml:"use_redis"`
+	EnableBackendRateLimiter bool                                `toml:"enable_backend_rate_limiter"`
+	BaseRate                 int                                 `toml:"base_rate"`
+	BaseInterval             TOMLDuration                        `toml:"base_interval"`
+	ExemptOrigins            []string                            `toml:"exempt_origins"`
+	ExemptUserAgents         []string                            `toml:"exempt_user_agents"`
+	ErrorMessage             string                              `toml:"error_message"`
+	MethodOverrides          map[string]*RateLimitMethodOverride `toml:"method_overrides"`
 }
 
 type RateLimitMethodOverride struct {
 	Limit    int          `toml:"limit"`
 	Interval TOMLDuration `toml:"interval"`
+	Global   bool         `toml:"global"`
 }
 
 type TOMLDuration time.Duration
@@ -100,21 +105,30 @@ type BatchConfig struct {
 	ErrorMessage string `toml:"error_message"`
 }
 
+// SenderRateLimitConfig configures the sender-based rate limiter
+// for eth_sendRawTransaction requests.
+type SenderRateLimitConfig struct {
+	Enabled  bool
+	Interval TOMLDuration
+	Limit    int
+}
+
 type Config struct {
-	WSBackendGroup        string              `toml:"ws_backend_group"`
-	Server                ServerConfig        `toml:"server"`
-	Cache                 CacheConfig         `toml:"cache"`
-	Redis                 RedisConfig         `toml:"redis"`
-	Metrics               MetricsConfig       `toml:"metrics"`
-	RateLimit             RateLimitConfig     `toml:"rate_limit"`
-	BackendOptions        BackendOptions      `toml:"backend"`
-	Backends              BackendsConfig      `toml:"backends"`
-	BatchConfig           BatchConfig         `toml:"batch"`
-	Authentication        map[string]string   `toml:"authentication"`
-	BackendGroups         BackendGroupsConfig `toml:"backend_groups"`
-	RPCMethodMappings     map[string]string   `toml:"rpc_method_mappings"`
-	WSMethodWhitelist     []string            `toml:"ws_method_whitelist"`
-	WhitelistErrorMessage string              `toml:"whitelist_error_message"`
+	WSBackendGroup        string                `toml:"ws_backend_group"`
+	Server                ServerConfig          `toml:"server"`
+	Cache                 CacheConfig           `toml:"cache"`
+	Redis                 RedisConfig           `toml:"redis"`
+	Metrics               MetricsConfig         `toml:"metrics"`
+	RateLimit             RateLimitConfig       `toml:"rate_limit"`
+	BackendOptions        BackendOptions        `toml:"backend"`
+	Backends              BackendsConfig        `toml:"backends"`
+	BatchConfig           BatchConfig           `toml:"batch"`
+	Authentication        map[string]string     `toml:"authentication"`
+	BackendGroups         BackendGroupsConfig   `toml:"backend_groups"`
+	RPCMethodMappings     map[string]string     `toml:"rpc_method_mappings"`
+	WSMethodWhitelist     []string              `toml:"ws_method_whitelist"`
+	WhitelistErrorMessage string                `toml:"whitelist_error_message"`
+	SenderRateLimit       SenderRateLimitConfig `toml:"sender_rate_limit"`
 }
 
 func ReadFromEnvOrConfig(value string) (string, error) {
