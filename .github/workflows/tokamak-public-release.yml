@@ -706,6 +706,7 @@ jobs:
       - tokamak-message-relayer
       - data-transport-layer
       - batch-submitter-service
+      - proxyd
     runs-on: ubuntu-latest
 
     steps:
@@ -739,6 +740,11 @@ jobs:
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+
+      - name: Update proxyd Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |
