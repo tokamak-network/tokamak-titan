@@ -24,7 +24,7 @@ until $(curl --fail --output /dev/null "$TOKAMAK_CONTRACTS_URL"); do
   echo "Will wait $((RETRIES--)) more times for $TOKAMAK_CONTRACTS_URL to be up..."
 
   if [ "$RETRIES" -lt 0 ]; then
-    echo "Timeout waiting for boba addresses at $TOKAMAK_CONTRACTS_URL"
+    echo "Timeout waiting for tokamak addresses at $TOKAMAK_CONTRACTS_URL"
     exit 1
   fi
 done
