@@ -78,13 +78,26 @@ var (
 		Message:       "over rate limit",
 		HTTPErrorCode: 429,
 	}
+	ErrOverSenderRateLimit = &RPCErr{
+		Code:          JSONRPCErrorInternal - 17,
+		Message:       "sender is over rate limit",
+		HTTPErrorCode: 429,
+	}
 
 	ErrBackendUnexpectedJSONRPC = errors.New("backend returned an unexpected JSON-RPC response")
 )
 
 func ErrInvalidRequest(msg string) *RPCErr {
 	return &RPCErr{
-		Code:          -32601,
+		Code:          -32600,
+		Message:       msg,
+		HTTPErrorCode: 400,
+	}
+}
+
+func ErrInvalidParams(msg string) *RPCErr {
+	return &RPCErr{
+		Code:          -32602,
 		Message:       msg,
 		HTTPErrorCode: 400,
 	}
@@ -212,10 +225,10 @@ func (b *Backend) Forward(ctx context.Context, reqs []*RPCReq, isBatch bool) ([]
 		RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOffline)
 		return nil, ErrBackendOffline
 	}
-	if b.IsRateLimited() {
-		RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOverCapacity)
-		return nil, ErrBackendOverCapacity
-	}
+	// if b.IsRateLimited() {
+	// 	RecordBatchRPCError(ctx, b.Name, reqs, ErrBackendOverCapacity)
+	// 	return nil, ErrBackendOverCapacity
+	// }
 
 	var lastError error
 	// <= to account for the first attempt not technically being

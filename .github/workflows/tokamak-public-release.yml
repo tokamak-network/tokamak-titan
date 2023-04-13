@@ -9,6 +9,10 @@ jobs:
   l2geth:
     name: Publish L2Geth
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -44,6 +48,10 @@ jobs:
   gas-oracle:
     name: Publish Gas Oracle
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -79,6 +87,10 @@ jobs:
   hardhat-node:
     name: Publish Hardhat Node
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -114,6 +126,9 @@ jobs:
   message-relayer:
     name: Publish Message Relayer
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -151,6 +166,9 @@ jobs:
   tokamak-message-relayer:
     name: Publish Tokamak Message Relayer
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -188,6 +206,9 @@ jobs:
   fault-detector:
     name: Publish Fault Detector
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -225,6 +246,9 @@ jobs:
   drippie-mon:
     name: Publish Drippie Monitor
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -262,6 +286,9 @@ jobs:
   data-transport-layer:
     name: Publish Data Transport Layer
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -299,6 +326,9 @@ jobs:
   contracts:
     name: Publish Deployer
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -336,6 +366,9 @@ jobs:
   integration_tests:
     name: Publish Integration tests
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -373,6 +406,9 @@ jobs:
   replica-healthcheck:
     name: Publish Replica Healthcheck
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -410,6 +446,10 @@ jobs:
   proxyd:
     name: Publish proxyd
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -450,6 +490,9 @@ jobs:
   op-exporter:
     name: Publish op-exporter
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -490,6 +533,9 @@ jobs:
   l2geth-exporter:
     name: Publish l2geth-exporter
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -530,6 +576,9 @@ jobs:
   batch-submitter-service:
     name: Publish batch-submitter-service
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -567,6 +616,9 @@ jobs:
   indexer:
     name: Publish indexer
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -607,6 +659,9 @@ jobs:
   teleportr:
     name: Publish Teleportr
     runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ steps.extractver.outputs.VERSION }}
+      newRelease: ${{ steps.extractver.outputs.RELEASE }}
 
     steps:
       - name: Checkout
@@ -643,3 +698,63 @@ jobs:
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
             GITVERSION=${{ steps.extractver.outputs.VERSION }}
+
+  update-kustomize:
+    name: Update image version in kustomize manifest file
+    needs:
+      - l2geth
+      - tokamak-message-relayer
+      - data-transport-layer
+      - batch-submitter-service
+      - proxyd
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v1
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: tokamak-network/tokamak-optimism-infra
+          ref: main
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          path: tokamak-optimism-infra
+
+      - name: Update l2geth Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.l2geth:${{ needs.l2geth.outputs.newRelease }}
+
+      - name: Update tokamak-message-relayer Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.tokamak-message-relayer:${{ needs.tokamak-message-relayer.outputs.newRelease }}
+
+      - name: Update data-transport-layer Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
+
+      - name: Update batch-submitter-service Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+
+      - name: Update proxyd Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
+
+      - name: Show updated Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cat kustomization.yaml
+
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          message: '[AUTO] Update tokamak-optimism images tag to ${{ needs.l2geth.outputs.newRelease }} for release'
+          cwd: 'tokamak-optimism-infra/'
