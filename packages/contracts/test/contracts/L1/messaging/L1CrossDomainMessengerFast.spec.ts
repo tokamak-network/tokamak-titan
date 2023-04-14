@@ -113,7 +113,6 @@ describe('L1CrossDomainMessengerFast', () => {
   describe('pause', () => {
     describe('when called by the current owner', () => {
       it('should pause the contract', async () => {
-        console.log(L1CrossDomainMessengerFast)
         await L1CrossDomainMessengerFast.pause()
 
         expect(await L1CrossDomainMessengerFast.paused()).to.be.true
