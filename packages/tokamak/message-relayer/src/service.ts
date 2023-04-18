@@ -44,8 +44,8 @@ type MessageRelayerOptions = {
 type MessageRelayerMetrics = {
   highestCheckedL2Tx: Gauge
   highestKnownL2Tx: Gauge
-  // numRelayedMessages: Counter
   numBatchTx: Counter
+  numRelayedMessages: Counter
 }
 
 type MessageRelayerState = {
@@ -171,10 +171,13 @@ export class MessageRelayerService extends BaseServiceV2<
           type: Gauge,
           desc: 'Highest known L2 transaction',
         },
-        // TODO: add numRelayedMessages
         numBatchTx: {
           type: Counter,
           desc: 'Number of Batch tx',
+        },
+        numRelayedMessages: {
+          type: Counter,
+          desc: 'Number of relayed messages',
         },
       },
     })
@@ -409,6 +412,8 @@ export class MessageRelayerService extends BaseServiceV2<
               })
               this.logger.info('Relay message transaction sent', { receipt })
               this.metrics.numBatchTx.inc()
+              this.metrics.numRelayedMessages.inc(subBuffer.length)
+
             } catch (err) {
               this.logger.error('Relay attempt failed, skipping', {
                 message: err.toString(),
