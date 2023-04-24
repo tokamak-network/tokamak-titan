@@ -140,7 +140,6 @@ describe('Bridged tokens', () => {
         tx,
         MessageStatus.READY_FOR_RELAY
       )
-
       await env.messenger.finalizeMessage(tx)
       await env.messenger.waitForMessageReceipt(tx)
 

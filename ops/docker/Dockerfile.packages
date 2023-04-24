@@ -44,7 +44,9 @@ COPY packages/contracts-periphery/package.json ./packages/contracts-periphery/pa
 COPY packages/contracts-governance/package.json ./packages/contracts-governance/package.json
 COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/package.json
 COPY packages/hardhat-deploy-config/package.json ./packages/hardhat-deploy-config/package.json
+COPY packages/tokamak/contracts/package.json ./packges/tokamak/contracts/package.json
 COPY packages/tokamak/message-relayer/package.json ./packages/tokamak/message-relayer/package.json
+COPY packages/tokamak/sdk/package.json ./packages/tokamak/sdk/package.json
 COPY packages/fault-detector/package.json ./packages/fault-detector/package.json
 COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/package.json
 COPY packages/drippie-mon/package.json ./packages/drippie-mon/package.json
@@ -66,6 +68,10 @@ FROM base as deployer
 WORKDIR /opt/optimism/packages/contracts
 COPY ./ops/scripts/deployer.sh .
 CMD ["yarn", "run", "deploy"]
+
+FROM base as tokamak-deployer
+WORKDIR /opt/optimism/packages/tokamak/contracts
+ENTRYPOINT ["./scripts/wait-for-l1-and-l2.sh", "./scripts/tokamak-deployer.sh"]
 
 #FROM alpine:3.16.2 as contract-artifacts-bedrock
 #RUN mkdir -p /artifacts
@@ -96,9 +102,15 @@ COPY ./ops/scripts/relayer.sh .
 CMD ["npm", "run", "start"]
 
 
-FROM base as tokamak-message-relayer
+FROM base as tokamak-batch-relayer
 WORKDIR /opt/optimism/packages/tokamak/message-relayer
 COPY ./ops/scripts/relayer.sh .
+CMD ["npm", "run", "start"]
+
+
+FROM base as tokamak-batch-relayer-fast
+WORKDIR /opt/optimism/packages/tokamak/message-relayer
+COPY ./ops/scripts/relayer-fast.sh .
 CMD ["npm", "run", "start"]
 
 

@@ -26,6 +26,22 @@ Allow a message.
 |---|---|---|
 | _xDomainCalldataHash | bytes32 | Hash of the message to block.
 
+### batchRelayMessages
+
+```solidity
+function batchRelayMessages(IL1CrossDomainMessenger.L2ToL1Message[] _messages) external nonpayable
+```
+
+Forwards multiple cross domain messages to the L1 Cross Domain Messenger for relaying
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messages | IL1CrossDomainMessenger.L2ToL1Message[] | An array of L2 to L1 messages
+
 ### blockMessage
 
 ```solidity
@@ -46,6 +62,28 @@ Block a message.
 
 ```solidity
 function blockedMessages(bytes32) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined
+
+### failedMessages
+
+```solidity
+function failedMessages(bytes32) external view returns (bool)
 ```
 
 

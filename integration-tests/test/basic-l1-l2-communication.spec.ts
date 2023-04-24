@@ -59,6 +59,8 @@ describe('Basic L1<>L2 Communication', async () => {
         const value = `0x${'77'.repeat(32)}`
 
         // Send L2 -> L1 message.
+        // the relayer catch the "SentMessage" event, and check staus and add it to messageBuffer
+        // On the next cycle, the relayer batch-relay the message to L1
         const transaction = await env.messenger.sendMessage(
           {
             direction: MessageDirection.L2_TO_L1,
