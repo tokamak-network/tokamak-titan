@@ -127,15 +127,15 @@ services:
       - ${L2GETH_HTTP_PORT:-8545}:8545
       - ${L2GETH_WS_PORT:-8546}:8546
 
-  batch_relayer:
+  tokamak-message-relayer:
     depends_on:
       - l1_chain
       - l2geth
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: tokamak-batch-relayer
-    image: onthertech/optimism.batch-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
+      target: tokamak-message-relayer
+    image: onthertech/optimism.tokamak-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
     entrypoint: ./relayer.sh
     environment:
       URL: http://deployer:8081/addresses.json
@@ -150,15 +150,15 @@ services:
       MESSAGE_RELAYER__MULTI_RELAY_LIMIT: 10
       MESSAGE_RELAYER__ENABLE_RELAYER_FILTER: 'false'
 
-  batch_relayer_fast:
+  tokamak-message-relayer-fast:
     depends_on:
       - l1_chain
       - l2geth
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: tokamak-batch-relayer-fast
-    image: onthertech/optimism.batch-relayer-fast:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
+      target: tokamak-message-relayer
+    image: onthertech/optimism.tokamak-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
     entrypoint: ./relayer-fast.sh
     environment:
       URL: http://deployer:8081/addresses.json
