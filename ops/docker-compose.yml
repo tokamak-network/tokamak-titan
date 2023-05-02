@@ -40,34 +40,6 @@ services:
       # expose the service to the host for getting the contract addrs
       - ${DEPLOYER_PORT:-8080}:8081
 
-  # deploys tokamak contracts and serves contract addresses
-  tokamak_deployer:
-    depends_on:
-      - l1_chain
-      - dtl
-      - l2geth
-    image: onthertech/optimism.tokamak-deployer:${DOCKER_TAG_TOKAMAK_DEPLOYER:-latest}
-    build:
-      context: ..
-      dockerfile: ./ops/docker/Dockerfile.packages
-      target: tokamak-deployer
-    environment:
-      L1_NODE_WEB3_URL: http://l1_chain:8545
-      L2_NODE_WEB3_URL: http://l2geth:8545
-      ADDRESS_MANAGER_ADDRESS: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
-      URL: http://deployer:8081/addresses.json
-      CONTRACTS_DEPLOYER_KEY: 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-      CONTRACTS_TARGET_NETWORK: 'local'
-      RETRIES: 200
-      TOKAMAK_CONTRACTS_URL: http://tokamak_deployer:8082/tokamak-addr.json
-      RELAYER_PRIVATE_KEY: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
-      # skip compilation when run in docker-compose, since the contracts
-      # were already compiled in the builder step
-      NO_COMPILE: 1
-    ports:
-      # expose the service to the host for getting the contract addrs
-      - ${TOKAMAK_DEPLOYER_PORT:-8082}:8082
-
   dtl:
     depends_on:
       - l1_chain
