@@ -44,7 +44,6 @@ COPY packages/contracts-periphery/package.json ./packages/contracts-periphery/pa
 COPY packages/contracts-governance/package.json ./packages/contracts-governance/package.json
 COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/package.json
 COPY packages/hardhat-deploy-config/package.json ./packages/hardhat-deploy-config/package.json
-COPY packages/tokamak/contracts/package.json ./packges/tokamak/contracts/package.json
 COPY packages/tokamak/message-relayer/package.json ./packages/tokamak/message-relayer/package.json
 COPY packages/tokamak/sdk/package.json ./packages/tokamak/sdk/package.json
 COPY packages/fault-detector/package.json ./packages/fault-detector/package.json
