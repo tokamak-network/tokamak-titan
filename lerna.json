@@ -12,7 +12,6 @@
     "packages/message-relayer",
     "packages/replica-healthcheck",
     "packages/sdk",
-    "packages/tokamak/contracts",
     "packages/tokamak/message-relayer",
     "packages/tokamak/sdk"
   ],
