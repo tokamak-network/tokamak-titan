@@ -77,7 +77,7 @@ contract L1CrossDomainMessengerFast is
     modifier onlyRelayer() {
         require(
             msg.sender == resolve("MessageRelayer"),
-            "L1CrossDomainMessenger: Function can only be called by the MessageRelayer"
+            "L1CrossDomainMessengerFast: Function can only be called by the MessageRelayer"
         );
         _;
     }

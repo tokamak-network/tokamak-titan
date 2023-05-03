@@ -126,6 +126,8 @@ services:
     depends_on:
       - l1_chain
       - l2geth
+    deploy:
+      replicas: 0
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
