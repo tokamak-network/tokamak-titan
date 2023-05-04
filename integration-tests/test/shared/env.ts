@@ -97,7 +97,7 @@ export class OptimismEnv {
       bridges: bridgeOverrides,
     })
 
-    // tokamak: batch-relayer
+    // tokamak
     const batchMessenger = new BatchCrossChainMessenger({
       l1SignerOrProvider: l1Wallet,
       l2SignerOrProvider: l2Wallet,
@@ -118,27 +118,6 @@ export class OptimismEnv {
       fastRelayer: false,
     })
 
-    // tokamak: batch-relayer-fast
-    const batchMessengerFast = new BatchCrossChainMessenger({
-      l1SignerOrProvider: l1Wallet,
-      l2SignerOrProvider: l2Wallet,
-      l1ChainId: await getChainId(l1Provider),
-      l2ChainId: await getChainId(l2Provider),
-      contracts: {
-        l1: {
-          AddressManager: envConfig.ADDRESS_MANAGER,
-          L1CrossDomainMessenger: envConfig.L1_CROSS_DOMAIN_MESSENGER,
-          L1CrossDomainMessengerFast: envConfig.L1_CROSS_DOMAIN_MESSENGER_FAST,
-          L1StandardBridge: envConfig.L1_STANDARD_BRIDGE,
-          StateCommitmentChain: envConfig.STATE_COMMITMENT_CHAIN,
-          CanonicalTransactionChain: envConfig.CANONICAL_TRANSACTION_CHAIN,
-          BondManager: envConfig.BOND_MANAGER,
-        },
-      },
-      bridges: bridgeOverrides,
-      fastRelayer: true,
-    })
-
     // fund the user if needed
     const balance = await l2Wallet.getBalance()
     const min = envConfig.L2_WALLET_MIN_BALANCE_ETH.toString()
@@ -152,7 +131,6 @@ export class OptimismEnv {
       l2Wallet,
       messenger,
       batchMessenger,
-      batchMessengerFast,
       l1Provider,
       l2Provider,
       verifierProvider,
@@ -220,39 +198,6 @@ export class OptimismEnv {
       remoteTx = await this.batchMessenger.l1Provider.getTransaction(
         messageReceipt.transactionReceipt.transactionHash
       )
-    }
-
-    return {
-      tx: fullTx,
-      receipt,
-      remoteTx,
-      remoteReceipt: messageReceipt.transactionReceipt,
-    }
-  }
-
-  async waitForXDomainTransactionBatchFast(
-    tx: Promise<TransactionResponse> | TransactionResponse
-  ): Promise<CrossDomainMessagePair> {
-    tx = await tx
-    console.log('done waiting for tx:', tx.hash)
-
-    const receipt = await tx.wait()
-
-    const resolved = await this.batchMessengerFast.toCrossChainMessage(tx)
-
-    const messageReceipt = await this.batchMessengerFast.waitForMessageReceipt(
-      tx
-    )
-
-    let fullTx: any
-    let remoteTx: any
-    if (resolved.direction === MessageDirection.L2_TO_L1) {
-      fullTx = await this.batchMessengerFast.l2Provider.getTransaction(tx.hash)
-      remoteTx = await this.batchMessengerFast.l1Provider.getTransaction(
-        messageReceipt.transactionReceipt.transactionHash
-      )
-    } else {
-      console.log('We cannot use L1CrossMessengerFast.sendMessage to deposit')
     }
 
     return {
