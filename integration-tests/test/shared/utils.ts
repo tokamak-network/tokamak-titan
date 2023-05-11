@@ -122,9 +122,6 @@ const procEnv = cleanEnv(process.env, {
   L1_CROSS_DOMAIN_MESSENGER: addressValidator({
     default: '',
   }),
-  L1_CROSS_DOMAIN_MESSENGER_FAST: addressValidator({
-    default: '',
-  }),
   L1_STANDARD_BRIDGE: addressValidator({
     default: '',
   }),

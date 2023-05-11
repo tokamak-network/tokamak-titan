@@ -12,8 +12,6 @@ export const names = {
       OVM_L1CrossDomainMessenger: 'OVM_L1CrossDomainMessenger',
       Proxy__OVM_L1CrossDomainMessenger: 'Proxy__OVM_L1CrossDomainMessenger',
       Proxy__OVM_L1StandardBridge: 'Proxy__OVM_L1StandardBridge',
-      L1CrossDomainMessengerFast: 'L1CrossDomainMessengerFast',
-      Proxy__L1CrossDomainMessengerFast: 'Proxy__L1CrossDomainMessengerFast',
     },
     accounts: { OVM_Sequencer: 'OVM_Sequencer', OVM_Proposer: 'OVM_Proposer' },
   },

@@ -101,7 +101,6 @@ export const getAllOEContracts = (
     l1: {
       AddressManager: undefined,
       L1CrossDomainMessenger: undefined,
-      L1CrossDomainMessengerFast: undefined,
       L1StandardBridge: undefined,
       StateCommitmentChain: undefined,
       CanonicalTransactionChain: undefined,

@@ -293,14 +293,10 @@ export class BatchCrossChainMessenger {
     }
 
     // By this point opts.direction will always be defined.
-    let messenger =
+    const messenger =
       opts.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l1.L1CrossDomainMessenger
         : this.contracts.l2.L2CrossDomainMessenger
-
-    if (opts.direction === MessageDirection.L1_TO_L2 && this.fastRelayer) {
-      messenger = this.contracts.l1.L1CrossDomainMessengerFast
-    }
 
     // Filter in order
     return receipt.logs
@@ -500,7 +496,7 @@ export class BatchCrossChainMessenger {
   }
 
   /**
-   * Get Status of Message from L1CrossDomainMessenger/L1CrossDomainMessengerFast
+   * Get Status of Message from contracts
    *
    * @param message Cross chain message to check the status of.
    * @returns Status of the message.
@@ -512,7 +508,7 @@ export class BatchCrossChainMessenger {
     const resolved = await this.toCrossChainMessage(message)
 
     // hashing the message (keccak256)
-    // messageHash is equal to xDomainCalldata in L1CrossDomainMessengerFast
+    // messageHash is equal to xDomainCalldata
     const messageHash = hashCrossChainMessage(resolved)
     if (resolved.direction === MessageDirection.L1_TO_L2) {
       throw new Error(`can only determine for L2 to L1 messages`)
@@ -531,30 +527,15 @@ export class BatchCrossChainMessenger {
         if (targetBlock.timestamp + challengePeriod > latestBlock.timestamp) {
           return MessageStatus.IN_CHALLENGE_PERIOD
         } else {
-          // get status (success or fail)
-          let successStatus: boolean
-          let failedStatus: boolean
-
-          if (this.fastRelayer) {
-            successStatus =
-              await this.contracts.l1.L1CrossDomainMessengerFast.successfulMessages(
-                messageHash
-              )
-            failedStatus =
-              await this.contracts.l1.L1CrossDomainMessengerFast.failedMessages(
-                messageHash
-              )
-          } else {
-            // check contract
-            successStatus =
-              await this.contracts.l1.L1CrossDomainMessenger.successfulMessages(
-                messageHash
-              )
-            failedStatus =
-              await this.contracts.l1.L1CrossDomainMessenger.failedMessages(
-                messageHash
-              )
-          }
+          // check the message status
+          const successStatus =
+            await this.contracts.l1.L1CrossDomainMessenger.successfulMessages(
+              messageHash
+            )
+          const failedStatus =
+            await this.contracts.l1.L1CrossDomainMessenger.failedMessages(
+              messageHash
+            )
           if (successStatus) {
             return MessageStatus.RELAYED
           } else if (failedStatus) {
@@ -581,14 +562,11 @@ export class BatchCrossChainMessenger {
     const messageHash = hashCrossChainMessage(resolved)
 
     // Here we want the messenger that will receive the message, not the one that sent it.
-    let messenger =
+    const messenger =
       resolved.direction === MessageDirection.L1_TO_L2
         ? this.contracts.l2.L2CrossDomainMessenger
         : this.contracts.l1.L1CrossDomainMessenger
 
-    if (resolved.direction === MessageDirection.L2_TO_L1 && this.fastRelayer) {
-      messenger = this.contracts.l1.L1CrossDomainMessengerFast
-    }
     const relayedMessageEvents = await messenger.queryFilter(
       messenger.filters.RelayedMessage(messageHash)
     )
@@ -1527,7 +1505,7 @@ export class BatchCrossChainMessenger {
         overrides?: Overrides
       }
     ): Promise<TransactionRequest> => {
-      // we should not use L1CrossDomainMessengerFast for L1_TO_L2
+      // we should not use
       if (message.direction === MessageDirection.L1_TO_L2) {
         return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.sendMessage(
           message.target,
@@ -1576,7 +1554,7 @@ export class BatchCrossChainMessenger {
           },
         })
       } else {
-        // we should not use L1CrossDomainMessengerFast for resendMessage
+        // we should not use
         const legacyL1XDM = new ethers.Contract(
           this.contracts.l1.L1CrossDomainMessenger.address,
           getContractInterface('L1CrossDomainMessenger'),
@@ -1661,26 +1639,14 @@ export class BatchCrossChainMessenger {
         //   proof,
         //   opts?.overrides || {}
         // )
-
-        if (this.fastRelayer) {
-          return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.relayMessage(
-            resolved.target,
-            resolved.sender,
-            resolved.message,
-            resolved.messageNonce,
-            proof,
-            opts?.overrides || {}
-          )
-        } else {
-          return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.relayMessage(
-            resolved.target,
-            resolved.sender,
-            resolved.message,
-            resolved.messageNonce,
-            proof,
-            opts?.overrides || {}
-          )
-        }
+        return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.relayMessage(
+          resolved.target,
+          resolved.sender,
+          resolved.message,
+          resolved.messageNonce,
+          proof,
+          opts?.overrides || {}
+        )
       }
     },
 
@@ -1713,18 +1679,10 @@ export class BatchCrossChainMessenger {
           proof,
         })
       }
-      if (this.fastRelayer) {
-        // ethers.js v5 does not handle overloading
-        return this.contracts.l1.L1CrossDomainMessengerFast.populateTransaction.batchRelayMessages(
-          batchMessage,
-          opts?.overrides || {}
-        )
-      } else {
-        return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.batchRelayMessages(
-          batchMessage,
-          opts?.overrides || {}
-        )
-      }
+      return this.contracts.l1.L1CrossDomainMessenger.populateTransaction.batchRelayMessages(
+        batchMessage,
+        opts?.overrides || {}
+      )
     },
 
     /**
