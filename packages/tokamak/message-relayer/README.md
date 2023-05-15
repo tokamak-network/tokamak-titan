@@ -30,6 +30,7 @@ make up
 The `message-relayer` can also be run manually.
 Copy `.env.example` into a new file named `.env`, then set the environment variables listed there.
 Set FAST_RELAYER=true to enable the fast withdrawal.
+(Note: fast withdrawal will be supported later.)
 Once your environment variables have been set, run the relayer via:
 
 ```
