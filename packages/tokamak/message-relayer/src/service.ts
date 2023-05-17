@@ -413,7 +413,6 @@ export class MessageRelayerService extends BaseServiceV2<
               this.logger.info('Relay message transaction sent', { receipt })
               this.metrics.numBatchTx.inc()
               this.metrics.numRelayedMessages.inc(subBuffer.length)
-
             } catch (err) {
               this.logger.error('Relay attempt failed, skipping', {
                 message: err.toString(),
