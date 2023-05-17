@@ -24,6 +24,6 @@ const deployFn: DeployFunction = async (hre) => {
 }
 
 // This is kept during an upgrade. So no upgrade tag.
-deployFn.tags = ['Proxy__L1CrossDomainMessenger']
+deployFn.tags = ['Proxy__L1CrossDomainMessengerFast']
 
 export default deployFn
