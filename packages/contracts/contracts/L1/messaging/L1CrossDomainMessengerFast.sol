@@ -214,10 +214,16 @@ contract L1CrossDomainMessengerFast is
         // relayed multiple times in the case that the call reverted.
         if (success == true) {
             successfulMessages[xDomainCalldataHash] = true;
-            emit RelayedMessage(xDomainCalldataHash);
+            emit RelayedFastMessage(_target, _sender, _message, _messageNonce, xDomainCalldataHash);
         } else {
             failedMessages[xDomainCalldataHash] == true;
-            emit FailedRelayedMessage(xDomainCalldataHash);
+            emit FailedRelayedFastMessage(
+                _target,
+                _sender,
+                _message,
+                _messageNonce,
+                xDomainCalldataHash
+            );
         }
 
         // Store an identifier that can be used to prove that the given message was relayed by some

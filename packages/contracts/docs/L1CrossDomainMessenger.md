@@ -353,6 +353,26 @@ function xDomainMessageSender() external view returns (address)
 
 ## Events
 
+### FailedRelayedFastMessage
+
+```solidity
+event FailedRelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce, bytes32 indexed msgHash)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| target `indexed` | address | undefined |
+| sender  | address | undefined |
+| message  | bytes | undefined |
+| messageNonce  | uint256 | undefined |
+| msgHash `indexed` | bytes32 | undefined |
+
 ### FailedRelayedMessage
 
 ```solidity
@@ -449,6 +469,26 @@ event Paused(address account)
 | Name | Type | Description |
 |---|---|---|
 | account  | address | undefined |
+
+### RelayedFastMessage
+
+```solidity
+event RelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce, bytes32 indexed msgHash)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| target `indexed` | address | undefined |
+| sender  | address | undefined |
+| message  | bytes | undefined |
+| messageNonce  | uint256 | undefined |
+| msgHash `indexed` | bytes32 | undefined |
 
 ### RelayedMessage
 

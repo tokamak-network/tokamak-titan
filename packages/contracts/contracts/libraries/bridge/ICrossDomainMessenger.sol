@@ -18,6 +18,20 @@ interface ICrossDomainMessenger {
     );
     event RelayedMessage(bytes32 indexed msgHash);
     event FailedRelayedMessage(bytes32 indexed msgHash);
+    event RelayedFastMessage(
+        address indexed target,
+        address sender,
+        bytes message,
+        uint256 messageNonce,
+        bytes32 indexed msgHash
+    );
+    event FailedRelayedFastMessage(
+        address indexed target,
+        address sender,
+        bytes message,
+        uint256 messageNonce,
+        bytes32 indexed msgHash
+    );
 
     /*************
      * Variables *
