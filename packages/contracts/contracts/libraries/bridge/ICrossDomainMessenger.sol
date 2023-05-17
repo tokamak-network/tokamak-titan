@@ -22,15 +22,13 @@ interface ICrossDomainMessenger {
         address indexed target,
         address sender,
         bytes message,
-        uint256 messageNonce,
-        bytes32 indexed msgHash
+        uint256 messageNonce
     );
     event FailedRelayedFastMessage(
         address indexed target,
         address sender,
         bytes message,
-        uint256 messageNonce,
-        bytes32 indexed msgHash
+        uint256 messageNonce
     );
 
     /*************
