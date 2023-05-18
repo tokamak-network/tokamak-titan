@@ -171,7 +171,7 @@ function xDomainMessageSender() external view returns (address)
 ### FailedRelayedFastMessage
 
 ```solidity
-event FailedRelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce, bytes32 indexed msgHash)
+event FailedRelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce)
 ```
 
 
@@ -186,7 +186,6 @@ event FailedRelayedFastMessage(address indexed target, address sender, bytes mes
 | sender  | address | undefined |
 | message  | bytes | undefined |
 | messageNonce  | uint256 | undefined |
-| msgHash `indexed` | bytes32 | undefined |
 
 ### FailedRelayedMessage
 
@@ -207,7 +206,7 @@ event FailedRelayedMessage(bytes32 indexed msgHash)
 ### RelayedFastMessage
 
 ```solidity
-event RelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce, bytes32 indexed msgHash)
+event RelayedFastMessage(address indexed target, address sender, bytes message, uint256 messageNonce)
 ```
 
 
@@ -222,7 +221,6 @@ event RelayedFastMessage(address indexed target, address sender, bytes message, 
 | sender  | address | undefined |
 | message  | bytes | undefined |
 | messageNonce  | uint256 | undefined |
-| msgHash `indexed` | bytes32 | undefined |
 
 ### RelayedMessage
 
