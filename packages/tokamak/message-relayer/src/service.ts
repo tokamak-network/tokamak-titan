@@ -381,6 +381,9 @@ export class MessageRelayerService extends BaseServiceV2<
                     nonce,
                   },
                 })
+              this.logger.info(
+                `Relay message transaction sent, txid: ${txResponse.hash}`
+              )
               const txReceipt = await txResponse.wait(
                 this.options.numConfirmations
               )
@@ -403,9 +406,6 @@ export class MessageRelayerService extends BaseServiceV2<
                 ),
                 delay: this.options.resubmissionTimeout,
               })
-              this.logger.info(
-                `Relay message transaction sent, txid: ${receipt.transactionHash}`
-              )
               this.metrics.numBatchTx.inc()
               this.metrics.numRelayedMessages.inc(subBuffer.length)
             } catch (err) {
