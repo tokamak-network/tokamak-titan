@@ -120,7 +120,6 @@ services:
       MESSAGE_RELAYER__MAX_WAIT_TIME_S: 5
       MESSAGE_RELAYER__MAX_WAIT_TX_TIME_S: 5
       MESSAGE_RELAYER__MULTI_RELAY_LIMIT: 10
-      MESSAGE_RELAYER__ENABLE_RELAYER_FILTER: 'false'
 
   tokamak-message-relayer-fast:
     depends_on:
@@ -146,7 +145,7 @@ services:
       MESSAGE_RELAYER__MAX_WAIT_TIME_S: 5
       MESSAGE_RELAYER__MAX_WAIT_TX_TIME_S: 5
       MESSAGE_RELAYER__MULTI_RELAY_LIMIT: 10
-      FAST_RELAYER: 'true'
+      MESSAGE_RELAYER__IS_FAST_RELAYER: 'true'
 
   fault_detector:
     depends_on:
