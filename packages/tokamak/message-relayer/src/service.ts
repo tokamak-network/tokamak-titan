@@ -18,8 +18,6 @@ import {
 } from '@tokamak-optimism/sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
-import 'dotenv/config'
-
 type MessageRelayerOptions = {
   l1RpcProvider: Provider
   l2RpcProvider: Provider
@@ -184,9 +182,6 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 
   protected async init(): Promise<void> {
-    if (process.env.FAST_RELAYER) {
-      this.options.isFastRelayer = true
-    }
     // check options
     this.logger.info('Initializing message relayer', {
       fromL2TransactionIndex: this.options.fromL2TransactionIndex,
