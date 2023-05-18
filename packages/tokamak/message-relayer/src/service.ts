@@ -579,7 +579,7 @@ export class MessageRelayerService extends BaseServiceV2<
       this.state.lastFilterPollingTimestamp = new Date().getTime()
       this.state.fastRelayerFilter = fastRelayerFilterSelect
       this.state.relayerFilter = relayerFilterSelect
-      this.logger.info('Found the two filters', {
+      this.logger.debug('Found the two filters', {
         relayerFilterSelect,
         fastRelayerFilterSelect,
       })
