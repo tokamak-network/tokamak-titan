@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@tokamak-optimism/message-relayer",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "[Optimism] Service for automatically relaying L2 to L1 transactions",
   "main": "dist/index",
   "types": "dist/index",
