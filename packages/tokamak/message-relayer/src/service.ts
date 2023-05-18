@@ -293,7 +293,6 @@ export class MessageRelayerService extends BaseServiceV2<
       const secondsElapsed = Math.floor(
         (Date.now() - this.state.timeOfLastRelayS) / 1000
       )
-      console.log('Seconds elapsed since last batch push:', secondsElapsed)
 
       // timeOut is true if the time since the last relay (secondsElapsed) is greater than options.maxWaitTimeS
       const timeOut = secondsElapsed > this.options.maxWaitTimeS ? true : false
@@ -302,7 +301,6 @@ export class MessageRelayerService extends BaseServiceV2<
         const pendingTXSecondsElapsed = Math.floor(
           (Date.now() - this.state.timeOfLastPendingRelay) / 1000
         )
-        console.log('Next tx since last tx submitted', pendingTXSecondsElapsed)
         pendingTXTimeOut =
           pendingTXSecondsElapsed > this.options.maxWaitTxTimeS ? true : false
       }
@@ -329,10 +327,10 @@ export class MessageRelayerService extends BaseServiceV2<
           this.state.didWork = true
 
           if (bufferFull) {
-            console.log('Buffer full: flushing')
+            this.logger.info('Buffer full: flushing')
           }
           if (timeOut) {
-            console.log('Buffer timeout: flushing')
+            this.logger.info('Buffer timeout: flushing')
           }
 
           // clean up the array
@@ -405,7 +403,9 @@ export class MessageRelayerService extends BaseServiceV2<
                 ),
                 delay: this.options.resubmissionTimeout,
               })
-              this.logger.info('Relay message transaction sent', { receipt })
+              this.logger.info(
+                `Relay message transaction sent, txid: ${receipt.transactionHash}`
+              )
               this.metrics.numBatchTx.inc()
               this.metrics.numRelayedMessages.inc(subBuffer.length)
             } catch (err) {
@@ -428,7 +428,7 @@ export class MessageRelayerService extends BaseServiceV2<
                 effectiveGasPrice: receipt.effectiveGasPrice.toString(),
               })
             } else {
-              this.logger.warning('Unsuccessful relayMultiMessage', {
+              this.logger.warn('Unsuccessful relayMultiMessage', {
                 blockNumber: receipt.blockNumber,
                 transactionIndex: receipt.transactionIndex,
                 status: receipt.status,
@@ -440,16 +440,10 @@ export class MessageRelayerService extends BaseServiceV2<
             this.state.timeOfLastPendingRelay = Date.now()
           }
         } else {
-          console.log('Current gas price is unacceptable')
+          this.logger.debug('Current gas price is unacceptable')
           this.state.timeOfLastPendingRelay = Date.now()
         }
         this.state.timeOfLastRelayS = Date.now()
-      } else {
-        console.log(
-          'Buffer still too small - current buffer length: ',
-          this.state.messageBuffer.length
-        )
-        console.log('Buffer flush size set to: ', this.options.minBatchSize)
       }
 
       if (this.state.timeOfLastPendingRelay === false) {
