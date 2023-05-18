@@ -55,6 +55,6 @@ const deployFn: DeployFunction = async (hre) => {
   )
 }
 
-deployFn.tags = ['finalize']
+deployFn.tags = ['finalize', 'Proxy__L1CrossDomainMessengerFast']
 
 export default deployFn
