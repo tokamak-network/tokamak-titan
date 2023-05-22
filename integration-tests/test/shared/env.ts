@@ -107,7 +107,6 @@ export class OptimismEnv {
         l1: {
           AddressManager: envConfig.ADDRESS_MANAGER,
           L1CrossDomainMessenger: envConfig.L1_CROSS_DOMAIN_MESSENGER,
-          L1CrossDomainMessengerFast: envConfig.L1_CROSS_DOMAIN_MESSENGER_FAST,
           L1StandardBridge: envConfig.L1_STANDARD_BRIDGE,
           StateCommitmentChain: envConfig.STATE_COMMITMENT_CHAIN,
           CanonicalTransactionChain: envConfig.CANONICAL_TRANSACTION_CHAIN,
