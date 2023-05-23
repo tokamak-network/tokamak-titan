@@ -50,6 +50,12 @@ const deployFn: DeployFunction = async (hre) => {
       name: names.managed.accounts.OVM_Proposer,
       address: hre.deployConfig.ovmProposerAddress,
     },
+    // OVM_FastRelayer is the address allowed to relay withdraw to the
+    // L1CrossDomainMessengerFast.
+    {
+      name: names.managed.accounts.OVM_FastRelayer,
+      address: hre.deployConfig.ovmFastRelayer,
+    },
   ]
 
   // Filter out all addresses that will not change, so that the log statement is maximally
