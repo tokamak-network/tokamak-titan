@@ -195,7 +195,6 @@ describe('BatchCrossChainMessenger', () => {
               l1: {
                 AddressManager: '0x' + '11'.repeat(20),
                 L1CrossDomainMessenger: '0x' + '12'.repeat(20),
-                L1CrossDomainMessengerFast: '0x' + '19'.repeat(20),
                 L1StandardBridge: '0x' + '13'.repeat(20),
                 StateCommitmentChain: '0x' + '14'.repeat(20),
                 CanonicalTransactionChain: '0x' + '15'.repeat(20),

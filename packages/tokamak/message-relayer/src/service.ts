@@ -208,9 +208,6 @@ export class MessageRelayerService extends BaseServiceV2<
       const L1CrossDomainMessenger = await addressManager.getAddress(
         'Proxy__OVM_L1CrossDomainMessenger'
       )
-      const L1CrossDomainMessengerFast = await addressManager.getAddress(
-        'Proxy__L1CrossDomainMessengerFast'
-      )
       const L1StandardBridge = await addressManager.getAddress(
         'Proxy__OVM_L1StandardBridge'
       )
@@ -226,7 +223,6 @@ export class MessageRelayerService extends BaseServiceV2<
         l1: {
           AddressManager: this.options.addressManagerAddress,
           L1CrossDomainMessenger,
-          L1CrossDomainMessengerFast,
           L1StandardBridge,
           StateCommitmentChain,
           CanonicalTransactionChain,

@@ -2,7 +2,7 @@
 
 `message-relayer` is a service that automatically finalizes ("relays") messages sent from Tokamak Network to Ethereum.
 It buffers messages for a certain amount of time and relays them from layer 2 to layer 1 in batches when a certain amount of messages are gathered. We can expect to save the transaction costs and reduce the network load.
-The message relayer uses L1CrossDomainMessenger/L1CrossDomainMessengerFast to relay messages together in batches.
+The message relayer uses L1CrossDomainMessenger to relay messages in batches.
 
 ## Installation
 
@@ -29,7 +29,8 @@ make up
 
 The `message-relayer` can also be run manually.
 Copy `.env.example` into a new file named `.env`, then set the environment variables listed there.
-Set FAST_RELAYER=true to enable the fast withdrawal.
+Set MESSAGE_RELAYER__IS_FAST_RELAYER=true to enable the fast withdrawal.
+(Note: fast withdrawal will be supported later.)
 Once your environment variables have been set, run the relayer via:
 
 ```
