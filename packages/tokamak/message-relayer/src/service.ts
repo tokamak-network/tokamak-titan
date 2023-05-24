@@ -444,7 +444,6 @@ export class MessageRelayerService extends BaseServiceV2<
         this.state.timeOfLastRelayS = Date.now()
       }
 
-      // this.state.timeOfLastPendingRelay === true 일 때 'Waiting for the current pending tx to be finalized'
       if (this.state.timeOfLastPendingRelay === false) {
         const l2BlockNumber =
           await this.state.messenger.l2Provider.getBlockNumber()
