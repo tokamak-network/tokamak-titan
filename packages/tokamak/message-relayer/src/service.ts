@@ -414,24 +414,26 @@ export class MessageRelayerService extends BaseServiceV2<
 
             if (!receipt) {
               this.logger.error('No receipt for relayMultiMessage transaction')
-            } else if (receipt.status === 1) {
-              this.logger.info('Sucessful relayMultiMessage', {
-                blockNumber: receipt.blockNumber,
-                transactionIndex: receipt.transactionIndex,
-                status: receipt.status,
-                msgCount: subBuffer.length,
-                gasUsed: receipt.gasUsed.toString(),
-                effectiveGasPrice: receipt.effectiveGasPrice.toString(),
-              })
             } else {
-              this.logger.warn('Unsuccessful relayMultiMessage', {
-                blockNumber: receipt.blockNumber,
-                transactionIndex: receipt.transactionIndex,
-                status: receipt.status,
-                msgCount: subBuffer.length,
-                gasUsed: receipt.gasUsed.toString(),
-                effectiveGasPrice: receipt.effectiveGasPrice.toString(),
-              })
+              if (receipt.status === 1) {
+                this.logger.info('Sucessful relayMultiMessage', {
+                  blockNumber: receipt.blockNumber,
+                  transactionIndex: receipt.transactionIndex,
+                  status: receipt.status,
+                  msgCount: subBuffer.length,
+                  gasUsed: receipt.gasUsed.toString(),
+                  effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+                })
+              } else {
+                this.logger.warn('Unsuccessful relayMultiMessage', {
+                  blockNumber: receipt.blockNumber,
+                  transactionIndex: receipt.transactionIndex,
+                  status: receipt.status,
+                  msgCount: subBuffer.length,
+                  gasUsed: receipt.gasUsed.toString(),
+                  effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+                })
+              }
             }
             this.state.timeOfLastPendingRelay = Date.now()
           }
@@ -442,6 +444,7 @@ export class MessageRelayerService extends BaseServiceV2<
         this.state.timeOfLastRelayS = Date.now()
       }
 
+      // this.state.timeOfLastPendingRelay === true 일 때 'Waiting for the current pending tx to be finalized'
       if (this.state.timeOfLastPendingRelay === false) {
         const l2BlockNumber =
           await this.state.messenger.l2Provider.getBlockNumber()
