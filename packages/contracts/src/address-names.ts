@@ -15,7 +15,11 @@ export const names = {
       L1CrossDomainMessengerFast: 'L1CrossDomainMessengerFast',
       Proxy__L1CrossDomainMessengerFast: 'Proxy__L1CrossDomainMessengerFast',
     },
-    accounts: { OVM_Sequencer: 'OVM_Sequencer', OVM_Proposer: 'OVM_Proposer' },
+    accounts: {
+      OVM_Sequencer: 'OVM_Sequencer',
+      OVM_Proposer: 'OVM_Proposer',
+      OVM_FastRelayer: 'OVM_FastRelayer',
+    },
   },
   unmanaged: {
     AddressDictator: 'AddressDictator',
