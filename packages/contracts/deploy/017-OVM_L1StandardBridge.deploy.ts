@@ -114,7 +114,15 @@ const deployFn: DeployFunction = async (hre) => {
 
   // Set the addresses!
   console.log('Ownership successfully transferred. Invoking doActions...')
-  await ChugSplashDictator.doActions(bridgeCode)
+  console.log('--- L1StandardBridge Bytecode ---')
+  console.log(bridgeCode)
+  console.log('---')
+  const res = await ChugSplashDictator.doActions(bridgeCode)
+  console.log(`Check transaction was failed: ${res.hash}`)
+  console.log(
+    'If the tx was failed, please execute doActions method of ChugSplashDictator.'
+  )
+  console.log(`ChugSplashDictator.address: ${ChugSplashDictator.address}`)
 
   console.log(`Confirming that owner address was correctly set...`)
   await awaitCondition(
