@@ -337,7 +337,6 @@ export class MessageRelayerService extends BaseServiceV2<
             const status =
               await this.state.messenger.getMessageStatusFromContracts(cur)
             if (
-              // STATE_ROOT_NOT_PUBLISHED, IN_CHALLENGE_PERIOD, READY_FOR_RELAY
               status !== MessageStatus.RELAYED &&
               status !== MessageStatus.RELAYED_FAILED
             ) {
@@ -377,8 +376,8 @@ export class MessageRelayerService extends BaseServiceV2<
                     nonce,
                   },
                 })
-              this.logger.info(
-                `Relay message transaction sent, txid: ${txResponse.hash}`
+              this.logger.debug(
+                `Relay message transaction is requested, txid: ${txResponse.hash}`
               )
               const txReceipt = await txResponse.wait(
                 this.options.numConfirmations
@@ -402,6 +401,9 @@ export class MessageRelayerService extends BaseServiceV2<
                 ),
                 delay: this.options.resubmissionTimeout,
               })
+              this.logger.info(
+                `Relay message transaction is finished, txid: ${receipt.transactionHash}`
+              )
               this.metrics.numBatchTx.inc()
               this.metrics.numRelayedMessages.inc(subBuffer.length)
             } catch (err) {
@@ -438,7 +440,9 @@ export class MessageRelayerService extends BaseServiceV2<
             this.state.timeOfLastPendingRelay = Date.now()
           }
         } else {
-          this.logger.debug('Current gas price is unacceptable')
+          this.logger.info(
+            `Current gas price is unacceptable, L1 gas price: ${gasPriceGwei}Gwei`
+          )
           this.state.timeOfLastPendingRelay = Date.now()
         }
         this.state.timeOfLastRelayS = Date.now()
