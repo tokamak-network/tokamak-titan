@@ -441,7 +441,7 @@ export class MessageRelayerService extends BaseServiceV2<
           }
         } else {
           this.logger.info(
-            `Current gas price is unacceptable, L1 gas price: ${gasPriceGwei}Gwei`
+            `Current gas price is unacceptable, L1 gas price: ${gasPriceGwei}Gwei (Max: ${this.options.maxGasPriceInGwei})`
           )
           this.state.timeOfLastPendingRelay = Date.now()
         }
