@@ -14,6 +14,7 @@ const config = {
   ovmFeeWalletAddress: '0xbab08F1B06aa7a9a4eCA71A983730f84C419fcDa',
   ovmAddressManagerOwner: '0xCaD132F770cFBC2B3c512C0FF35c4d9fc37476c9',
   ovmGasPriceOracleOwner: '0xcd815a5BCea75aD4CAe46b4Cd1d4f6aA8e114e81',
+  ovmFastRelayer: '0x710C658A54bBE3bE71A1d90FB4ACD6D4bFaCdBF6',
   ovmWhitelistOwner: '0x0000000000000000000000000000000000000000',
 }
 
