@@ -6,9 +6,7 @@ import {
 } from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/ERC721Bridge.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { L1ERC721Bridge } from "../../L1/messaging/L1ERC721Bridge.sol";
-import {
-    IOptimismMintableERC721
-} from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/IOptimismMintableERC721.sol";
+import { IOptimismMintableERC721 } from "../../ERC721/IOptimismMintableERC721.sol";
 
 /**
  * @title L2ERC721Bridge

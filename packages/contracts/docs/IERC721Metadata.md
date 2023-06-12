@@ -1,8 +1,8 @@
-# IERC721Enumerable
+# IERC721Metadata
 
 
 
-> ERC-721 Non-Fungible Token Standard, optional enumeration extension
+> ERC-721 Non-Fungible Token Standard, optional metadata extension
 
 
 
@@ -94,6 +94,23 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
+### name
+
+```solidity
+function name() external view returns (string)
+```
+
+
+
+*Returns the token collection name.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### ownerOf
 
 ```solidity
@@ -174,67 +191,44 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
-### tokenByIndex
+### symbol
 
 ```solidity
-function tokenByIndex(uint256 index) external view returns (uint256)
+function symbol() external view returns (string)
 ```
 
 
 
-*Returns a token ID at a given `index` of all the tokens stored by the contract. Use along with {totalSupply} to enumerate all tokens.*
+*Returns the token collection symbol.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### tokenURI
+
+```solidity
+function tokenURI(uint256 tokenId) external view returns (string)
+```
+
+
+
+*Returns the Uniform Resource Identifier (URI) for `tokenId` token.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| index | uint256 | undefined
+| tokenId | uint256 | undefined
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
-
-### tokenOfOwnerByIndex
-
-```solidity
-function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256)
-```
-
-
-
-*Returns a token ID owned by `owner` at a given `index` of its token list. Use along with {balanceOf} to enumerate all of ``owner``&#39;s tokens.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| owner | address | undefined
-| index | uint256 | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
-
-### totalSupply
-
-```solidity
-function totalSupply() external view returns (uint256)
-```
-
-
-
-*Returns the total amount of tokens stored by the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined
+| _0 | string | undefined
 
 ### transferFrom
 

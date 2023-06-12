@@ -149,18 +149,18 @@ function totalSupply() external view returns (uint256)
 ### transfer
 
 ```solidity
-function transfer(address recipient, uint256 amount) external nonpayable returns (bool)
+function transfer(address to, uint256 amount) external nonpayable returns (bool)
 ```
 
 
 
-*Moves `amount` tokens from the caller&#39;s account to `recipient`. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event.*
+*Moves `amount` tokens from the caller&#39;s account to `to`. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| recipient | address | undefined
+| to | address | undefined
 | amount | uint256 | undefined
 
 #### Returns
@@ -172,19 +172,19 @@ function transfer(address recipient, uint256 amount) external nonpayable returns
 ### transferFrom
 
 ```solidity
-function transferFrom(address sender, address recipient, uint256 amount) external nonpayable returns (bool)
+function transferFrom(address from, address to, uint256 amount) external nonpayable returns (bool)
 ```
 
 
 
-*Moves `amount` tokens from `sender` to `recipient` using the allowance mechanism. `amount` is then deducted from the caller&#39;s allowance. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event.*
+*Moves `amount` tokens from `from` to `to` using the allowance mechanism. `amount` is then deducted from the caller&#39;s allowance. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| sender | address | undefined
-| recipient | address | undefined
+| from | address | undefined
+| to | address | undefined
 | amount | uint256 | undefined
 
 #### Returns

@@ -41,7 +41,7 @@ function approve(address spender, uint256 amount) external nonpayable returns (b
 
 
 
-*See {IERC20-approve}. Requirements: - `spender` cannot be the zero address.*
+*See {IERC20-approve}. NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on `transferFrom`. This is semantically equivalent to an infinite approval. Requirements: - `spender` cannot be the zero address.*
 
 #### Parameters
 
@@ -285,18 +285,18 @@ function totalSupply() external view returns (uint256)
 ### transfer
 
 ```solidity
-function transfer(address recipient, uint256 amount) external nonpayable returns (bool)
+function transfer(address to, uint256 amount) external nonpayable returns (bool)
 ```
 
 
 
-*See {IERC20-transfer}. Requirements: - `recipient` cannot be the zero address. - the caller must have a balance of at least `amount`.*
+*See {IERC20-transfer}. Requirements: - `to` cannot be the zero address. - the caller must have a balance of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| recipient | address | undefined
+| to | address | undefined
 | amount | uint256 | undefined
 
 #### Returns
@@ -308,19 +308,19 @@ function transfer(address recipient, uint256 amount) external nonpayable returns
 ### transferFrom
 
 ```solidity
-function transferFrom(address sender, address recipient, uint256 amount) external nonpayable returns (bool)
+function transferFrom(address from, address to, uint256 amount) external nonpayable returns (bool)
 ```
 
 
 
-*See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. Requirements: - `sender` and `recipient` cannot be the zero address. - `sender` must have a balance of at least `amount`. - the caller must have allowance for ``sender``&#39;s tokens of at least `amount`.*
+*See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. NOTE: Does not update the allowance if the current allowance is the maximum `uint256`. Requirements: - `from` and `to` cannot be the zero address. - `from` must have a balance of at least `amount`. - the caller must have allowance for ``from``&#39;s tokens of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| sender | address | undefined
-| recipient | address | undefined
+| from | address | undefined
+| to | address | undefined
 | amount | uint256 | undefined
 
 #### Returns

@@ -1,12 +1,12 @@
-# IERC721Enumerable
+# ERC721Enumerable
 
 
 
-> ERC-721 Non-Fungible Token Standard, optional enumeration extension
 
 
 
-*See https://eips.ethereum.org/EIPS/eip-721*
+
+*This implements an optional extension of {ERC721} defined in the EIP that adds enumerability of all the token ids in the contract as well as all token ids owned by each account.*
 
 ## Methods
 
@@ -18,7 +18,7 @@ function approve(address to, uint256 tokenId) external nonpayable
 
 
 
-*Gives permission to `to` to transfer `tokenId` token to another account. The approval is cleared when the token is transferred. Only a single account can be approved at a time, so approving the zero address clears previous approvals. Requirements: - The caller must own the token or be an approved operator. - `tokenId` must exist. Emits an {Approval} event.*
+*See {IERC721-approve}.*
 
 #### Parameters
 
@@ -30,12 +30,12 @@ function approve(address to, uint256 tokenId) external nonpayable
 ### balanceOf
 
 ```solidity
-function balanceOf(address owner) external view returns (uint256 balance)
+function balanceOf(address owner) external view returns (uint256)
 ```
 
 
 
-*Returns the number of tokens in ``owner``&#39;s account.*
+*See {IERC721-balanceOf}.*
 
 #### Parameters
 
@@ -47,17 +47,17 @@ function balanceOf(address owner) external view returns (uint256 balance)
 
 | Name | Type | Description |
 |---|---|---|
-| balance | uint256 | undefined
+| _0 | uint256 | undefined
 
 ### getApproved
 
 ```solidity
-function getApproved(uint256 tokenId) external view returns (address operator)
+function getApproved(uint256 tokenId) external view returns (address)
 ```
 
 
 
-*Returns the account approved for `tokenId` token. Requirements: - `tokenId` must exist.*
+*See {IERC721-getApproved}.*
 
 #### Parameters
 
@@ -69,7 +69,7 @@ function getApproved(uint256 tokenId) external view returns (address operator)
 
 | Name | Type | Description |
 |---|---|---|
-| operator | address | undefined
+| _0 | address | undefined
 
 ### isApprovedForAll
 
@@ -79,7 +79,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 
 
-*Returns if the `operator` is allowed to manage all of the assets of `owner`. See {setApprovalForAll}*
+*See {IERC721-isApprovedForAll}.*
 
 #### Parameters
 
@@ -94,15 +94,32 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined
 
-### ownerOf
+### name
 
 ```solidity
-function ownerOf(uint256 tokenId) external view returns (address owner)
+function name() external view returns (string)
 ```
 
 
 
-*Returns the owner of the `tokenId` token. Requirements: - `tokenId` must exist.*
+*See {IERC721Metadata-name}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
+### ownerOf
+
+```solidity
+function ownerOf(uint256 tokenId) external view returns (address)
+```
+
+
+
+*See {IERC721-ownerOf}.*
 
 #### Parameters
 
@@ -114,17 +131,17 @@ function ownerOf(uint256 tokenId) external view returns (address owner)
 
 | Name | Type | Description |
 |---|---|---|
-| owner | address | undefined
+| _0 | address | undefined
 
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
 ```
 
 
 
-*Safely transfers `tokenId` token from `from` to `to`. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must exist and be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer. Emits a {Transfer} event.*
+*See {IERC721-safeTransferFrom}.*
 
 #### Parameters
 
@@ -133,24 +150,24 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 | from | address | undefined
 | to | address | undefined
 | tokenId | uint256 | undefined
-| data | bytes | undefined
+| _data | bytes | undefined
 
 ### setApprovalForAll
 
 ```solidity
-function setApprovalForAll(address operator, bool _approved) external nonpayable
+function setApprovalForAll(address operator, bool approved) external nonpayable
 ```
 
 
 
-*Approve or remove `operator` as an operator for the caller. Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller. Requirements: - The `operator` cannot be the caller. Emits an {ApprovalForAll} event.*
+*See {IERC721-setApprovalForAll}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
 | operator | address | undefined
-| _approved | bool | undefined
+| approved | bool | undefined
 
 ### supportsInterface
 
@@ -160,7 +177,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -174,6 +191,23 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined
 
+### symbol
+
+```solidity
+function symbol() external view returns (string)
+```
+
+
+
+*See {IERC721Metadata-symbol}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### tokenByIndex
 
 ```solidity
@@ -182,7 +216,7 @@ function tokenByIndex(uint256 index) external view returns (uint256)
 
 
 
-*Returns a token ID at a given `index` of all the tokens stored by the contract. Use along with {totalSupply} to enumerate all tokens.*
+*See {IERC721Enumerable-tokenByIndex}.*
 
 #### Parameters
 
@@ -204,7 +238,7 @@ function tokenOfOwnerByIndex(address owner, uint256 index) external view returns
 
 
 
-*Returns a token ID owned by `owner` at a given `index` of its token list. Use along with {balanceOf} to enumerate all of ``owner``&#39;s tokens.*
+*See {IERC721Enumerable-tokenOfOwnerByIndex}.*
 
 #### Parameters
 
@@ -219,6 +253,28 @@ function tokenOfOwnerByIndex(address owner, uint256 index) external view returns
 |---|---|---|
 | _0 | uint256 | undefined
 
+### tokenURI
+
+```solidity
+function tokenURI(uint256 tokenId) external view returns (string)
+```
+
+
+
+*See {IERC721Metadata-tokenURI}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined
+
 ### totalSupply
 
 ```solidity
@@ -227,7 +283,7 @@ function totalSupply() external view returns (uint256)
 
 
 
-*Returns the total amount of tokens stored by the contract.*
+*See {IERC721Enumerable-totalSupply}.*
 
 
 #### Returns
@@ -244,7 +300,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*Transfers `tokenId` token from `from` to `to`. WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible. Requirements: - `from` cannot be the zero address. - `to` cannot be the zero address. - `tokenId` token must be owned by `from`. - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}. Emits a {Transfer} event.*
+*See {IERC721-transferFrom}.*
 
 #### Parameters
 
