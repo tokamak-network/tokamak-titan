@@ -26,11 +26,21 @@ contract OVM_ETH is L2StandardERC20 {
     // ETH ERC20 features are disabled until further notice.
     // Discussion here: https://github.com/ethereum-optimism/optimism/discussions/1444
 
-    function transfer(address recipient, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override(ERC20, IERC20)
+        returns (bool)
+    {
         revert("OVM_ETH: transfer is disabled pending further community discussion.");
     }
 
-    function approve(address spender, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        virtual
+        override(ERC20, IERC20)
+        returns (bool)
+    {
         revert("OVM_ETH: approve is disabled pending further community discussion.");
     }
 

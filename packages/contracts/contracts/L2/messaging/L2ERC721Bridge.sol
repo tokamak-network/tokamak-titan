@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import { ERC721Bridge } from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/ERC721Bridge.sol";
+import {
+    ERC721Bridge
+} from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/ERC721Bridge.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { L1ERC721Bridge } from "../../L1/messaging/L1ERC721Bridge.sol";
-import { IOptimismMintableERC721 } from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/IOptimismMintableERC721.sol";
+import {
+    IOptimismMintableERC721
+} from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/IOptimismMintableERC721.sol";
 
 /**
  * @title L2ERC721Bridge
@@ -23,9 +27,7 @@ contract L2ERC721Bridge is ERC721Bridge {
      * @param _messenger   Address of the CrossDomainMessenger on this network.
      * @param _otherBridge Address of the ERC721 bridge on the other network.
      */
-    constructor(address _messenger, address _otherBridge)
-        ERC721Bridge(_messenger, _otherBridge)
-    {}
+    constructor(address _messenger, address _otherBridge) ERC721Bridge(_messenger, _otherBridge) {}
 
     /**
      * @notice Completes an ERC721 bridge from the other domain and sends the ERC721 token to the
