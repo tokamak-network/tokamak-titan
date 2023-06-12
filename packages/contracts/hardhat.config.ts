@@ -60,6 +60,12 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
+        version: '0.8.15', // Required for ERC721Bridge
+        settings: {
+          optimizer: { enabled: true, runs: 10_000 },
+        },
+      },
+      {
         version: '0.8.9',
         settings: {
           optimizer: { enabled: true, runs: 10_000 },
