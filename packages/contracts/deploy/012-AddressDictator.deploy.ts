@@ -56,6 +56,12 @@ const deployFn: DeployFunction = async (hre) => {
       name: names.managed.accounts.OVM_FastRelayer,
       address: hre.deployConfig.ovmFastRelayer,
     },
+    // OVM_TONStakingManager is the address allowed to create staking for the
+    // Seigniorages
+    {
+      name: names.managed.accounts.OVM_TONStakingManager,
+      address: hre.deployConfig.ovmTONStakingManager,
+    },
   ]
 
   // Filter out all addresses that will not change, so that the log statement is maximally

@@ -85,6 +85,16 @@ export interface DeployConfig {
   ovmGasPriceOracleOwner: string
 
   /**
+   * Address of the account to execue fast relay contract on L1.
+   */
+  ovmFastRelayer?: string
+
+  /**
+   * Address of the account to execue staking contract on L1.
+   */
+  ovmTONStakingManager?: string
+
+  /**
    * Optional whitelist owner address.
    */
   ovmWhitelistOwner?: string
@@ -179,6 +189,14 @@ const configSpec: {
   },
   ovmGasPriceOracleOwner: {
     type: 'address',
+  },
+  ovmFastRelayer: {
+    type: 'address',
+    default: ethers.constants.AddressZero,
+  },
+  ovmTONStakingManager: {
+    type: 'address',
+    default: ethers.constants.AddressZero,
   },
   ovmWhitelistOwner: {
     type: 'address',
