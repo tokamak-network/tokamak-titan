@@ -13,6 +13,7 @@ const config = {
   ovmAddressManagerOwner: '0x36602DC3d18c37627366109FF80E527De1002CF8',
   ovmGasPriceOracleOwner: '0x9ed2E27310917ec6242D9F0cbA2C7217D82460c5',
   ovmFastRelayer: '0x4e19b098e96e82a073CBcfEB4491f008512FbcF1',
+  ovmTONStakingManager: '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720',
 }
 
 export default config

@@ -14,6 +14,7 @@ const config = {
   ovmAddressManagerOwner: '0x37212a8F2abbb40000e974DA82D410DdbecFa956',
   ovmGasPriceOracleOwner: '0x8F3E9A5c4Ee4092E8CF3159dc65090CFD7e63D2e',
   ovmFastRelayer: '0xfd1265BA61e773c4e9DF206E57316ac7fAD38dD6',
+  ovmTONStakingManager: '0xD4335A175c36c0922F6A368b83f9F6671bf07606',
 }
 
 export default config

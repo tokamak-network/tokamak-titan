@@ -19,6 +19,7 @@ export const names = {
       OVM_Sequencer: 'OVM_Sequencer',
       OVM_Proposer: 'OVM_Proposer',
       OVM_FastRelayer: 'OVM_FastRelayer',
+      OVM_TONStakingManager: 'OVM_TONStakingManager',
     },
   },
   unmanaged: {
