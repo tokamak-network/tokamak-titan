@@ -26,40 +26,43 @@ import {
 } from '@eth-optimism/core-utils'
 import { getContractInterface, predeploys } from '@eth-optimism/contracts'
 import * as rlp from 'rlp'
+
 import {
   CoreCrossChainMessage,
+  OEContracts,
+  OEContractsLike,
   MessageLike,
   MessageRequestLike,
   TransactionLike,
-  NumberLike,
   AddressLike,
+  NumberLike,
   SignerOrProviderLike,
   CrossChainMessage,
   CrossChainMessageRequest,
   CrossChainMessageProof,
   MessageDirection,
+  MessageStatus,
   TokenBridgeMessage,
   MessageReceipt,
   MessageReceiptStatus,
   BridgeAdapterData,
   BridgeAdapters,
+  StateRoot,
+  StateRootBatch,
   IBridgeAdapter,
+} from './interfaces'
+import {
   toSignerOrProvider,
   toNumber,
   toTransactionHash,
   DeepPartial,
-  StateRoot,
-  StateRootBatch,
+  getAllOEContracts,
+  getBridgeAdapters,
   makeMerkleTreeProof,
   makeStateTrieProof,
-} from '@eth-optimism/sdk'
-
-import { OEContracts, MessageStatus, OEContractsLike } from './interfaces'
-import {
-  hashCrossChainMessage,
-  getAllOEContracts,
   DEPOSIT_CONFIRMATION_BLOCKS,
   CHAIN_BLOCK_TIMES,
+  hashCrossChainMessage,
 } from './utils'
 
 export class BatchCrossChainMessenger {
@@ -175,6 +178,9 @@ export class BatchCrossChainMessenger {
       l1SignerOrProvider: this.l1SignerOrProvider,
       l2SignerOrProvider: this.l2SignerOrProvider,
       overrides: opts.contracts,
+    })
+    this.bridges = getBridgeAdapters(this.l2ChainId, this, {
+      overrides: opts.bridges,
     })
   }
 
