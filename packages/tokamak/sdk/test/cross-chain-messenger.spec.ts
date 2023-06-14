@@ -1,20 +1,22 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { hashCrossDomainMessage } from '@eth-optimism/core-utils'
+import { predeploys } from '@eth-optimism/contracts'
 import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
+
 import {
   MessageDirection,
   CONTRACT_ADDRESSES,
   omit,
   MessageStatus,
   CrossChainMessage,
+  BatchCrossChainMessenger,
   StandardBridgeAdapter,
+  ETHBridgeAdapter,
   L1ChainID,
   L2ChainID,
-} from '@eth-optimism/sdk'
-
+} from '../src'
 import { expect } from './setup'
-import { BatchCrossChainMessenger } from '../src'
 import { DUMMY_MESSAGE, DUMMY_EXTENDED_MESSAGE } from './helpers'
 
 describe('BatchCrossChainMessenger', () => {
@@ -1184,7 +1186,6 @@ describe('BatchCrossChainMessenger', () => {
           )
       })
     })
-
     describe('when resending an L2 to L1 message', () => {
       it('should throw an error', async () => {
         const message = {
@@ -1199,6 +1200,120 @@ describe('BatchCrossChainMessenger', () => {
 
         await expect(messenger.resendMessage(sent, 10000)).to.be.rejected
       })
+    })
+  })
+  describe('depositETH', () => {
+    let l1Messenger: Contract
+    let l2Messenger: Contract
+    let l1Bridge: Contract
+    let l2Bridge: Contract
+    let messenger: BatchCrossChainMessenger
+    beforeEach(async () => {
+      l1Messenger = (await (
+        await ethers.getContractFactory('MockMessenger')
+      ).deploy()) as any
+      l1Bridge = (await (
+        await ethers.getContractFactory('MockBridge')
+      ).deploy(l1Messenger.address)) as any
+      l2Messenger = (await (
+        await ethers.getContractFactory('MockMessenger')
+      ).deploy()) as any
+      l2Bridge = (await (
+        await ethers.getContractFactory('MockBridge')
+      ).deploy(l2Messenger.address)) as any
+
+      messenger = new BatchCrossChainMessenger({
+        l1SignerOrProvider: l1Signer,
+        l2SignerOrProvider: l2Signer,
+        l1ChainId: L1ChainID.HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        contracts: {
+          l1: {
+            L1CrossDomainMessenger: l1Messenger.address,
+            L1StandardBridge: l1Bridge.address,
+          },
+          l2: {
+            L2CrossDomainMessenger: l2Messenger.address,
+            L2StandardBridge: l2Bridge.address,
+          },
+        },
+        bridges: {
+          ETH: {
+            Adapter: ETHBridgeAdapter,
+            l1Bridge: l1Bridge.address,
+            l2Bridge: l2Bridge.address,
+          },
+        },
+      })
+    })
+
+    it('should trigger the deposit ETH function with the given amount', async () => {
+      await expect(messenger.depositETH(100000))
+        .to.emit(l1Bridge, 'ETHDepositInitiated')
+        .withArgs(
+          await l1Signer.getAddress(),
+          await l1Signer.getAddress(),
+          100000,
+          '0x'
+        )
+    })
+  })
+  describe('withdrawETH', () => {
+    let l1Messenger: Contract
+    let l2Messenger: Contract
+    let l1Bridge: Contract
+    let l2Bridge: Contract
+    let messenger: BatchCrossChainMessenger
+    beforeEach(async () => {
+      l1Messenger = (await (
+        await ethers.getContractFactory('MockMessenger')
+      ).deploy()) as any
+      l1Bridge = (await (
+        await ethers.getContractFactory('MockBridge')
+      ).deploy(l1Messenger.address)) as any
+      l2Messenger = (await (
+        await ethers.getContractFactory('MockMessenger')
+      ).deploy()) as any
+      l2Bridge = (await (
+        await ethers.getContractFactory('MockBridge')
+      ).deploy(l2Messenger.address)) as any
+
+      messenger = new BatchCrossChainMessenger({
+        l1SignerOrProvider: l1Signer,
+        l2SignerOrProvider: l2Signer,
+        l1ChainId: L1ChainID.HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        contracts: {
+          l1: {
+            L1CrossDomainMessenger: l1Messenger.address,
+            L1StandardBridge: l1Bridge.address,
+          },
+          l2: {
+            L2CrossDomainMessenger: l2Messenger.address,
+            L2StandardBridge: l2Bridge.address,
+          },
+        },
+        bridges: {
+          ETH: {
+            Adapter: ETHBridgeAdapter,
+            l1Bridge: l1Bridge.address,
+            l2Bridge: l2Bridge.address,
+          },
+        },
+      })
+    })
+
+    it('should trigger the withdraw ETH function with the given amount', async () => {
+      await expect(messenger.withdrawETH(100000))
+        .to.emit(l2Bridge, 'WithdrawalInitiated')
+        .withArgs(
+          ethers.constants.AddressZero,
+          predeploys.OVM_ETH,
+          await l2Signer.getAddress(),
+          await l2Signer.getAddress(),
+          100000,
+          '0x'
+        )
     })
   })
 })
