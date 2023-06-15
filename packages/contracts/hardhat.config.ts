@@ -32,15 +32,6 @@ const config: HardhatUserConfig = {
       saveDeployments: false,
       tags: ['local'],
     },
-    optimism: {
-      url: 'http://127.0.0.1:8545',
-      saveDeployments: false,
-    },
-    'mainnet-trial': {
-      chainId: 42069,
-      url: 'http://127.0.0.1:8545',
-      accounts: [privateKey],
-    },
     'hardhat-remote': {
       chainId: 31337,
       url: process.env.CONTRACTS_RPC_URL || '',
@@ -52,6 +43,10 @@ const config: HardhatUserConfig = {
       url: process.env.CONTRACTS_RPC_URL || '',
       deploy,
       accounts: [privateKey],
+    },
+    titan: {
+      chainId: 55004,
+      url: 'https://rpc.titan.tokamak.network',
     },
   },
   mocha: {
@@ -107,7 +102,18 @@ const config: HardhatUserConfig = {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
+      titan: 'verify',
     },
+    customChains: [
+      {
+        network: 'titan',
+        chainId: 55004,
+        urls: {
+          apiURL: 'https://explorer.titan.tokamak.network/api',
+          browserURL: 'https://explorer.titan.tokamak.network',
+        },
+      },
+    ],
   },
   dodoc: {
     runOnCompile: true,
