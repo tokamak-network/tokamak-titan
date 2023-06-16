@@ -18,7 +18,6 @@ import { StandardBridgeAdapter, ETHBridgeAdapter } from '../adapters'
 import {
   CONTRACT_ADDRESSES,
   DEFAULT_L2_CONTRACT_ADDRESSES,
-  BRIDGE_ADAPTER_DATA,
 } from './chain-constants'
 
 /**
@@ -193,7 +192,6 @@ export const getBridgeAdapters = (
           },
         }
       : {}),
-    ...(BRIDGE_ADAPTER_DATA[l2ChainId] || {}),
     ...(opts?.overrides || {}),
   }
 

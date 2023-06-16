@@ -33,7 +33,7 @@ describe('BatchCrossChainMessenger', () => {
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
-          l2ChainId: L2ChainID.OPTIMISM,
+          l2ChainId: L2ChainID.TITAN,
         })
 
         expect(messenger.l1Provider).to.equal(ethers.provider)
@@ -46,7 +46,7 @@ describe('BatchCrossChainMessenger', () => {
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
-          l2ChainId: L2ChainID.OPTIMISM,
+          l2ChainId: L2ChainID.TITAN,
         })
 
         expect(messenger.l2Provider).to.equal(ethers.provider)
@@ -59,7 +59,7 @@ describe('BatchCrossChainMessenger', () => {
           l1SignerOrProvider: 'https://localhost:8545',
           l2SignerOrProvider: ethers.provider,
           l1ChainId: L1ChainID.MAINNET,
-          l2ChainId: L2ChainID.OPTIMISM,
+          l2ChainId: L2ChainID.TITAN,
         })
 
         expect(Provider.isProvider(messenger.l1Provider)).to.be.true
@@ -72,7 +72,7 @@ describe('BatchCrossChainMessenger', () => {
           l1SignerOrProvider: ethers.provider,
           l2SignerOrProvider: 'https://localhost:8545',
           l1ChainId: L1ChainID.MAINNET,
-          l2ChainId: L2ChainID.OPTIMISM,
+          l2ChainId: L2ChainID.TITAN,
         })
 
         expect(Provider.isProvider(messenger.l2Provider)).to.be.true
@@ -86,7 +86,7 @@ describe('BatchCrossChainMessenger', () => {
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: ethers.provider,
             l1ChainId: undefined as any,
-            l2ChainId: L2ChainID.OPTIMISM,
+            l2ChainId: L2ChainID.TITAN,
           })
         }).to.throw('L1 chain ID is missing or invalid')
       })
@@ -112,7 +112,7 @@ describe('BatchCrossChainMessenger', () => {
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: 'https://localhost:8545',
             l1ChainId: L1ChainID.MAINNET,
-            l2ChainId: L2ChainID.OPTIMISM,
+            l2ChainId: L2ChainID.TITAN,
           })
 
           const addresses = CONTRACT_ADDRESSES[messenger.l2ChainId]
@@ -160,7 +160,7 @@ describe('BatchCrossChainMessenger', () => {
             l1SignerOrProvider: ethers.provider,
             l2SignerOrProvider: 'https://localhost:8545',
             l1ChainId: L1ChainID.MAINNET,
-            l2ChainId: L2ChainID.OPTIMISM,
+            l2ChainId: L2ChainID.TITAN,
             contracts: overrides,
           })
 
@@ -217,7 +217,7 @@ describe('BatchCrossChainMessenger', () => {
               contracts: overrides,
             })
 
-            const addresses = CONTRACT_ADDRESSES[L2ChainID.OPTIMISM]
+            const addresses = CONTRACT_ADDRESSES[L2ChainID.TITAN]
             for (const [contractName, contractAddress] of Object.entries(
               addresses.l1
             )) {
@@ -286,7 +286,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -477,7 +477,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -565,7 +565,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -798,7 +798,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -948,7 +948,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: ethers.provider,
         l2SignerOrProvider: ethers.provider,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l2: {
             L2CrossDomainMessenger: l2Messenger.address,
@@ -1055,7 +1055,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -1151,7 +1151,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -1226,7 +1226,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
@@ -1282,7 +1282,7 @@ describe('BatchCrossChainMessenger', () => {
         l1SignerOrProvider: l1Signer,
         l2SignerOrProvider: l2Signer,
         l1ChainId: L1ChainID.HARDHAT_LOCAL,
-        l2ChainId: L2ChainID.OPTIMISM_HARDHAT_LOCAL,
+        l2ChainId: L2ChainID.HARDHAT_LOCAL,
         contracts: {
           l1: {
             L1CrossDomainMessenger: l1Messenger.address,
