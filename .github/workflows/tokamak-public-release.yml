@@ -725,30 +725,42 @@ jobs:
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/optimism.l2geth:${{ needs.l2geth.outputs.newRelease }}
+            cd ../mainnet
+            kustomize edit set image onthertech/optimism.l2geth:${{ needs.l2geth.outputs.newRelease }}
 
       - name: Update tokamak-message-relayer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.tokamak-message-relayer:${{ needs.tokamak-message-relayer.outputs.newRelease }}
+            cd ../mainnet
             kustomize edit set image onthertech/optimism.tokamak-message-relayer:${{ needs.tokamak-message-relayer.outputs.newRelease }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/optimism.data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
+            cd ../mainnet
+            kustomize edit set image onthertech/optimism.data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+            cd ../mainnet
             kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
 
       - name: Update proxyd Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
+            cd ../mainnet
+            kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cat kustomization.yaml
+            cd ../mainnet
             cat kustomization.yaml
 
       - name: Commit and push changes
