@@ -28,7 +28,8 @@ const deployFn: DeployFunction = async (hre) => {
 
   await deployAndVerifyAndThen({
     hre,
-    name: names.unmanaged.ChugSplashDictator,
+    name: names.unmanaged.ChugSplashDictator_for_L1StandardBridge,
+    contract: 'ChugSplashDictator',
     args: [
       Proxy__OVM_L1StandardBridge.address,
       hre.deployConfig.ovmAddressManagerOwner,
