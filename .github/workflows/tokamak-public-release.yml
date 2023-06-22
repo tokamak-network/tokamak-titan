@@ -707,6 +707,7 @@ jobs:
       - data-transport-layer
       - batch-submitter-service
       - proxyd
+      - gas-oracle
     runs-on: ubuntu-latest
 
     steps:
@@ -755,6 +756,13 @@ jobs:
             kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
+
+      - name: Update gas-oracle Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            kustomize edit set image onthertech/optimism.gas-oracle:${{ needs.gas-oracle-service.outputs.newRelease }}
+            cd ../mainnet
+            kustomize edit set image onthertech/optimism.gas-oracle:${{ needs.gas-oracle-service.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |
