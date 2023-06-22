@@ -698,6 +698,11 @@ jobs:
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/optimism.proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
 
+      - name: Update proxyd Kubernetes resources
+        run: |
+            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            kustomize edit set image onthertech/optimism.gas-oracle:nightly-${{ needs.proxyd.outputs.newVersion }}
+
       - name: Show updated Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
