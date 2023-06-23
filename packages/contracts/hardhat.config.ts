@@ -48,6 +48,10 @@ const config: HardhatUserConfig = {
       chainId: 55004,
       url: 'https://rpc.titan.tokamak.network',
     },
+    titangoerli: {
+      chainId: 5050,
+      url: 'https://goerli.optimism.tokamak.network',
+    },
   },
   mocha: {
     timeout: 50000,
@@ -103,6 +107,7 @@ const config: HardhatUserConfig = {
       mainnet: process.env.ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
       titan: 'verify',
+      titangoerli: 'verify',
     },
     customChains: [
       {
@@ -111,6 +116,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://explorer.titan.tokamak.network/api',
           browserURL: 'https://explorer.titan.tokamak.network',
+        },
+      },
+      {
+        network: 'titangoerli',
+        chainId: 5050,
+        urls: {
+          apiURL: 'https://goerli.explorer.tokamak.network/api',
+          browserURL: 'https://goerli.explorer.tokamak.network',
         },
       },
     ],
