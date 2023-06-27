@@ -10,7 +10,7 @@ const deployFn: DeployFunction = async (hre) => {
     hre,
     name: names.managed.contracts.L1ERC721BridgeProxy,
     contract: 'L1ChugSplashProxy',
-    iface: 'L1StandardBridge',
+    iface: 'L1ERC721Bridge',
     args: [deployer], // admin account
   })
 }

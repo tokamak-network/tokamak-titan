@@ -27,7 +27,7 @@ export const names = {
     ChugSplashDictator_for_L1StandardBridge:
       'ChugSplashDictator_for_L1StandardBridge',
     ChugSplashDictator_for_L1ERC721Bridge:
-      'ChugSplashDictator_fro_L1ERC721Bridge',
+      'ChugSplashDictator_for_L1ERC721Bridge',
     Lib_AddressManager: 'Lib_AddressManager',
   },
 }
