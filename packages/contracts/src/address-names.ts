@@ -14,6 +14,7 @@ export const names = {
       Proxy__OVM_L1StandardBridge: 'Proxy__OVM_L1StandardBridge',
       L1CrossDomainMessengerFast: 'L1CrossDomainMessengerFast',
       Proxy__L1CrossDomainMessengerFast: 'Proxy__L1CrossDomainMessengerFast',
+      L1ERC721BridgeProxy: 'L1ERC721BridgeProxy',
     },
     accounts: {
       OVM_Sequencer: 'OVM_Sequencer',
@@ -23,7 +24,10 @@ export const names = {
   },
   unmanaged: {
     AddressDictator: 'AddressDictator',
-    ChugSplashDictator: 'ChugSplashDictator',
+    ChugSplashDictator_for_L1StandardBridge:
+      'ChugSplashDictator_for_L1StandardBridge',
+    ChugSplashDictator_for_L1ERC721Bridge:
+      'ChugSplashDictator_for_L1ERC721Bridge',
     Lib_AddressManager: 'Lib_AddressManager',
   },
 }

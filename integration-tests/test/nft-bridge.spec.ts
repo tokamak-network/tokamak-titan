@@ -4,10 +4,10 @@ import { ethers } from 'hardhat'
 import { getChainId } from '@eth-optimism/core-utils'
 import { predeploys } from '@eth-optimism/contracts'
 import Artifact__TestERC721 from '@eth-optimism/contracts-periphery/artifacts/contracts/testing/helpers/TestERC721.sol/TestERC721.json'
-import Artifact__L1ERC721Bridge from '@eth-optimism/contracts-periphery/artifacts/contracts/L1/L1ERC721Bridge.sol/L1ERC721Bridge.json'
-import Artifact__L2ERC721Bridge from '@eth-optimism/contracts-periphery/artifacts/contracts/L2/L2ERC721Bridge.sol/L2ERC721Bridge.json'
-import Artifact__OptimismMintableERC721Factory from '@eth-optimism/contracts-periphery/artifacts/contracts/universal/op-erc721/OptimismMintableERC721Factory.sol/OptimismMintableERC721Factory.json'
-import Artifact__OptimismMintableERC721 from '@eth-optimism/contracts-periphery/artifacts/contracts/universal/op-erc721/OptimismMintableERC721.sol/OptimismMintableERC721.json'
+import Artifact__L1ERC721Bridge from '@eth-optimism/contracts/artifacts/contracts/L1/messaging/L1ERC721Bridge.sol/L1ERC721Bridge.json'
+import Artifact__L2ERC721Bridge from '@eth-optimism/contracts/artifacts/contracts/L2/messaging/L2ERC721Bridge.sol/L2ERC721Bridge.json'
+import Artifact__OptimismMintableERC721Factory from '@eth-optimism/contracts/artifacts/contracts/L2/ERC721/OptimismMintableERC721Factory.sol/OptimismMintableERC721Factory.json'
+import Artifact__OptimismMintableERC721 from '@eth-optimism/contracts/artifacts/contracts/L2/ERC721/OptimismMintableERC721.sol/OptimismMintableERC721.json'
 
 /* Imports: Internal */
 import { expect } from './shared/setup'
@@ -125,6 +125,7 @@ describe('ERC721 Bridge', () => {
     const erc721CreatedEvent = receipt.events[0]
     expect(erc721CreatedEvent.event).to.be.eq('OptimismMintableERC721Created')
 
+    // L2 token
     OptimismMintableERC721 = await ethers.getContractAt(
       Artifact__OptimismMintableERC721.abi,
       erc721CreatedEvent.args.localToken
@@ -305,7 +306,7 @@ describe('ERC721 Bridge', () => {
       await withdrawalTx.wait()
       await env.relayXDomainMessages(withdrawalTx)
 
-      // The legitimate NFT on L1 is still held in the bridge.
+      // The legitimate NFT on L1 is still held in the bridge. (Not Alice)
       expect(await L1ERC721.ownerOf(TOKEN_ID)).to.equal(L1ERC721Bridge.address)
     }
   )

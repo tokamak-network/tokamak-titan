@@ -15,9 +15,9 @@ import { names } from '../src/address-names'
 const deployFn: DeployFunction = async (hre) => {
   const { deployer } = await hre.getNamedAccounts()
 
-  const ChugSplashDictator = await getContractFromArtifact(
+  const ChugSplashDictator_for_L1StandardBridge = await getContractFromArtifact(
     hre,
-    names.unmanaged.ChugSplashDictator,
+    names.unmanaged.ChugSplashDictator_for_L1StandardBridge,
     {
       signerOrProvider: deployer,
     }
@@ -35,7 +35,7 @@ const deployFn: DeployFunction = async (hre) => {
   // Make sure the dictator has been initialized with the correct bridge code.
   const bridgeArtifact = getContractDefinition('L1StandardBridge')
   const bridgeCode = bridgeArtifact.deployedBytecode
-  const codeHash = await ChugSplashDictator.codeHash()
+  const codeHash = await ChugSplashDictator_for_L1StandardBridge.codeHash()
   if (ethers.utils.keccak256(bridgeCode) !== codeHash) {
     throw new Error('code hash does not match actual bridge code')
   }
@@ -45,12 +45,16 @@ const deployFn: DeployFunction = async (hre) => {
   ).callStatic.getOwner({
     from: ethers.constants.AddressZero,
   })
-  const finalOwner = await ChugSplashDictator.finalOwner()
+  const finalOwner = await ChugSplashDictator_for_L1StandardBridge.finalOwner()
 
-  const messengerSlotKey = await ChugSplashDictator.messengerSlotKey()
-  const messengerSlotVal = await ChugSplashDictator.messengerSlotVal()
-  const bridgeSlotKey = await ChugSplashDictator.bridgeSlotKey()
-  const bridgeSlotVal = await ChugSplashDictator.bridgeSlotVal()
+  const messengerSlotKey =
+    await ChugSplashDictator_for_L1StandardBridge.messengerSlotKey()
+  const messengerSlotVal =
+    await ChugSplashDictator_for_L1StandardBridge.messengerSlotVal()
+  const bridgeSlotKey =
+    await ChugSplashDictator_for_L1StandardBridge.bridgeSlotKey()
+  const bridgeSlotVal =
+    await ChugSplashDictator_for_L1StandardBridge.bridgeSlotVal()
 
   console.log(`
     The ChugSplashDictator contract (glory to Arstotzka) has been deployed.
@@ -79,7 +83,7 @@ const deployFn: DeployFunction = async (hre) => {
         to the ChugSplashDictator contract located at the following address:
 
         TRANSFER OWNERSHIP TO THE FOLLOWING ADDRESS ONLY:
-        >>>>> (${ChugSplashDictator.address}) <<<<<
+        >>>>> (${ChugSplashDictator_for_L1StandardBridge.address}) <<<<<
 
     (4) Wait for the deploy process to continue.
   `)
@@ -92,7 +96,7 @@ const deployFn: DeployFunction = async (hre) => {
   ) {
     const owner = await hre.ethers.getSigner(currentOwner)
     await Proxy__OVM_L1StandardBridge.connect(owner).setOwner(
-      ChugSplashDictator.address
+      ChugSplashDictator_for_L1StandardBridge.address
     )
   }
 
@@ -105,7 +109,7 @@ const deployFn: DeployFunction = async (hre) => {
         ).callStatic.getOwner({
           from: ethers.constants.AddressZero,
         }),
-        ChugSplashDictator.address
+        ChugSplashDictator_for_L1StandardBridge.address
       )
     },
     30000,
@@ -117,12 +121,16 @@ const deployFn: DeployFunction = async (hre) => {
   console.log('--- L1StandardBridge Bytecode ---')
   console.log(bridgeCode)
   console.log('---')
-  const res = await ChugSplashDictator.doActions(bridgeCode)
+  const res = await ChugSplashDictator_for_L1StandardBridge.doActions(
+    bridgeCode
+  )
   console.log(`Check transaction was failed: ${res.hash}`)
   console.log(
     'If the tx was failed, please execute doActions method of ChugSplashDictator.'
   )
-  console.log(`ChugSplashDictator.address: ${ChugSplashDictator.address}`)
+  console.log(
+    `ChugSplashDictator_for_L1StandardBridge.address: ${ChugSplashDictator_for_L1StandardBridge.address}`
+  )
 
   console.log(`Confirming that owner address was correctly set...`)
   await awaitCondition(
