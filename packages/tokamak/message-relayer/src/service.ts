@@ -15,7 +15,7 @@ import {
   NumberLike,
   DEPOSIT_CONFIRMATION_BLOCKS,
   CHAIN_BLOCK_TIMES,
-} from '@tokamak-optimism/sdk'
+} from '@tokamak-network/titan-sdk'
 import { Provider } from '@ethersproject/abstract-provider'
 
 type MessageRelayerOptions = {
