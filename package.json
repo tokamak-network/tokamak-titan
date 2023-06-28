@@ -1,7 +1,7 @@
 {
-  "name": "tokamak-optimism",
+  "name": "tokamak-titan",
   "version": "0.1.8",
-  "author": "Tokamak Optimism",
+  "author": "Tokamak Titan",
   "license": "MIT",
   "workspaces": {
     "packages": [

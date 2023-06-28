@@ -22,7 +22,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -40,10 +40,10 @@ jobs:
           file: ./l2geth/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.l2geth:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.l2geth:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.l2geth:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.l2geth:latest
+            onthertech/titan-l2geth:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-l2geth:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-l2geth:latest
 
   gas-oracle:
     name: Publish Gas Oracle
@@ -61,7 +61,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -79,10 +79,10 @@ jobs:
           file: ./gas-oracle/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.gas-oracle:latest
+            onthertech/titan-gas-oracle:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-gas-oracle:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-gas-oracle:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-gas-oracle:latest
 
   hardhat-node:
     name: Publish Hardhat Node
@@ -100,7 +100,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -118,10 +118,10 @@ jobs:
           file: ./ops/docker/hardhat/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.hardhat-node:latest
+            onthertech/titan-hardhat:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-hardhat:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-hardhat:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-hardhat:latest
 
   message-relayer:
     name: Publish Message Relayer
@@ -142,7 +142,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -163,7 +163,7 @@ jobs:
             onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
             onthertech/optimism.message-relayer:latest
 
-  tokamak-message-relayer:
+  titan-message-relayer:
     name: Publish Tokamak Message Relayer
     runs-on: ubuntu-latest
     outputs:
@@ -182,7 +182,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -195,13 +195,13 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: tokamak-message-relayer
+          target: titan-message-relayer
           push: true
           tags: |
-            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.tokamak-message-relayer:latest
+            onthertech/titan-message-relayer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-message-relayer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-message-relayer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-message-relayer:latest
 
   fault-detector:
     name: Publish Fault Detector
@@ -222,7 +222,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -238,10 +238,10 @@ jobs:
           target: fault-detector
           push: true
           tags: |
-            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.fault-detector:latest
+            onthertech/titan-fault-detector:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-fault-detector:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-fault-detector:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-fault-detector:latest
 
   drippie-mon:
     name: Publish Drippie Monitor
@@ -262,7 +262,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -278,10 +278,10 @@ jobs:
           target: drippie-mon
           push: true
           tags: |
-            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.drippie-mon:latest
+            onthertech/titan-drippie-mon:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-drippie-mon:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-drippie-mon:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-drippie-mon:latest
 
   data-transport-layer:
     name: Publish Data Transport Layer
@@ -302,7 +302,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -318,10 +318,10 @@ jobs:
           target: data-transport-layer
           push: true
           tags: |
-            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.data-transport-layer:latest
+            onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-data-transport-layer:latest
 
   contracts:
     name: Publish Deployer
@@ -342,7 +342,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/contracts/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -358,10 +358,10 @@ jobs:
           target: deployer
           push: true
           tags: |
-            onthertech/optimism.deployer:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.deployer:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.deployer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.deployer:latest
+            onthertech/titan-deployer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-deployer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-deployer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-deployer:latest
 
   integration_tests:
     name: Publish Integration tests
@@ -382,7 +382,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -398,10 +398,10 @@ jobs:
           target: integration-tests
           push: true
           tags: |
-            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.integration-tests:latest
+            onthertech/titan-integration-tests:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-integration-tests:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-integration-tests:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-integration-tests:latest
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
@@ -422,7 +422,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -438,10 +438,10 @@ jobs:
           target: replica-healthcheck
           push: true
           tags: |
-            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.replica-healthcheck:latest
+            onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-replica-healthcheck:latest
 
   proxyd:
     name: Publish proxyd
@@ -462,7 +462,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Login to Docker Hub
@@ -478,10 +478,10 @@ jobs:
           file: ./proxyd/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.proxyd:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.proxyd:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.proxyd:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.proxyd:latest
+            onthertech/titan-proxyd:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-proxyd:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-proxyd:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-proxyd:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -511,7 +511,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Build and push
@@ -521,10 +521,10 @@ jobs:
           file: ./op-exporter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.op-exporter:latest
+            onthertech/titan-op-exporter:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-op-exporter:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-op-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-op-exporter:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -554,7 +554,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Build and push
@@ -564,10 +564,10 @@ jobs:
           file: ./l2geth-exporter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.l2geth-exporter:latest
+            onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-l2geth-exporter:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -592,7 +592,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Login to Docker Hub
@@ -608,10 +608,10 @@ jobs:
           file: ./batch-submitter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.batch-submitter-service:latest
+            onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-batch-submitter-service:latest
 
   indexer:
     name: Publish indexer
@@ -637,7 +637,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Build and push
@@ -647,10 +647,10 @@ jobs:
           file: ./indexer/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.indexer:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.indexer:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.indexer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.indexer:latest
+            onthertech/titan-indexer:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-indexer:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-indexer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-indexer:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -680,7 +680,7 @@ jobs:
         run: |
           echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
           echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
 
       - name: Build and push
@@ -690,10 +690,10 @@ jobs:
           file: ./teleportr/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.teleportr:${{ steps.extractver.outputs.RELEASE }}
-            onthertech/optimism.teleportr:${{ steps.extractver.outputs.VERSION }}
-            onthertech/optimism.teleportr:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.teleportr:latest
+            onthertech/titan-teleportr:${{ steps.extractver.outputs.RELEASE }}
+            onthertech/titan-teleportr:${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-teleportr:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-teleportr:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -703,7 +703,7 @@ jobs:
     name: Update image version in kustomize manifest file
     needs:
       - l2geth
-      - tokamak-message-relayer
+      - titan-message-relayer
       - data-transport-layer
       - batch-submitter-service
       - proxyd
@@ -725,44 +725,44 @@ jobs:
       - name: Update l2geth Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.l2geth:${{ needs.l2geth.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-l2geth:${{ needs.l2geth.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.l2geth:${{ needs.l2geth.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-l2geth:${{ needs.l2geth.outputs.newRelease }}
 
-      - name: Update tokamak-message-relayer Kubernetes resources
+      - name: Update titan-message-relayer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.tokamak-message-relayer:${{ needs.tokamak-message-relayer.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-message-relayer:${{ needs.titan-message-relayer.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.tokamak-message-relayer:${{ needs.tokamak-message-relayer.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-message-relayer:${{ needs.titan-message-relayer.outputs.newRelease }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
 
       - name: Update proxyd Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-proxyd:${{ needs.proxyd.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.proxyd:${{ needs.proxyd.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-proxyd:${{ needs.proxyd.outputs.newRelease }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
-            kustomize edit set image onthertech/optimism.gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
             cd ../mainnet
-            kustomize edit set image onthertech/optimism.gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
+            kustomize edit set image onthertech/titan-gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |

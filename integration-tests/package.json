@@ -33,7 +33,7 @@
     "@eth-optimism/contracts-periphery": "^1.0.1",
     "@eth-optimism/core-utils": "0.10.1",
     "@eth-optimism/sdk": "1.6.6",
-    "@tokamak-optimism/sdk": "0.0.1",
+    "@tokamak-network/titan-sdk": "0.0.2",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",
     "@ethersproject/transactions": "^5.7.0",

@@ -12,7 +12,7 @@ import {
   ETHBridgeAdapter,
   BridgeAdapterData,
 } from '@eth-optimism/sdk'
-import { BatchCrossChainMessenger, MessageStatus } from '@tokamak-optimism/sdk'
+import { BatchCrossChainMessenger, MessageStatus } from '@tokamak-network/titan-sdk'
 import { predeploys } from '@eth-optimism/contracts'
 
 /* Imports: Internal */

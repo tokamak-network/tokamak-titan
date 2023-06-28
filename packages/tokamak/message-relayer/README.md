@@ -1,4 +1,4 @@
-# @tokamak-optimism/message-relayer
+# @tokamak-network/titan-message-relayer
 
 `message-relayer` is a service that automatically finalizes ("relays") messages sent from Tokamak Network to Ethereum.
 It buffers messages for a certain amount of time and relays them from layer 2 to layer 1 in batches when a certain amount of messages are gathered. We can expect to save the transaction costs and reduce the network load.
@@ -9,8 +9,8 @@ The message relayer uses L1CrossDomainMessenger to relay messages in batches.
 Clone, install, and build:
 
 ```
-git clone https://github.com/tokamak-network/tokamak-optimism-v2.git
-cd tokamak-optimism-v2
+git clone https://github.com/tokamak-network/tokamak-titan.git
+cd tokamak-titan
 yarn install
 yarn build
 ```
@@ -20,8 +20,8 @@ yarn build
 **This is the same as running it in your local development environment.**
 
 ```
-git clone https://github.com/tokamak-network/tokamak-optimism-v2.git
-cd tokamak-optimism-v2/ops
+git clone https://github.com/tokamak-network/tokamak-titan.git
+cd tokamak-titan/ops
 make up
 ```
 

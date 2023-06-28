@@ -20,7 +20,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -38,9 +38,9 @@ jobs:
           file: ./l2geth/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.l2geth:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.l2geth:nightly
-            onthertech/optimism.l2geth:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-l2geth:nightly
+            onthertech/titan-l2geth:nightly-${{ steps.extractver.outputs.VERSION }}
 
   gas-oracle:
     name: Publish Gas Oracle
@@ -56,7 +56,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -74,9 +74,9 @@ jobs:
           file: ./gas-oracle/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.gas-oracle:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.gas-oracle:nightly
-            onthertech/optimism.gas-oracle:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-gas-oracle:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-gas-oracle:nightly
+            onthertech/titan-gas-oracle:nightly-${{ steps.extractver.outputs.VERSION }}
 
   hardhat-node:
     name: Publish Hardhat Node
@@ -92,7 +92,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -110,9 +110,9 @@ jobs:
           file: ./ops/docker/hardhat/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.hardhat-node:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.hardhat-node:nightly
-            onthertech/optimism.hardhat-node:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-hardhat:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-hardhat:nightly
+            onthertech/titan-hardhat:nightly-${{ steps.extractver.outputs.VERSION }}
 
   message-relayer:
     name: Publish Message Relayer
@@ -131,7 +131,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -151,8 +151,8 @@ jobs:
             onthertech/optimism.message-relayer:nightly
             onthertech/optimism.message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
 
-  tokamak-message-relayer:
-    name: Publish Tokamak Message Relayer
+  titan-message-relayer:
+    name: Publish Titan Message Relayer
     runs-on: ubuntu-latest
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -168,7 +168,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -181,12 +181,12 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: tokamak-message-relayer
+          target: titan-message-relayer
           push: true
           tags: |
-            onthertech/optimism.tokamak-message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.tokamak-message-relayer:nightly
-            onthertech/optimism.tokamak-message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-message-relayer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-message-relayer:nightly
+            onthertech/titan-message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   fault-detector:
     name: Publish Fault Detector
@@ -205,7 +205,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -221,9 +221,9 @@ jobs:
           target: fault-detector
           push: true
           tags: |
-            onthertech/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.fault-detector:nightly
-            onthertech/optimism.fault-detector:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-fault-detector:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-fault-detector:nightly
+            onthertech/titan-fault-detector:nightly-${{ steps.extractver.outputs.VERSION }}
 
   drippie-mon:
     name: Publish Drippie Monitor
@@ -242,7 +242,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -258,9 +258,9 @@ jobs:
           target: drippie-mon
           push: true
           tags: |
-            onthertech/optimism.drippie-mon:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.drippie-mon:nightly
-            onthertech/optimism.drippie-mon:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-drippie-mon:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-drippie-mon:nightly
+            onthertech/titan-drippie-mon:nightly-${{ steps.extractver.outputs.VERSION }}
 
   data-transport-layer:
     name: Publish Data Transport Layer
@@ -279,7 +279,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -295,9 +295,9 @@ jobs:
           target: data-transport-layer
           push: true
           tags: |
-            onthertech/optimism.data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.data-transport-layer:nightly
-            onthertech/optimism.data-transport-layer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-data-transport-layer:nightly
+            onthertech/titan-data-transport-layer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   contracts:
     name: Publish Deployer
@@ -316,7 +316,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/contracts/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -332,9 +332,9 @@ jobs:
           target: deployer
           push: true
           tags: |
-            onthertech/optimism.deployer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.deployer:nightly
-            onthertech/optimism.deployer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-deployer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-deployer:nightly
+            onthertech/titan-deployer:nightly-${{ steps.extractver.outputs.VERSION }}
 
   integration_tests:
     name: Publish Integration tests
@@ -353,7 +353,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -369,9 +369,9 @@ jobs:
           target: integration-tests
           push: true
           tags: |
-            onthertech/optimism.integration-tests:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.integration-tests:nightly
-            onthertech/optimism.integration-tests:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-integration-tests:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-integration-tests:nightly
+            onthertech/titan-integration-tests:nightly-${{ steps.extractver.outputs.VERSION }}
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
@@ -390,7 +390,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -406,9 +406,9 @@ jobs:
           target: replica-healthcheck
           push: true
           tags: |
-            onthertech/optimism.replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.replica-healthcheck:nightly
-            onthertech/optimism.replica-healthcheck:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-replica-healthcheck:nightly
+            onthertech/titan-replica-healthcheck:nightly-${{ steps.extractver.outputs.VERSION }}
 
   proxyd:
     name: Publish proxyd
@@ -434,7 +434,7 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -443,9 +443,9 @@ jobs:
           file: ./proxyd/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.proxyd:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.proxyd:nightly
-            onthertech/optimism.proxyd:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-proxyd:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-proxyd:nightly
+            onthertech/titan-proxyd:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -475,7 +475,7 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -484,9 +484,9 @@ jobs:
           file: ./op-exporter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.op-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.op-exporter:nightly
-            onthertech/optimism.op-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-op-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-op-exporter:nightly
+            onthertech/titan-op-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -516,7 +516,7 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -525,9 +525,9 @@ jobs:
           file: ./l2geth-exporter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.l2geth-exporter:nightly
-            onthertech/optimism.l2geth-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-l2geth-exporter:nightly
+            onthertech/titan-l2geth-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -550,7 +550,7 @@ jobs:
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -565,9 +565,9 @@ jobs:
           file: ./batch-submitter/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.batch-submitter-service:nightly
-            onthertech/optimism.batch-submitter-service:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-batch-submitter-service:nightly
+            onthertech/titan-batch-submitter-service:nightly-${{ steps.extractver.outputs.VERSION }}
 
   indexer:
     name: Publish indexer
@@ -593,7 +593,7 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -602,9 +602,9 @@ jobs:
           file: ./indexer/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.indexer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.indexer:nightly
-            onthertech/optimism.indexer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-indexer:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-indexer:nightly
+            onthertech/titan-indexer:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -634,7 +634,7 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::"$GITHUB_SHA"
+          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -643,9 +643,9 @@ jobs:
           file: ./teleportr/Dockerfile
           push: true
           tags: |
-            onthertech/optimism.teleportr:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.teleportr:nightly
-            onthertech/optimism.teleportr:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-teleportr:${{ steps.extractver.outputs.GITSHA }}
+            onthertech/titan-teleportr:nightly
+            onthertech/titan-teleportr:nightly-${{ steps.extractver.outputs.VERSION }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -655,7 +655,7 @@ jobs:
     name: Update image version in kustomize manifest file
     needs:
       - l2geth
-      - tokamak-message-relayer
+      - titan-message-relayer
       - data-transport-layer
       - batch-submitter-service
       - proxyd
@@ -677,32 +677,32 @@ jobs:
       - name: Update l2geth Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
 
-      - name: Update tokamak-message-relayer Kubernetes resources
+      - name: Update titan-message-relayer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.tokamak-message-relayer:nightly-${{ needs.tokamak-message-relayer.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
 
       - name: Update proxyd Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
             cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/optimism.gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
+            kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
 
       - name: Show updated Kubernetes resources
         run: |

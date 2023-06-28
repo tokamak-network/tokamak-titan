@@ -97,7 +97,7 @@ COPY ./ops/scripts/relayer.sh ./
 CMD ["npm", "run", "start"]
 
 
-FROM base as tokamak-message-relayer
+FROM base as titan-message-relayer
 WORKDIR /opt/optimism/packages/tokamak/message-relayer
 COPY ./ops/scripts/relayer.sh ./ops/scripts/relayer-fast.sh ./
 CMD ["npm", "run", "start"]
