@@ -20,6 +20,13 @@ curl \
     --retry-connrefused \
     --retry $RETRIES \
     --retry-delay 1 \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "jsonrpc":"2.0",
+      "method":"eth_blockNumber",
+      "params":[],
+      "id":83
+    }' \
     $MESSAGE_RELAYER__L2_RPC_PROVIDER
 
 # go

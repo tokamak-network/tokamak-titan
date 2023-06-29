@@ -21,6 +21,13 @@ curl --fail \
     --retry $RETRIES \
     --retry-delay 1 \
     --output /dev/null \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "jsonrpc":"2.0",
+      "method":"eth_blockNumber",
+      "params":[],
+      "id":83
+    }' \
     $L2_ETH_RPC
 
 # go
