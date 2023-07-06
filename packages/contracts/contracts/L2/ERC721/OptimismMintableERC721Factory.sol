@@ -19,12 +19,12 @@ contract OptimismMintableERC721Factory {
     /**
      * @notice Address of the ERC721 bridge on this network.
      */
-    address public immutable bridge;
+    address public bridge;
 
     /**
      * @notice Chain ID for the remote network.
      */
-    uint256 public immutable remoteChainId;
+    uint256 public remoteChainId;
 
     /**
      * @notice Tracks addresses created by this factory.

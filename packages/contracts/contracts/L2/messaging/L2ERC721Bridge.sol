@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import {
-    ERC721Bridge
-} from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/ERC721Bridge.sol";
+import { ERC721Bridge } from "../../universal/ERC721Bridge.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { L1ERC721Bridge } from "../../L1/messaging/L1ERC721Bridge.sol";
 import { IOptimismMintableERC721 } from "../ERC721/IOptimismMintableERC721.sol";
@@ -21,7 +19,6 @@ import { IOptimismMintableERC721 } from "../ERC721/IOptimismMintableERC721.sol";
  */
 contract L2ERC721Bridge is ERC721Bridge {
     /**
-     *
      * @param _messenger   Address of the CrossDomainMessenger on this network.
      * @param _otherBridge Address of the ERC721 bridge on the other network.
      */
@@ -82,12 +79,12 @@ contract L2ERC721Bridge is ERC721Bridge {
         uint32 _minGasLimit,
         bytes calldata _extraData
     ) internal override {
-        require(_remoteToken != address(0), "L2ERC721Bridge: remote token cannot be address(0)");
+        require(_remoteToken != address(0), "ERC721Bridge: remote token cannot be address(0)");
 
         // Check that the withdrawal is being initiated by the NFT owner
         require(
             _from == IOptimismMintableERC721(_localToken).ownerOf(_tokenId),
-            "L2ERC721Bridge: Withdrawal is not being initiated by NFT owner"
+            "Withdrawal is not being initiated by NFT owner"
         );
 
         // Construct calldata for l1ERC721Bridge.finalizeBridgeERC721(_to, _tokenId)

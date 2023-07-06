@@ -96,6 +96,23 @@ Completes an ERC721 bridge from the other domain and sends the ERC721 token to t
 | _tokenId | uint256 | ID of the token being deposited.
 | _extraData | bytes | Optional data to forward to L2. Data supplied here will not be used to                     execute any code on L2 and is only emitted as extra data for the                     convenience of off-chain tooling.
 
+### initialize
+
+```solidity
+function initialize(address _messenger, address _otherBridge) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messenger | address | L1 Messenger address being used for cross-chain communications.
+| _otherBridge | address | L2 ERC721 bridge address.
+
 ### messenger
 
 ```solidity

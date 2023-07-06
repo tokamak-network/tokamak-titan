@@ -30,7 +30,7 @@ Current message version identifier.
 ### MIN_GAS_CALLDATA_OVERHEAD
 
 ```solidity
-function MIN_GAS_CALLDATA_OVERHEAD() external view returns (uint32)
+function MIN_GAS_CALLDATA_OVERHEAD() external view returns (uint64)
 ```
 
 Extra gas added to base gas for each byte of calldata in a message.
@@ -42,12 +42,12 @@ Extra gas added to base gas for each byte of calldata in a message.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint64 | undefined
 
 ### MIN_GAS_CONSTANT_OVERHEAD
 
 ```solidity
-function MIN_GAS_CONSTANT_OVERHEAD() external view returns (uint32)
+function MIN_GAS_CONSTANT_OVERHEAD() external view returns (uint64)
 ```
 
 Constant overhead added to the base gas for a message.
@@ -59,12 +59,12 @@ Constant overhead added to the base gas for a message.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint64 | undefined
 
 ### MIN_GAS_DYNAMIC_OVERHEAD_DENOMINATOR
 
 ```solidity
-function MIN_GAS_DYNAMIC_OVERHEAD_DENOMINATOR() external view returns (uint32)
+function MIN_GAS_DYNAMIC_OVERHEAD_DENOMINATOR() external view returns (uint64)
 ```
 
 Denominator for dynamic overhead added to the base gas for a message.
@@ -76,12 +76,12 @@ Denominator for dynamic overhead added to the base gas for a message.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint64 | undefined
 
 ### MIN_GAS_DYNAMIC_OVERHEAD_NUMERATOR
 
 ```solidity
-function MIN_GAS_DYNAMIC_OVERHEAD_NUMERATOR() external view returns (uint32)
+function MIN_GAS_DYNAMIC_OVERHEAD_NUMERATOR() external view returns (uint64)
 ```
 
 Numerator for dynamic overhead added to the base gas for a message.
@@ -93,12 +93,12 @@ Numerator for dynamic overhead added to the base gas for a message.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint64 | undefined
 
 ### baseGas
 
 ```solidity
-function baseGas(bytes _message, uint32 _minGasLimit) external pure returns (uint32)
+function baseGas(bytes _message, uint32 _minGasLimit) external pure returns (uint64)
 ```
 
 Computes the amount of gas required to guarantee that a given message will be         received on the other chain without running out of gas. Guaranteeing that a message         will not run out of gas is important because this ensures that a message can always         be replayed on the other chain if it fails to execute completely.
@@ -116,7 +116,7 @@ Computes the amount of gas required to guarantee that a given message will be   
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | Amount of gas required to guarantee message receipt.
+| _0 | uint64 | Amount of gas required to guarantee message receipt.
 
 ### messageNonce
 
