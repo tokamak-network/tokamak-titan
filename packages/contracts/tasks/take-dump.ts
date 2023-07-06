@@ -83,6 +83,19 @@ task('take-dump').setAction(async ({}, hre) => {
       // Set the messageNonce to a high value to avoid overwriting old sent messages.
       messageNonce: 100000,
     },
+    L2ERC721Bridge: {
+      messenger: predeploys.L2CrossDomainMessenger,
+      otherBridge: (
+        await getContractFromArtifact(
+          hre,
+          names.managed.contracts.L1ERC721BridgeProxy
+        )
+      ).address,
+    },
+    OptimismMintableERC721Factory: {
+      bridge: predeploys.L2ERC721Bridge,
+      remoteChainId: await hre.getChainId(),
+    },
     WETH9: {
       name: 'Wrapped Ether',
       symbol: 'WETH',
