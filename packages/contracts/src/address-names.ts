@@ -14,6 +14,7 @@ export const names = {
       Proxy__OVM_L1StandardBridge: 'Proxy__OVM_L1StandardBridge',
       L1CrossDomainMessengerFast: 'L1CrossDomainMessengerFast',
       Proxy__L1CrossDomainMessengerFast: 'Proxy__L1CrossDomainMessengerFast',
+      L1ERC721Bridge: 'L1ERC721Bridge',
       L1ERC721BridgeProxy: 'L1ERC721BridgeProxy',
     },
     accounts: {
