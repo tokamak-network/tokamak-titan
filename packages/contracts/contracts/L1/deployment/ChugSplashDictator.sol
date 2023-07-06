@@ -6,7 +6,8 @@ import { iL1ChugSplashDeployer } from "../../chugsplash/interfaces/iL1ChugSplash
 
 /**
  * @title ChugSplashDictator
- * @dev Like the AddressDictator, but specifically for the Proxy__OVM_L1StandardBridge. We're
+ * @dev Like the AddressDictator, but specifically for the
+        Proxy__OVM_L1StandardBridge and L1ERC721BridgeProxy. We're
  *      working on a generalized version of this but this is good enough for the moment.
  */
 contract ChugSplashDictator is iL1ChugSplashDeployer {

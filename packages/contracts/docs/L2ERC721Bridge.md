@@ -72,13 +72,30 @@ Completes an ERC721 bridge from the other domain and sends the ERC721 token to t
 | _tokenId | uint256 | ID of the token being deposited.
 | _extraData | bytes | Optional data to forward to L1. Data supplied here will not be used to                     execute any code on L1 and is only emitted as extra data for the                     convenience of off-chain tooling.
 
+### initialize
+
+```solidity
+function initialize(address _messenger, address _otherBridge) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _messenger | address | L1 Messenger address being used for cross-chain communications.
+| _otherBridge | address | L2 ERC 721 bridge address.
+
 ### messenger
 
 ```solidity
-function messenger() external view returns (contract CrossDomainMessenger)
+function messenger() external view returns (address)
 ```
 
-Messenger contract on this domain.
+
 
 
 
@@ -87,7 +104,7 @@ Messenger contract on this domain.
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract CrossDomainMessenger | undefined
+| _0 | address | undefined
 
 ### otherBridge
 
@@ -95,7 +112,7 @@ Messenger contract on this domain.
 function otherBridge() external view returns (address)
 ```
 
-Address of the bridge on the other network.
+
 
 
 

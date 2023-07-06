@@ -58,7 +58,6 @@
   },
   "dependencies": {
     "@eth-optimism/core-utils": "0.10.1",
-    "@eth-optimism/contracts-periphery": "1.0.1",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/abstract-signer": "^5.7.0"
   },

@@ -6,7 +6,7 @@
 
 
 
-*Like the AddressDictator, but specifically for the Proxy__OVM_L1StandardBridge. We&#39;re      working on a generalized version of this but this is good enough for the moment.*
+*Like the AddressDictator, but specifically for the Proxy__OVM_L1StandardBridge and L1ERC721BridgeProxy. We&#39;re      working on a generalized version of this but this is good enough for the moment.*
 
 ## Methods
 
