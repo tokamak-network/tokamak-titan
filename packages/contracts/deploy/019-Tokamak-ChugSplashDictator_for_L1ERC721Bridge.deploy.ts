@@ -31,9 +31,9 @@ const deployFn: DeployFunction = async (hre) => {
     name: names.unmanaged.ChugSplashDictator_for_L1ERC721Bridge,
     contract: 'ChugSplashDictator',
     args: [
-      L1ERC721BridgeProxy.address,
-      hre.deployConfig.ovmAddressManagerOwner,
-      ethers.utils.keccak256(bridgeCode),
+      L1ERC721BridgeProxy.address, // target
+      hre.deployConfig.ovmAddressManagerOwner, // final owner
+      ethers.utils.keccak256(bridgeCode), // codehash
       ethers.utils.hexZeroPad('0x00', 32),
       ethers.utils.hexZeroPad(Proxy__OVM_L1CrossDomainMessenger.address, 32),
       ethers.utils.hexZeroPad('0x01', 32),

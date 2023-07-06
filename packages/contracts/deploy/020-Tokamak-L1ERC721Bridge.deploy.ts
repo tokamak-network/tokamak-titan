@@ -16,17 +16,17 @@ import { predeploys } from '../src/predeploys'
 const deployFn: DeployFunction = async (hre) => {
   const { deployer } = await hre.getNamedAccounts()
 
+  const Proxy__OVM_L1CrossDomainMessenger = await getContractFromArtifact(
+    hre,
+    names.managed.contracts.Proxy__OVM_L1CrossDomainMessenger
+  )
+
   const ChugSplashDictator_for_L1ERC721Bridge = await getContractFromArtifact(
     hre,
     names.unmanaged.ChugSplashDictator_for_L1ERC721Bridge,
     {
       signerOrProvider: deployer,
     }
-  )
-
-  const Proxy__OVM_L1CrossDomainMessenger = await getContractFromArtifact(
-    hre,
-    names.managed.contracts.Proxy__OVM_L1CrossDomainMessenger
   )
 
   const L1ERC721BridgeProxy = await getContractFromArtifact(
