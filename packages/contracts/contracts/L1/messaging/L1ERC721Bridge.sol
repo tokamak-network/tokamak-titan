@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import {
-    ERC721Bridge
-} from "@eth-optimism/contracts-periphery/contracts/universal/op-erc721/ERC721Bridge.sol";
+import { ERC721Bridge } from "../../universal/ERC721Bridge.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { L2ERC721Bridge } from "../../L2/messaging/L2ERC721Bridge.sol";
+import {
+    CrossDomainMessenger
+} from "@eth-optimism/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol";
 
 /**
  * @title L1ERC721Bridge
@@ -21,11 +22,28 @@ contract L1ERC721Bridge is ERC721Bridge {
     mapping(address => mapping(address => mapping(uint256 => bool))) public deposits;
 
     /**
-     *
      * @param _messenger   Address of the CrossDomainMessenger on this network.
      * @param _otherBridge Address of the ERC721 bridge on the other network.
      */
     constructor(address _messenger, address _otherBridge) ERC721Bridge(_messenger, _otherBridge) {}
+
+    /******************
+     * Initialization *
+     ******************/
+
+    /**
+     * @param _messenger L1 Messenger address being used for cross-chain communications.
+     * @param _otherBridge L2 ERC721 bridge address.
+     */
+    // slither-disable-next-line external-function
+    function initialize(address _messenger, address _otherBridge) public {
+        messenger = CrossDomainMessenger(_messenger);
+        otherBridge = _otherBridge;
+    }
+
+    /*************************
+     * Cross-chain Functions *
+     *************************/
 
     /**
      * @notice Completes an ERC721 bridge from the other domain and sends the ERC721 token to the
@@ -80,11 +98,10 @@ contract L1ERC721Bridge is ERC721Bridge {
         uint32 _minGasLimit,
         bytes calldata _extraData
     ) internal override {
-        require(_remoteToken != address(0), "L1ERC721Bridge: remote token cannot be address(0)");
+        require(_remoteToken != address(0), "ERC721Bridge: remote token cannot be address(0)");
 
         // Construct calldata for _l2Token.finalizeBridgeERC721(_to, _tokenId)
         bytes memory message = abi.encodeWithSelector(
-            // target selector
             L2ERC721Bridge.finalizeBridgeERC721.selector,
             _remoteToken,
             _localToken,

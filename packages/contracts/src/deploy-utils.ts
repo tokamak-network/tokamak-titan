@@ -1,4 +1,4 @@
-import { ethers, Contract } from 'ethers'
+import { ethers, Contract, utils } from 'ethers'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { sleep, awaitCondition, getChainId } from '@eth-optimism/core-utils'
@@ -261,6 +261,23 @@ export const getContractFromArtifact = async (
       signerOrProvider
     ),
   })
+}
+
+export const validateERC721Bridge = async (hre, address: string, expected) => {
+  const L1ERC721Bridge = await hre.ethers.getContractAt('ERC721Bridge', address)
+
+  const messenger = await L1ERC721Bridge.messenger()
+  const otherBridge = await L1ERC721Bridge.otherBridge()
+
+  if (utils.getAddress(messenger) !== utils.getAddress(expected.messenger)) {
+    throw new Error(`messenger mismatch`)
+  }
+
+  if (
+    utils.getAddress(otherBridge) !== utils.getAddress(expected.otherBridge)
+  ) {
+    throw new Error(`otherBridge mismatch`)
+  }
 }
 
 export const isHardhatNode = async (hre) => {

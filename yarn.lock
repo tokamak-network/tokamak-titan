@@ -633,6 +633,17 @@
     ethers "^5.7.0"
     hardhat "^2.9.6"
 
+"@eth-optimism/contracts-bedrock@^0.8.0":
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts-bedrock/-/contracts-bedrock-0.8.3.tgz#a73302b57a61d9516abf80c136bf8298327178d5"
+  integrity sha512-GGe09aHb0ucyh9u1+xMxVs9HUPyAa4ojVARjXztAdGmliash4Kmn8o95qmCM7eQeaMMdVYKKdVk21lqekIhZ2w==
+  dependencies:
+    "@eth-optimism/core-utils" "^0.10.1"
+    "@openzeppelin/contracts" "4.7.3"
+    "@openzeppelin/contracts-upgradeable" "4.7.3"
+    ethers "^5.7.0"
+    hardhat "^2.9.6"
+
 "@eth-optimism/contracts-periphery@1.0.1", "@eth-optimism/contracts-periphery@^1.0.1":
   version "1.0.1"
   resolved "https://registry.npmjs.org/@eth-optimism/contracts-periphery/-/contracts-periphery-1.0.1.tgz"
@@ -2877,6 +2888,10 @@
   integrity sha512-IM2rwyk9SHxnifHnoCKmB1K1su/d1BvF5C0zspCWH8rVrrNpS1NzLTjisDNJmbM69/cWcEX0vfk449LuTsQVaw==
   dependencies:
     squirrelly "^8.0.8"
+
+"@rari-capital/solmate@https://github.com/rari-capital/solmate.git#8f9b23f8838670afda0fd8983f2c41e8037ae6bc":
+  version "7.0.0-alpha.3"
+  resolved "https://github.com/rari-capital/solmate.git#8f9b23f8838670afda0fd8983f2c41e8037ae6bc"
 
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
