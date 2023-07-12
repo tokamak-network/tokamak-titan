@@ -166,6 +166,9 @@ func NewServer(
 		maxBatchSize:         maxBatchSize,
 		upgrader: &websocket.Upgrader{
 			HandshakeTimeout: 5 * time.Second,
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
 		},
 		mainLim:                mainLim,
 		overrideLims:           overrideLims,
