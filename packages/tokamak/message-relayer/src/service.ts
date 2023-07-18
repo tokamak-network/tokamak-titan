@@ -271,7 +271,7 @@ export class MessageRelayerService extends BaseServiceV2<
     while (this.running) {
       // Update metrics
       this.metrics.highestCheckedL2Tx.set(this.state.highestCheckedL2Tx)
-      // this.metrics.highestKnownL2Tx.set(this.state.highestKnownL2Tx)
+      this.metrics.highestKnownL2Tx.set(this.state.highestKnownL2Tx)
 
       /**
        * didWork: Indicates whether the service has recently performed an operation. This value is updated periodically while the service is running, and is set to true each time the service performs an action.
