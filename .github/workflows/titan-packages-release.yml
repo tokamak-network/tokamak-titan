@@ -1,0 +1,42 @@
+name: Release the Titan Packages
+
+on:
+  push:
+    # will be change to main
+    branches:
+      - OR-723_titan-sdk-ci-cd
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js 16.x
+        uses: actions/setup-node@master
+        with:
+          node-version: 16.x
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      # prune invailid tags in local
+      - name: Fetch Tags
+        run: git fetch --prune --tags
+
+      - name: Create .npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: yarn release
+          createGithubReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
