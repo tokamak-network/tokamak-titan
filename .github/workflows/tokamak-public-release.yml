@@ -717,56 +717,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: tokamak-network/tokamak-optimism-infra
+          repository: tokamak-network/tokamak-titan-infra
           ref: main
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          path: tokamak-optimism-infra
+          path: tokamak-titan-infra
 
       - name: Update l2geth Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-l2geth:${{ needs.l2geth.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-l2geth:${{ needs.l2geth.outputs.newRelease }}
 
       - name: Update titan-message-relayer Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-message-relayer:${{ needs.titan-message-relayer.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-message-relayer:${{ needs.titan-message-relayer.outputs.newRelease }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
 
       - name: Update proxyd Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-proxyd:${{ needs.proxyd.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-proxyd:${{ needs.proxyd.outputs.newRelease }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             kustomize edit set image onthertech/titan-gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
             cd ../mainnet
             kustomize edit set image onthertech/titan-gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli
             cat kustomization.yaml
             cd ../mainnet
             cat kustomization.yaml
@@ -777,4 +777,4 @@ jobs:
           default_author: github_actions
           github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
           message: '[AUTO] Update tokamak-optimism images tag to ${{ needs.l2geth.outputs.newRelease }} for release'
-          cwd: 'tokamak-optimism-infra/'
+          cwd: 'tokamak-titan-infra/'

@@ -669,44 +669,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: tokamak-network/tokamak-optimism-infra
+          repository: tokamak-network/tokamak-titan-infra
           ref: main
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          path: tokamak-optimism-infra
+          path: tokamak-titan-infra
 
       - name: Update l2geth Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
 
       - name: Update titan-message-relayer Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
 
       - name: Update proxyd Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
 
       - name: Show updated Kubernetes resources
         run: |
-            cd tokamak-optimism-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
             cat kustomization.yaml
 
       - name: Commit and push changes
@@ -715,4 +715,4 @@ jobs:
           default_author: github_actions
           github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
           message: '[AUTO] Update tokamak-optimism images tag for nightly'
-          cwd: 'tokamak-optimism-infra/'
+          cwd: 'tokamak-titan-infra/'
