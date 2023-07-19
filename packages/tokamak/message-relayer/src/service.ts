@@ -269,6 +269,9 @@ export class MessageRelayerService extends BaseServiceV2<
   protected async main(): Promise<void> {
     // it is currently running.
     while (this.running) {
+      this.state.highestKnownL2Tx =
+        await this.state.messenger.l2Provider.getBlockNumber()
+
       // Update metrics
       this.metrics.highestCheckedL2Tx.set(this.state.highestCheckedL2Tx)
       this.metrics.highestKnownL2Tx.set(this.state.highestKnownL2Tx)
