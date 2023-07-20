@@ -1,4 +1,4 @@
-name: Release the Titan Packages
+name: Publish the Titan Packages
 
 on:
   push:
@@ -27,20 +27,28 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      # prune invailid tags in local
-      - name: Fetch Tags
-        run: git fetch --prune --tags
-
       - name: Create .npmrc
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
 
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: yarn release
-          createGithubReleases: false
+      # publish titan-sdk package
+      - name: Filter packages to publish
+        id: filter-packages
+        run: |
+          # Define the package names to publish
+          PACKAGES_TO_PUBLISH=("@tokamak-network/titan-sdk")
+          # Set the output variables for packages to publish
+          echo "::set-output name=packages-to-publish::${PACKAGES_TO_PUBLISH[*]}"
+
+      - name: Publish Packages
+        run: |
+          echo "The packages will be published are ${{ steps.filter-packages.outputs.packages-to-publish }}"
+          for PACKAGE in ${{ steps.filter-packages.outputs.packages-to-publish }}; do
+            if yarn workspace $PACKAGE publish; then
+              echo "Package $PACKAGE published successfully!"
+            else
+              echo "Skipping package $PACKAGE publishing as it encountered an error."
+            fi
+          done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
