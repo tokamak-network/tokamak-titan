@@ -4,7 +4,7 @@ on:
   push:
     # will be change to main
     branches:
-      - OR-723_titan-sdk-ci-cd
+      - main
 
 jobs:
   release:
@@ -31,7 +31,6 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
 
-      # publish titan-sdk package
       - name: Filter packages to publish
         id: filter-packages
         run: |
