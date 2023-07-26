@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'release-*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -34,7 +35,7 @@ jobs:
         id: filter-packages
         run: |
           # Define the package names to publish
-          PACKAGES_TO_PUBLISH=("@tokamak-network/titan-sdk")
+          PACKAGES_TO_PUBLISH=("@tokamak-network/titan-sdk @tokamak-network/titan-contracts")
           # Set the output variables for packages to publish
           echo "::set-output name=packages-to-publish::${PACKAGES_TO_PUBLISH[*]}"
 
