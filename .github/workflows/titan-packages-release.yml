@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'release-*'
-  workflow_dispatch:
 
 jobs:
   release:
@@ -41,8 +40,8 @@ jobs:
 
       - name: Publish Packages
         run: |
-          echo "The packages will be published are ${{ steps.filter-packages.outputs.packages-to-publish }}"
           for PACKAGE in ${{ steps.filter-packages.outputs.packages-to-publish }}; do
+            echo "Publishing $PACKAGE"
             if yarn workspace $PACKAGE publish; then
               echo "Package $PACKAGE published successfully!"
             else
