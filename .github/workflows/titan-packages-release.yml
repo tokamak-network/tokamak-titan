@@ -3,7 +3,7 @@ name: Publish the Titan Packages
 on:
   push:
     tags:
-      - 'release-*'
+      - 'test-add-titan-contracts-ci-cd'
   workflow_dispatch:
 
 jobs:
@@ -43,6 +43,7 @@ jobs:
         run: |
           echo "The packages will be published are ${{ steps.filter-packages.outputs.packages-to-publish }}"
           for PACKAGE in ${{ steps.filter-packages.outputs.packages-to-publish }}; do
+            echo "Publishing the $PACKAGE"
             if yarn workspace $PACKAGE publish; then
               echo "Package $PACKAGE published successfully!"
             else
