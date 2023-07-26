@@ -2,7 +2,7 @@ name: Publish the Titan Packages
 
 on:
   push:
-    tags:
+    branches:
       - 'test-add-titan-contracts-ci-cd'
   workflow_dispatch:
 
