@@ -13,7 +13,8 @@
     "packages/replica-healthcheck",
     "packages/sdk",
     "packages/tokamak/message-relayer",
-    "packages/tokamak/sdk"
+    "packages/tokamak/sdk",
+    "packages/tokamak/contracts"
   ],
   "version": "independent"
 }
