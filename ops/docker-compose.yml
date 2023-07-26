@@ -22,13 +22,13 @@ services:
       # expose the service to the host for integration testing
       - ${L1CHAIN_HTTP_PORT:-9545}:8545
 
-  deployer:
+  titan-deployer:
     depends_on:
       - l1_chain
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: deployer
+      target: titan-deployer
     image: onthertech/titan-deployer:${DOCKER_TAG_DEPLOYER:-latest}
     entrypoint: ./deployer.sh
     environment:
@@ -43,7 +43,7 @@ services:
   dtl:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - l2geth
     build:
       context: ..
@@ -70,7 +70,7 @@ services:
   l2geth:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
@@ -167,7 +167,7 @@ services:
   verifier:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - dtl
       - l2geth
     deploy:
@@ -279,7 +279,7 @@ services:
   batch_submitter:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - l2geth
     build:
       context: ..
