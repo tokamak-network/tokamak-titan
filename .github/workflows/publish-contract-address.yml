@@ -3,7 +3,7 @@ name: Publish contracts addresses
 on:
   push:
     paths:
-      - 'packages/contracts/genesis/**'
+      - 'packages/tokamak/contracts/genesis/**'
   workflow_dispatch:
 
 jobs:
@@ -20,4 +20,4 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
         AWS_REGION: 'ap-northeast-2'
-        SOURCE_DIR: 'packages/contracts/genesis'
+        SOURCE_DIR: 'packages/tokamak/contracts/genesis'
