@@ -28,7 +28,6 @@ More detailed documentation can be found [here](https://tokamaknetwork.gitbook.i
 root
 ├── <a href="./packages">packages</a>
 │   ├── <a href="./packages/common-ts">common-ts</a>: TypeScript development tools
-│   ├── <a href="./packages/contracts">contracts</a>: L1 and L2 smart contracts
 │   ├── <a href="./packages/core-utils">core-utils</a>: Low-level tools that facilitate L2 development
 │   ├── <a href="./packages/data-transport-layer">data-transport-layer</a>: Indexing service for associated L1 data
 │   ├── <a href="./packages/drippie-mon">drippie-mon</a>: Monitoring service for Drippie instances
