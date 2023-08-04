@@ -315,7 +315,7 @@ jobs:
       - name: Get version
         id: extractver
         run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/contracts/package.json)
+          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
       - name: Login to Docker Hub

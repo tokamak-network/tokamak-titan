@@ -5,7 +5,7 @@
 
 SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 ABIGEN="$SCRIPTS_DIR/../cmd/abigen/main.go"
-CONTRACTS_PATH="$SCRIPTS_DIR/../../packages/contracts/artifacts/contracts"
+CONTRACTS_PATH="$SCRIPTS_DIR/../../packages/tokamak/contracts/artifacts/contracts"
 GAS_PRICE_ORACLE="$CONTRACTS_PATH/L2/predeploys/OVM_GasPriceOracle.sol/OVM_GasPriceOracle.json"
 
 OUT_DIR="$SCRIPTS_DIR/../rollup/fees/bindings"

@@ -93,5 +93,5 @@ jobs:
         run: yarn build
 
       - name: Unit Tests
-        working-directory: ./packages/contracts
+        working-directory: ./packages/tokamak/contracts
         run: yarn test

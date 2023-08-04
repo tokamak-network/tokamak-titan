@@ -132,7 +132,7 @@ jobs:
         run: yarn install
 
       - name: Check packages/contracts
-        working-directory: ./packages/contracts
+        working-directory: ./packages/tokamak/contracts
         run: npx depcheck
 
       - name: Check packages/core-utils

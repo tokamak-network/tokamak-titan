@@ -9,7 +9,7 @@ LDFLAGSSTRING +=-X main.GitDate=$(GITDATE)
 LDFLAGSSTRING +=-X main.GitVersion=$(GITVERSION)
 LDFLAGS :=-ldflags "$(LDFLAGSSTRING)"
 
-CONTRACTS_PATH := "../../packages/contracts/artifacts/contracts"
+CONTRACTS_PATH := "../../packages/tokamak/contracts/artifacts/contracts"
 
 gas-oracle:
 	env GO111MODULE=on go build $(LDFLAGS)
