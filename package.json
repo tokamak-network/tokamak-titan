@@ -6,7 +6,6 @@
   "workspaces": {
     "packages": [
       "packages/common-ts",
-      "packages/contracts",
       "packages/core-utils",
       "packages/data-transport-layer",
       "packages/drippie-mon",

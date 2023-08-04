@@ -38,7 +38,7 @@ COPY packages/sdk/package.json ./packages/sdk/package.json
 COPY packages/actor-tests/package.json ./packages/actor-tests/package.json
 COPY packages/core-utils/package.json ./packages/core-utils/package.json
 COPY packages/common-ts/package.json ./packages/common-ts/package.json
-COPY packages/contracts/package.json ./packages/contracts/package.json
+# COPY packages/contracts/package.json ./packages/contracts/package.json
 #COPY packages/contracts-bedrock/package.json ./packages/contracts-bedrock/package.json
 COPY packages/contracts-periphery/package.json ./packages/contracts-periphery/package.json
 COPY packages/contracts-governance/package.json ./packages/contracts-governance/package.json
