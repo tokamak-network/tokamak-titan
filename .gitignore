@@ -35,6 +35,12 @@ packages/integration-tests-bedrock/artifacts
 packages/contracts-bedrock/deployments/devnetL1
 packages/contracts-bedrock/deployments/anvil
 
+packages/tokamak/contracts/deployments/custom
+packages/tokamak/contracts/coverage*
+packages/tokamak/contracts/@ens*
+packages/tokamak/contracts/@openzeppelin*
+packages/tokamak/contracts/hardhat*
+
 # vim
 *.sw*
 
