@@ -61,7 +61,7 @@ jobs:
           FORCE_COLOR: 1
           ENABLE_GAS_REPORT: 1
       - name: Print gas report
-        run: cat packages/contracts/gas-report.txt
+        run: cat packages/tokamak/contracts/gas-report.txt
 
   test-coverage:
     name: Generate test coverage
