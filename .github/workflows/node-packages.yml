@@ -96,9 +96,9 @@ jobs:
 
       - name: Build
         run: yarn build
-# exclude @eth-optimism/contracts
+
       - name: Test Coverage
-        run: yarn lerna run test:coverage --parallel --ignore="@eth-optimism/contracts"
+        run: yarn test:coverage --parallel
 
   depcheck:
     name: Check for unused dependencies

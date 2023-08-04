@@ -7,8 +7,8 @@ LDFLAGSSTRING +=-X main.GitDate=$(GITDATE)
 LDFLAGSSTRING +=-X main.GitVersion=$(GITVERSION)
 LDFLAGS := -ldflags "$(LDFLAGSSTRING)"
 
-DEPOSIT_ARTIFACT := ../../packages/contracts/artifacts/contracts/L1/teleportr/TeleportrDeposit.sol/TeleportrDeposit.json
-DISBURSER_ARTIFACT := ../../packages/contracts/artifacts/contracts/L2/teleportr/TeleportrDisburser.sol/TeleportrDisburser.json
+DEPOSIT_ARTIFACT := ../../packages/tokamak/contracts/artifacts/contracts/L1/teleportr/TeleportrDeposit.sol/TeleportrDeposit.json
+DISBURSER_ARTIFACT := ../../packages/tokamak/contracts/artifacts/contracts/L2/teleportr/TeleportrDisburser.sol/TeleportrDisburser.json
 
 teleportr:
 	env GO111MODULE=on go build -v $(LDFLAGS) ./cmd/teleportr
@@ -23,7 +23,7 @@ clean:
 test:
 	go test -v ./...
 
-lint: 
+lint:
 	golangci-lint run ./...
 
 bindings: bindings-deposit bindings-disburser
