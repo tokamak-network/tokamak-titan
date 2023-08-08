@@ -61,7 +61,7 @@ jobs:
           FORCE_COLOR: 1
           ENABLE_GAS_REPORT: 1
       - name: Print gas report
-        run: cat packages/contracts/gas-report.txt
+        run: cat packages/tokamak/contracts/gas-report.txt
 
   test-coverage:
     name: Generate test coverage
@@ -98,7 +98,7 @@ jobs:
         run: yarn build
 
       - name: Test Coverage
-        run: yarn test:coverage
+        run: yarn test:coverage --parallel
 
   depcheck:
     name: Check for unused dependencies
@@ -132,7 +132,7 @@ jobs:
         run: yarn install
 
       - name: Check packages/contracts
-        working-directory: ./packages/contracts
+        working-directory: ./packages/tokamak/contracts
         run: npx depcheck
 
       - name: Check packages/core-utils

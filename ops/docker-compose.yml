@@ -22,13 +22,13 @@ services:
       # expose the service to the host for integration testing
       - ${L1CHAIN_HTTP_PORT:-9545}:8545
 
-  deployer:
+  titan-deployer:
     depends_on:
       - l1_chain
     build:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
-      target: deployer
+      target: titan-deployer
     image: onthertech/titan-deployer:${DOCKER_TAG_DEPLOYER:-latest}
     entrypoint: ./deployer.sh
     environment:
@@ -43,7 +43,7 @@ services:
   dtl:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - l2geth
     build:
       context: ..
@@ -58,7 +58,7 @@ services:
     # depend on the docker-compose setup
     environment:
       # used for setting the address manager address
-      URL: http://deployer:8081/addresses.json
+      URL: http://titan-deployer:8081/addresses.json
       # connect to the 2 layers
       DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: http://l1_chain:8545
       DATA_TRANSPORT_LAYER__L2_RPC_ENDPOINT: http://l2geth:8545
@@ -70,7 +70,7 @@ services:
   l2geth:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
@@ -83,7 +83,7 @@ services:
       <<: *system-addr-env
       ETH1_HTTP: http://l1_chain:8545
       ROLLUP_TIMESTAMP_REFRESH: 5s
-      ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
+      ROLLUP_STATE_DUMP_PATH: http://titan-deployer:8081/state-dump.latest.json
       # connecting to the DTL
       ROLLUP_CLIENT_HTTP: http://dtl:7878
       ETH1_CTC_DEPLOYMENT_HEIGHT: 8
@@ -110,7 +110,7 @@ services:
     image: onthertech/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
     entrypoint: ./relayer.sh
     environment:
-      URL: http://deployer:8081/addresses.json
+      URL: http://titan-deployer:8081/addresses.json
       MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
       MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
       MESSAGE_RELAYER__L1_WALLET: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
@@ -134,7 +134,7 @@ services:
     image: onthertech/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
     entrypoint: ./relayer-fast.sh
     environment:
-      URL: http://deployer:8081/addresses.json
+      URL: http://titan-deployer:8081/addresses.json
       TOKAMAK_CONTRACTS_URL: http://tokamak_deployer:8082/tokamak-addr.json
       MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
       MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
@@ -167,7 +167,7 @@ services:
   verifier:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - dtl
       - l2geth
     deploy:
@@ -183,7 +183,7 @@ services:
       <<: *system-addr-env
       ETH1_HTTP: http://l1_chain:8545
       SEQUENCER_CLIENT_HTTP: http://l2geth:8545
-      ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
+      ROLLUP_STATE_DUMP_PATH: http://titan-deployer:8081/state-dump.latest.json
       ROLLUP_CLIENT_HTTP: http://dtl:7878
       ROLLUP_BACKEND: 'l1'
       ETH1_CTC_DEPLOYMENT_HEIGHT: 8
@@ -210,7 +210,7 @@ services:
       <<: *system-addr-env
       ETH1_HTTP: http://l1_chain:8545
       SEQUENCER_CLIENT_HTTP: http://l2geth:8545
-      ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
+      ROLLUP_STATE_DUMP_PATH: http://titan-deployer:8081/state-dump.latest.json
       ROLLUP_CLIENT_HTTP: http://dtl:7878
       ROLLUP_BACKEND: 'l2'
       ROLLUP_VERIFIER_ENABLE: 'true'
@@ -252,7 +252,7 @@ services:
       HEALTHCHECK_URL: http://replica_healthcheck:7300/metrics
       REPLICA_URL: http://replica:8545
       VERIFIER_URL: http://verifier:8545
-      URL: http://deployer:8081/addresses.json
+      URL: http://titan-deployer:8081/addresses.json
       ENABLE_GAS_REPORT: 1
       NO_NETWORK: 1
       BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE: ${BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE:-zlib}
@@ -279,7 +279,7 @@ services:
   batch_submitter:
     depends_on:
       - l1_chain
-      - deployer
+      - titan-deployer
       - l2geth
     build:
       context: ..
@@ -291,7 +291,7 @@ services:
     environment:
       L1_ETH_RPC: http://l1_chain:8545
       L2_ETH_RPC: http://l2geth:8545
-      URL: http://deployer:8081/addresses.json
+      URL: http://titan-deployer:8081/addresses.json
       BATCH_SUBMITTER_SEQUENCER_PRIVATE_KEY: '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
       BATCH_SUBMITTER_PROPOSER_PRIVATE_KEY: '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a'
       BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE: ${BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE:-zlib}

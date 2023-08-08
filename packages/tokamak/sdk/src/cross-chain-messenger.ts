@@ -24,7 +24,10 @@ import {
   BedrockOutputData,
   BedrockCrossChainMessageProof,
 } from '@eth-optimism/core-utils'
-import { getContractInterface, predeploys } from '@eth-optimism/contracts'
+import {
+  getContractInterface,
+  predeploys,
+} from '@tokamak-network/titan-contracts'
 import * as rlp from 'rlp'
 
 import {

@@ -12,7 +12,7 @@ import {
   TransactionResponse,
   BlockTag,
 } from '@ethersproject/abstract-provider'
-import { predeploys } from '@eth-optimism/contracts'
+import { predeploys } from '@tokamak-network/titan-contracts'
 import { getContractInterface } from '@eth-optimism/contracts-bedrock'
 import { hexStringEquals } from '@eth-optimism/core-utils'
 

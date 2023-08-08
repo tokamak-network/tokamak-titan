@@ -8,7 +8,7 @@ set -eou pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 REPO=$DIR/..
-STATE_DUMP=${STATE_DUMP:-$REPO/../packages/contracts/dist/dumps/state-dump.latest.json}
+STATE_DUMP=${STATE_DUMP:-$REPO/../packages/tokamak/contracts/dist/dumps/state-dump.latest.json}
 DATADIR=${DATADIR:-$HOME/.ethereum}
 
 # These are the initial key and address that must be used for the clique

@@ -1,7 +1,7 @@
 import {
   predeploys,
   getDeployedContractDefinition,
-} from '@eth-optimism/contracts'
+} from '@tokamak-network/titan-contracts'
 import { predeploys as bedrockPredeploys } from '@eth-optimism/contracts-bedrock'
 
 import {

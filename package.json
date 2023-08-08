@@ -6,7 +6,6 @@
   "workspaces": {
     "packages": [
       "packages/common-ts",
-      "packages/contracts",
       "packages/core-utils",
       "packages/data-transport-layer",
       "packages/drippie-mon",
@@ -17,6 +16,7 @@
       "packages/sdk",
       "packages/tokamak/message-relayer",
       "packages/tokamak/sdk",
+      "packages/tokamak/contracts",
       "batch-submitter",
       "bss-core",
       "gas-oracle",

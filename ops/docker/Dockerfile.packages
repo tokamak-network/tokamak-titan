@@ -38,14 +38,13 @@ COPY packages/sdk/package.json ./packages/sdk/package.json
 COPY packages/actor-tests/package.json ./packages/actor-tests/package.json
 COPY packages/core-utils/package.json ./packages/core-utils/package.json
 COPY packages/common-ts/package.json ./packages/common-ts/package.json
-COPY packages/contracts/package.json ./packages/contracts/package.json
-#COPY packages/contracts-bedrock/package.json ./packages/contracts-bedrock/package.json
 COPY packages/contracts-periphery/package.json ./packages/contracts-periphery/package.json
 COPY packages/contracts-governance/package.json ./packages/contracts-governance/package.json
 COPY packages/data-transport-layer/package.json ./packages/data-transport-layer/package.json
 COPY packages/hardhat-deploy-config/package.json ./packages/hardhat-deploy-config/package.json
 COPY packages/tokamak/message-relayer/package.json ./packages/tokamak/message-relayer/package.json
 COPY packages/tokamak/sdk/package.json ./packages/tokamak/sdk/package.json
+COPY packages/tokamak/contracts/package.json ./packages/tokamak/contracts/package.json
 COPY packages/fault-detector/package.json ./packages/fault-detector/package.json
 COPY packages/replica-healthcheck/package.json ./packages/replica-healthcheck/package.json
 COPY packages/drippie-mon/package.json ./packages/drippie-mon/package.json
@@ -59,25 +58,10 @@ COPY ./integration-tests ./integration-tests
 # build it!
 RUN yarn build
 
-#FROM base as actor-tests-bedrock
-#WORKDIR /opt/optimism/packages/actor-tests
-#ENTRYPOINT ["yarn", "run:bedrock"]
-
-FROM base as deployer
-WORKDIR /opt/optimism/packages/contracts
+FROM base as titan-deployer
+WORKDIR /opt/optimism/packages/tokamak/contracts
 COPY ./ops/scripts/deployer.sh .
 CMD ["yarn", "run", "deploy"]
-
-#FROM alpine:3.16.2 as contract-artifacts-bedrock
-#RUN mkdir -p /artifacts
-#WORKDIR /artifacts
-#COPY --from=base /opt/optimism/packages/contracts-bedrock/artifacts  /artifacts/contracts-bedrock
-#COPY --from=base /opt/optimism/packages/contracts-governance/artifacts  /artifacts/contracts-governance
-#CMD ["echo", "0"]
-
-#FROM base as deployer-bedrock
-#WORKDIR /opt/optimism/packages/contracts-bedrock
-#CMD ["yarn", "run", "deploy"]
 
 FROM base as data-transport-layer
 WORKDIR /opt/optimism/packages/data-transport-layer

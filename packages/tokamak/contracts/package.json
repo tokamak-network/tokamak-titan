@@ -1,7 +1,7 @@
 {
-  "name": "@eth-optimism/contracts",
-  "version": "0.5.37",
-  "description": "[Optimism] L1 and L2 smart contracts for Optimism",
+  "name": "@tokamak-network/titan-contracts",
+  "version": "0.0.1",
+  "description": "L1 and L2 smart contracts for Titan",
   "main": "dist/index",
   "types": "dist/index",
   "files": [
@@ -51,7 +51,7 @@
   ],
   "homepage": "https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts#readme",
   "license": "MIT",
-  "author": "Optimism PBC",
+  "author": "Optimism PBC & Tokamak Network",
   "repository": {
     "type": "git",
     "url": "https://github.com/ethereum-optimism/optimism.git"

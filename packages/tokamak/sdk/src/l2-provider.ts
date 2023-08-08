@@ -3,7 +3,10 @@ import assert from 'assert'
 import { Provider, TransactionRequest } from '@ethersproject/abstract-provider'
 import { serialize } from '@ethersproject/transactions'
 import { Contract, BigNumber } from 'ethers'
-import { predeploys, getContractInterface } from '@eth-optimism/contracts'
+import {
+  predeploys,
+  getContractInterface,
+} from '@tokamak-network/titan-contracts'
 import cloneDeep from 'lodash/cloneDeep'
 
 import { L2Provider, ProviderLike, NumberLike } from './interfaces'

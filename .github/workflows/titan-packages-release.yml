@@ -34,14 +34,14 @@ jobs:
         id: filter-packages
         run: |
           # Define the package names to publish
-          PACKAGES_TO_PUBLISH=("@tokamak-network/titan-sdk")
+          PACKAGES_TO_PUBLISH=("@tokamak-network/titan-sdk @tokamak-network/titan-contracts")
           # Set the output variables for packages to publish
           echo "::set-output name=packages-to-publish::${PACKAGES_TO_PUBLISH[*]}"
 
       - name: Publish Packages
         run: |
-          echo "The packages will be published are ${{ steps.filter-packages.outputs.packages-to-publish }}"
           for PACKAGE in ${{ steps.filter-packages.outputs.packages-to-publish }}; do
+            echo "Publishing $PACKAGE"
             if yarn workspace $PACKAGE publish; then
               echo "Package $PACKAGE published successfully!"
             else

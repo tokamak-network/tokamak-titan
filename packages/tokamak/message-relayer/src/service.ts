@@ -1,6 +1,6 @@
 /* Imports: External */
 import { Signer, utils, BigNumber } from 'ethers'
-import { getContractFactory } from '@eth-optimism/contracts'
+import { getContractFactory } from '@tokamak-network/titan-contracts'
 import { Address, getChainId, sleep } from '@eth-optimism/core-utils'
 import {
   BaseServiceV2,
