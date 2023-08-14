@@ -1,6 +1,6 @@
 {
   "name": "@tokamak-network/titan-sdk",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "[Tokamak-Titan] Tools for working with Titan",
   "main": "dist/index",
   "types": "dist/index",
