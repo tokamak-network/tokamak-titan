@@ -44,7 +44,7 @@ type MessageRelayerMetrics = {
   highestKnownL2Tx: Gauge
   numBatchTx: Counter
   numRelayedMessages: Counter
-  relayerBalance: Gauge
+  balanceEth: Gauge
 }
 
 type MessageRelayerState = {
@@ -178,7 +178,7 @@ export class MessageRelayerService extends BaseServiceV2<
           type: Counter,
           desc: 'Number of relayed messages',
         },
-        relayerBalance: {
+        balanceEth: {
           type: Gauge,
           desc: 'Balance of relyaer',
         },
@@ -280,10 +280,10 @@ export class MessageRelayerService extends BaseServiceV2<
       // Update metrics
       this.metrics.highestCheckedL2Tx.set(this.state.highestCheckedL2Tx)
       this.metrics.highestKnownL2Tx.set(this.state.highestKnownL2Tx)
-      const relayerBalance = Number(
+      const balanceEth = Number(
         utils.formatEther(await this.state.wallet.getBalance())
       )
-      this.metrics.relayerBalance.set(relayerBalance)
+      this.metrics.balanceEth.set(balanceEth)
 
       /**
        * didWork: Indicates whether the service has recently performed an operation. This value is updated periodically while the service is running, and is set to true each time the service performs an action.
