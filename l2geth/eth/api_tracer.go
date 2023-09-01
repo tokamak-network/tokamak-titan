@@ -788,7 +788,7 @@ func (api *PrivateDebugAPI) TraceCall(ctx context.Context, args ethapi.CallArgs,
 	// Execute the trace
 
 	// convert CallArg to Message
-	msg := args.ToMessage(api.eth.APIBackend.RPCGasCap().Uint64(), ctx, blockNrOrHash)
+	msg := args.ToMessage(api.eth.APIBackend.RPCGasCap().Uint64(), block)
 	// creates a new context for use in the EVM.
 	vmctx := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
 

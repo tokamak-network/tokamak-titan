@@ -852,7 +852,10 @@ type account struct {
 	StateDiff *map[common.Hash]common.Hash `json:"stateDiff"`
 }
 
-func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides map[common.Address]account, vmCfg *vm.Config, timeout time.Duration, globalGasCap *big.Int) ([]byte, uint64, bool, error) {
+// StateOverride is the collection of overriden accounts.
+type StateOverride map[common.Address]account
+
+func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, vmCfg *vm.Config, timeout time.Duration, globalGasCap *big.Int) (*core.ExecutionResult, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
 
 	// get state and header by blockNumber or blockHash
@@ -874,6 +877,7 @@ func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.Blo
 		addr = *args.From
 	}
 	// Override the fields of specified contracts before execution.
+
 	for addr, account := range overrides {
 		// Override account nonce.
 		if account.Nonce != nil {
@@ -989,30 +993,50 @@ func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.Blo
 	return res, gas, failed, err
 }
 
+func newRevertError(result *core.ExecutionResult) *revertError {
+	reason, errUnpack := abi.UnpackRevert(result.Revert())
+	err := errors.New("execution reverted")
+	if errUnpack == nil {
+		err = fmt.Errorf("execution reverted: %v", reason)
+	}
+	return &revertError{
+		error:  err,
+		reason: hexutil.Encode(result.Revert()),
+	}
+}
+
+// revertError is an API error that encompassas an EVM revertal with JSON error
+// code and a binary data blob.
+type revertError struct {
+	error
+	reason string // revert reason hex encoded
+}
+
 // Call executes the given transaction on the state for the given block number.
 //
 // Additionally, the caller can specify a batch of contract for fields overriding.
 //
 // Note, this function doesn't make and changes in the state/blockchain and is
 // useful to execute and retrieve values.
-func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *map[common.Address]account) (hexutil.Bytes, error) {
-	var accounts map[common.Address]account
-	if overrides != nil {
-		accounts = *overrides
-	}
-	result, _, failed, err := DoCall(ctx, s.b, args, blockNrOrHash, accounts, &vm.Config{}, 5*time.Second, s.b.RPCGasCap())
+func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
+
+	result, err := DoCall(ctx, s.b, args, blockNrOrHash, overrides, &vm.Config{}, 5*time.Second, s.b.RPCGasCap())
 	if err != nil {
 		return nil, err
 	}
-	if failed {
-		reason, errUnpack := abi.UnpackRevert(result)
-		err := errors.New("execution reverted")
-		if errUnpack == nil {
-			err = fmt.Errorf("execution reverted: %v", reason)
-		}
-		return (hexutil.Bytes)(result), err
+	// If the result contains a revert reason, try to unpack and return it
+	if len(result.Revert()) > 0 {
+		return nil.newRevertError(result)
 	}
-	return (hexutil.Bytes)(result), err
+	// if failed {
+	// 	reason, errUnpack := abi.UnpackRevert(result)
+	// 	err := errors.New("execution reverted")
+	// 	if errUnpack == nil {
+	// 		err = fmt.Errorf("execution reverted: %v", reason)
+	// 	}
+	// 	return (hexutil.Bytes)(result), err
+	// }
+	return result.Return(), err
 }
 
 // Optimism note: The gasPrice in Optimism is modified to always return 1 gwei. We
@@ -1061,8 +1085,8 @@ func DoEstimateGas(ctx context.Context, b Backend, args CallArgs, blockNrOrHash 
 	executable := func(gas uint64) (bool, []byte) {
 		args.Gas = (*hexutil.Uint64)(&gas)
 
-		res, _, failed, err := DoCall(ctx, b, args, blockNrOrHash, nil, &vm.Config{}, 0, gasCap)
-		if err != nil || failed {
+		res, err := DoCall(ctx, b, args, blockNrOrHash, nil, &vm.Config{}, 0, gasCap)
+		if err != nil {
 			return false, res
 		}
 		return true, res
