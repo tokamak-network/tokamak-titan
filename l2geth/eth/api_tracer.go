@@ -758,6 +758,7 @@ func (api *PrivateDebugAPI) TraceCall(ctx context.Context, args ethapi.CallArgs,
 		err   error
 		block *types.Block
 	)
+	var msg types.Message
 	// get block by hash or number
 	if hash, ok := blockNrOrHash.Hash(); ok {
 		block, err = api.eth.APIBackend.BlockByHash(ctx, hash)
@@ -786,9 +787,16 @@ func (api *PrivateDebugAPI) TraceCall(ctx context.Context, args ethapi.CallArgs,
 		}
 	}
 	// Execute the trace
+	rpcGasCap := api.eth.config.RPCGasCap
 
 	// convert CallArg to Message
-	msg := args.ToMessage(api.eth.APIBackend.RPCGasCap().Uint64(), block)
+	// if the user don't specify --rpc.gascap flag, rpcGasCap is nil
+	if rpcGasCap != nil {
+		msg = args.ToMessage(rpcGasCap.Uint64(), block)
+	} else {
+		msg = args.ToMessage(api.eth.config.Rollup.GasLimit, block)
+	}
+
 	// creates a new context for use in the EVM.
 	vmctx := core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
 

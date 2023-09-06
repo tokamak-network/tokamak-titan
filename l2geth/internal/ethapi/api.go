@@ -891,10 +891,9 @@ func (diff *StateOverride) Apply(state *state.StateDB) error {
 	return nil
 }
 
-func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride, vmCfg *vm.Config, timeout time.Duration, globalGasCap *big.Int) ([]byte, uint64, bool, error) {
+func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides map[common.Address]account, vmCfg *vm.Config, timeout time.Duration, globalGasCap *big.Int) ([]byte, uint64, bool, error) {
 	defer func(start time.Time) { log.Debug("Executing EVM call finished", "runtime", time.Since(start)) }(time.Now())
 
-	// get state and header by blockNumber or blockHash
 	state, header, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 	if state == nil || err != nil {
 		return nil, 0, false, err
@@ -913,7 +912,7 @@ func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.Blo
 		addr = *args.From
 	}
 	// Override the fields of specified contracts before execution.
-	for addr, account := range *overrides {
+	for addr, account := range overrides {
 		// Override account nonce.
 		if account.Nonce != nil {
 			state.SetNonce(addr, uint64(*account.Nonce))
@@ -1034,9 +1033,12 @@ func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.Blo
 //
 // Note, this function doesn't make and changes in the state/blockchain and is
 // useful to execute and retrieve values.
-func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *StateOverride) (hexutil.Bytes, error) {
-
-	result, _, failed, err := DoCall(ctx, s.b, args, blockNrOrHash, overrides, &vm.Config{}, 5*time.Second, s.b.RPCGasCap())
+func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *map[common.Address]account) (hexutil.Bytes, error) {
+	var accounts map[common.Address]account
+	if overrides != nil {
+		accounts = *overrides
+	}
+	result, _, failed, err := DoCall(ctx, s.b, args, blockNrOrHash, accounts, &vm.Config{}, 5*time.Second, s.b.RPCGasCap())
 	if err != nil {
 		return nil, err
 	}
