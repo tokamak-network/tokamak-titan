@@ -504,6 +504,34 @@ export class BatchCrossChainMessenger {
     }
   }
 
+  // to get bridge history
+  public async getMessageStatusPostRollup(
+    message: MessageLike,
+    event: ethers.Event
+  ): Promise<MessageStatus> {
+    const resolved = await this.toCrossChainMessage(message)
+    const receipt = await this.getMessageReceipt(resolved)
+
+    if (receipt === null) {
+      const bn = event.blockNumber;
+      const block = await this.l1Provider.getBlock(bn)
+      const timestamp = block.timestamp
+      const challengePeriod = await this.getChallengePeriodSeconds()
+      const latestBlock = await this.l1Provider.getBlock('latest')
+      if (timestamp + challengePeriod > latestBlock.timestamp) {
+        return MessageStatus.IN_CHALLENGE_PERIOD
+      } else {
+        return MessageStatus.READY_FOR_RELAY
+      }
+    } else {
+      if (receipt.receiptStatus === MessageReceiptStatus.RELAYED_SUCCEEDED) {
+        return MessageStatus.RELAYED
+      } else {
+        return MessageStatus.READY_FOR_RELAY
+      }
+    }
+  }
+
   /**
    * Get Status of Message from L1CrossDomainMessenger
    *
