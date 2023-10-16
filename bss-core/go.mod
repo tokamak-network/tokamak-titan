@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/decred/dcrd/hdkeychain/v3 v3.0.0
-	github.com/ethereum/go-ethereum v1.10.26
+	github.com/ethereum/go-ethereum v1.10.17
 	github.com/getsentry/sentry-go v0.12.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/stretchr/testify v1.7.2
