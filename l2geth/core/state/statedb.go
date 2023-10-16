@@ -94,9 +94,10 @@ type StateDB struct {
 	refund uint64
 
 	thash, bhash common.Hash
-	txIndex      int
-	logs         map[common.Hash][]*types.Log
-	logSize      uint
+	// transaction index in the block (always 0x0)
+	txIndex int
+	logs    map[common.Hash][]*types.Log
+	logSize uint
 
 	preimages map[common.Hash][]byte
 
@@ -246,6 +247,11 @@ func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 		// NOTE: We may remove this feature in a future release.
 		key := GetOVMBalanceKey(addr)
 		bal := s.GetState(dump.OvmEthAddress, key)
+		// from starting 'Native token' block, use TON
+		// TODO: change s.txIndex to block number of current state
+		// if s.txIndex+1 > 1789 {
+		// 	bal = s.GetState(dump.OvmTonAddress, key)
+		// }
 		return bal.Big()
 	} else {
 		stateObject := s.getStateObject(addr)
@@ -379,9 +385,18 @@ func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 		// (stateObject.AddBalance) to confirm that there are no checks being performed here.
 		key := GetOVMBalanceKey(addr)
 		value := s.GetState(dump.OvmEthAddress, key)
+		// TODO: change s.txIndex to block number of current state
+		// if s.txIndex+1 > 1789 {
+		// 	value = s.GetState(dump.OvmTonAddress, key)
+		// }
 		bal := value.Big()
 		bal = bal.Add(bal, amount)
-		s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		// TODO: change s.txIndex to block number of current state
+		// if s.txIndex+1 > 1789 {
+		// 	s.SetState(dump.OvmTonAddress, key, common.BigToHash(bal))
+		// } else {
+		// 	s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		// }
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
@@ -399,9 +414,18 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 		// (stateObject.SubBalance) to confirm that there are no checks being performed here.
 		key := GetOVMBalanceKey(addr)
 		value := s.GetState(dump.OvmEthAddress, key)
+		// TODO: change s.txIndex to block number of current state
+		if s.txIndex+1 > 1789 {
+			value = s.GetState(dump.OvmTonAddress, key)
+		}
 		bal := value.Big()
 		bal = bal.Sub(bal, amount)
-		s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		// TODO: change s.txIndex to block number of current state
+		if s.txIndex+1 > 1789 {
+			s.SetState(dump.OvmTonAddress, key, common.BigToHash(bal))
+		} else {
+			s.SetState(dump.OvmEthAddress, key, common.BigToHash(bal))
+		}
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
@@ -414,7 +438,12 @@ func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	if rcfg.UsingOVM {
 		// Mutate the storage slot inside of OVM_ETH to change balances.
 		key := GetOVMBalanceKey(addr)
-		s.SetState(dump.OvmEthAddress, key, common.BigToHash(amount))
+		// TODO: change s.txIndex to block number of current state
+		if s.txIndex+1 > 1789 {
+			s.SetState(dump.OvmTonAddress, key, common.BigToHash(amount))
+		} else {
+			s.SetState(dump.OvmEthAddress, key, common.BigToHash(amount))
+		}
 	} else {
 		stateObject := s.GetOrNewStateObject(addr)
 		if stateObject != nil {
