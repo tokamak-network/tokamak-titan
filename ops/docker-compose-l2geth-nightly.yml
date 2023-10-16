@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  l2geth:
+    build:
+      context: ..
+      dockerfile: ./l2geth/Dockerfile
+    # override with the geth script and the env vars required for it
+    entrypoint: sh ./geth.sh
+    env_file:
+      - ./envs/geth-nightly.env
+    environment:
+      ETH1_HTTP: https://goerli.rpc.tokamak.network
+      ROLLUP_TIMESTAMP_REFRESH: 1s
+      ROLLUP_STATE_DUMP_PATH: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-state-dump.20221011.json      
+      # connecting to the DTL
+      ROLLUP_CLIENT_HTTP: http://k8s-default-datatran-e8fd837f99-348dab9dc7d91f1d.elb.ap-northeast-2.amazonaws.com:7878
+      ETH1_CTC_DEPLOYMENT_HEIGHT: 8
+      RETRIES: 60
+      # no need to keep this secret, only used internally to sign blocks
+      BLOCK_SIGNER_KEY: 'b47acfe25087c4c4ed566b759756bc7206a515fce67cdfcdc50bf8989708d983'
+      BLOCK_SIGNER_ADDRESS: '0xa159967552001d881F01Da6E6E2e4754968e5905'
+
+      ROLLUP_ENFORCE_FEES: 'true'
+      ROLLUP_FEE_THRESHOLD_DOWN: 0.9
+      ROLLUP_FEE_THRESHOLD_UP: 1.1
+    ports:
+      - ${L2GETH_HTTP_PORT:-8545}:8545
+      - ${L2GETH_WS_PORT:-8546}:8546
