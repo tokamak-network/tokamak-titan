@@ -4,19 +4,19 @@
 
 ### Patch Changes
 
-- 1d8d50c42: build(deps): bump golang.org/x/crypto from 0.0.0-20220307211146-efcb8507fb70 to 0.1.0 in /batch-submitter
+- 265fe2dbc: build(deps): bump golang.org/x/crypto from 0.0.0-20220307211146-efcb8507fb70 to 0.1.0 in /batch-submitter
 
 ## 0.1.14
 
 ### Patch Changes
 
-- 72fa86bff: chore(deps): bump github.com/prometheus/client_golang from 1.11.0 to 1.11.1 in /batch-submitter
+- 947467bc8: chore(deps): bump github.com/prometheus/client_golang from 1.11.0 to 1.11.1 in /batch-submitter
 
 ## 0.1.13
 
 ### Patch Changes
 
-- 7a8812d14: Update go-ethereum to v1.10.26
+- 6ff7b1fb4: Update go-ethereum to v1.10.26
 
 ## 0.1.12
 
