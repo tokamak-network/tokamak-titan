@@ -40,7 +40,7 @@ jobs:
 
   gas-oracle:
     name: Publish Gas Oracle
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -75,7 +75,7 @@ jobs:
 
   hardhat-node:
     name: Publish Hardhat Node
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -110,7 +110,7 @@ jobs:
 
   message-relayer:
     name: Publish Message Relayer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -146,7 +146,7 @@ jobs:
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -182,7 +182,7 @@ jobs:
 
   fault-detector:
     name: Publish Fault Detector
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -218,7 +218,7 @@ jobs:
 
   drippie-mon:
     name: Publish Drippie Monitor
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -254,7 +254,7 @@ jobs:
 
   data-transport-layer:
     name: Publish Data Transport Layer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -290,7 +290,7 @@ jobs:
 
   contracts:
     name: Publish Deployer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -326,7 +326,7 @@ jobs:
 
   proxyd:
     name: Publish proxyd
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -366,7 +366,7 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -406,7 +406,7 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -446,7 +446,7 @@ jobs:
 
   batch-submitter-service:
     name: Publish batch-submitter-service
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -481,7 +481,7 @@ jobs:
 
   indexer:
     name: Publish indexer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -517,7 +517,7 @@ jobs:
 
   teleportr:
     name: Publish Teleportr
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
