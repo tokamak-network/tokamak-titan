@@ -68,6 +68,7 @@ jobs:
         with:
           context: .
           file: ./gas-oracle/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-gas-oracle:test
@@ -102,6 +103,7 @@ jobs:
         with:
           context: ./ops/docker/hardhat
           file: ./ops/docker/hardhat/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-hardhat:test
@@ -137,6 +139,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: message-relayer
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/optimism.message-relayer:test
@@ -172,6 +175,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: titan-message-relayer
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-message-relayer:test
@@ -207,6 +211,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: fault-detector
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-fault-detector:test
@@ -242,6 +247,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: drippie-mon
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-drippie-mon:test
@@ -277,6 +283,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: data-transport-layer
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-data-transport-layer:test
@@ -312,6 +319,7 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: titan-deployer
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-deployer:test
@@ -347,6 +355,7 @@ jobs:
         with:
           context: .
           file: ./proxyd/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-proxyd:test
@@ -386,6 +395,7 @@ jobs:
         with:
           context: .
           file: ./op-exporter/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-op-exporter:test
@@ -464,6 +474,7 @@ jobs:
         with:
           context: .
           file: ./batch-submitter/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-batch-submitter-service:test
@@ -499,6 +510,7 @@ jobs:
         with:
           context: .
           file: ./indexer/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-indexer:test
@@ -534,6 +546,7 @@ jobs:
         with:
           context: .
           file: ./teleportr/Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: |
             onthertech/titan-teleportr:test
