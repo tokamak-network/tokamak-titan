@@ -425,6 +425,7 @@ jobs:
           context: .
           file: ./l2geth-exporter/Dockerfile
           push: true
+          platforms: linux/amd64, linux/arm64
           tags: |
             onthertech/titan-l2geth-exporter:test
           build-args: |
