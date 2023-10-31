@@ -1,9 +1,6 @@
 name: Tokamak Optimism Publish (Nightly Version)
 
-on:
-  push:
-    branches:
-      - 'main'
+on: push
 
 jobs:
   l2geth:
