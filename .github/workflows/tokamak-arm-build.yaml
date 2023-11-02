@@ -111,7 +111,7 @@ jobs:
 
   message-relayer:
     name: Publish Message Relayer
-    runs-on: ARM64
+    runs-on: ubuntu-latest
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -134,6 +134,8 @@ jobs:
       - name: Build and push
         run: |
           lscpu
+          uname -r
+          cat /etc/os-release
           docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
           docker push onthertech/titan-events-listener:arm64
 
