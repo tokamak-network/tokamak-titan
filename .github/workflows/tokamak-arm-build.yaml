@@ -137,7 +137,7 @@ jobs:
           uname -r
           cat /etc/os-release
           docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
-          docker push onthertech/titan-events-listener:arm64
+          docker push onthertech/message-relayer:arm64
 
   # titan-message-relayer:
   #   name: Publish Titan Message Relayer
