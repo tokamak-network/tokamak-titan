@@ -3,111 +3,111 @@ name: Tokamak Optimism Publish (Nightly Version)
 on: push
 
 jobs:
-  l2geth:
-    name: Publish L2Geth
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # l2geth:
+  #   name: Publish L2Geth
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Get version
-        id: extractver
-        run: |
-          whoami
-          echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         whoami
+  #         echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Publish L2Geth
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./l2geth/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-l2geth:test
+  #     - name: Publish L2Geth
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./l2geth/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-l2geth:test
 
-  gas-oracle:
-    name: Publish Gas Oracle
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # gas-oracle:
+  #   name: Publish Gas Oracle
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Publish Gas Oracle
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./gas-oracle/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-gas-oracle:test
+  #     - name: Publish Gas Oracle
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./gas-oracle/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-gas-oracle:test
 
-  hardhat-node:
-    name: Publish Hardhat Node
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # hardhat-node:
+  #   name: Publish Hardhat Node
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Get version from package.json
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version from package.json
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Publish Hardhat Node
-        uses: docker/build-push-action@v2
-        with:
-          context: ./ops/docker/hardhat
-          file: ./ops/docker/hardhat/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-hardhat:test
+  #     - name: Publish Hardhat Node
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: ./ops/docker/hardhat
+  #         file: ./ops/docker/hardhat/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-hardhat:test
 
   message-relayer:
     name: Publish Message Relayer
@@ -135,423 +135,418 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/optimism.message-relayer:test
-
-  titan-message-relayer:
-    name: Publish Titan Message Relayer
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get version
-        id: extractver
         run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+          lscpu
+          docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
+          docker push onthertech/titan-events-listener:arm64
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # titan-message-relayer:
+  #   name: Publish Titan Message Relayer
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-message-relayer
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-message-relayer:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  fault-detector:
-    name: Publish Fault Detector
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: titan-message-relayer
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-message-relayer:test
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # fault-detector:
+  #   name: Publish Fault Detector
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: fault-detector
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-fault-detector:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  drippie-mon:
-    name: Publish Drippie Monitor
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: fault-detector
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-fault-detector:test
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # drippie-mon:
+  #   name: Publish Drippie Monitor
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: drippie-mon
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-drippie-mon:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  data-transport-layer:
-    name: Publish Data Transport Layer
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: drippie-mon
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-drippie-mon:test
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # data-transport-layer:
+  #   name: Publish Data Transport Layer
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: data-transport-layer
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-data-transport-layer:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  contracts:
-    name: Publish Deployer
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: data-transport-layer
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-data-transport-layer:test
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # contracts:
+  #   name: Publish Deployer
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-deployer
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-deployer:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  proxyd:
-    name: Publish proxyd
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: titan-deployer
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-deployer:test
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  # proxyd:
+  #   name: Publish proxyd
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./proxyd/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-proxyd:test
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  op-exporter:
-    name: Publish op-exporter
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./proxyd/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-proxyd:test
+  #         build-args: |
+  #           GITDATE=${{ steps.extractver.outputs.GITDATE }}
+  #           GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+  #           GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  # op-exporter:
+  #   name: Publish op-exporter
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./op-exporter/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-op-exporter:test
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  l2geth-exporter:
-    name: Publish l2geth-exporter
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./op-exporter/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-op-exporter:test
+  #         build-args: |
+  #           GITDATE=${{ steps.extractver.outputs.GITDATE }}
+  #           GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+  #           GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  # l2geth-exporter:
+  #   name: Publish l2geth-exporter
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./l2geth-exporter/Dockerfile
-          push: true
-          platforms: linux/arm64
-          tags: |
-            onthertech/titan-l2geth-exporter:test
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  batch-submitter-service:
-    name: Publish batch-submitter-service
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./l2geth-exporter/Dockerfile
+  #         push: true
+  #         platforms: linux/arm64
+  #         tags: |
+  #           onthertech/titan-l2geth-exporter:test
+  #         build-args: |
+  #           GITDATE=${{ steps.extractver.outputs.GITDATE }}
+  #           GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+  #           GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  # batch-submitter-service:
+  #   name: Publish batch-submitter-service
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./batch-submitter/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-batch-submitter-service:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  indexer:
-    name: Publish indexer
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./batch-submitter/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-batch-submitter-service:test
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  # indexer:
+  #   name: Publish indexer
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./indexer/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-indexer:test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-  teleportr:
-    name: Publish Teleportr
-    runs-on: ARM64
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./indexer/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-indexer:test
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  # teleportr:
+  #   name: Publish Teleportr
+  #   runs-on: ARM64
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./teleportr/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            onthertech/titan-teleportr:test
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
+
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./teleportr/Dockerfile
+  #         platforms: linux/arm64
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-teleportr:test
+  #         build-args: |
+  #           GITDATE=${{ steps.extractver.outputs.GITDATE }}
+  #           GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+  #           GITVERSION=${{ steps.extractver.outputs.VERSION }}
