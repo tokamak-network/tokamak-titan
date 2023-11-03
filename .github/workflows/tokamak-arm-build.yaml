@@ -111,7 +111,7 @@ jobs:
 
   message-relayer:
     name: Publish Message Relayer
-    runs-on: ubuntu-latest
+    runs-on: ARM64
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
