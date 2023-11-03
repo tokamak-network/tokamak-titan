@@ -24,6 +24,7 @@ jobs:
   test:
     name: Test-Job
     runs-on: ARM64
+    needs: start-runners
     steps:
       - name: Machine check
         run: cat /etc/os-release
@@ -31,6 +32,9 @@ jobs:
   stop-runners:
     name: Stop Github Runners
     runs-on: ubuntu-latest
+    needs:
+      - start-runners
+      - test
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
