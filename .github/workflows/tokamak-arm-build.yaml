@@ -724,6 +724,22 @@ jobs:
     name: Stop Github Runners
     runs-on: ubuntu-latest
     needs:
+      - start-runners
+      - l2geth
+      - gas-oracle
+      - hardhat-node
+      - message-relayer
+      - titan-message-relayer
+      - fault-detector
+      - drippie-mon
+      - data-transport-layer
+      - contracts
+      - proxyd
+      - op-exporter
+      - l2geth-exporter
+      - batch-submitter-service
+      - indexer
+      - teleportr
 
     steps:
       - name: Configure AWS credentials
