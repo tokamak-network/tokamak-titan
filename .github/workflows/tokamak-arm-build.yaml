@@ -38,7 +38,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
       - name: Start EC2 runner-1
@@ -49,7 +49,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
       - name: Start EC2 runner-2
@@ -60,7 +60,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
       - name: Start EC2 runner-3
@@ -71,7 +71,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
       - name: Start EC2 runner-4
@@ -82,7 +82,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
       - name: Start EC2 runner-5
@@ -93,7 +93,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.large
-          subnet-id: vpc-d0d14abb
+          subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
 
   l2geth:
