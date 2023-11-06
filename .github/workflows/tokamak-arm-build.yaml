@@ -40,6 +40,12 @@ jobs:
           ec2-instance-type: t4g.large
           subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
+          pre-runner-script: |
+            sudo yum update -y && \
+            sudo yum install docker -y && \
+            sudo yum install git -y && \
+            sudo yum install libicu -y && \
+            sudo systemctl enable docker
 
       - name: Start EC2 runner-1
         id: start-ec2-runner-1
