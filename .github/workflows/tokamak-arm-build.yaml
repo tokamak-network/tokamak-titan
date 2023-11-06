@@ -41,7 +41,7 @@ jobs:
           subnet-id: vpc-d0d14abb
           security-group-id: sg-08c81d0af78c0859f
 
-      - name: Start EC2 runner
+      - name: Start EC2 runner-1
         id: start-ec2-runner-1
         uses: machulav/ec2-github-runner@v2
         with:
@@ -52,7 +52,7 @@ jobs:
           subnet-id: vpc-d0d14abb
           security-group-id: sg-08c81d0af78c0859f
 
-      - name: Start EC2 runner
+      - name: Start EC2 runner-2
         id: start-ec2-runner-2
         uses: machulav/ec2-github-runner@v2
         with:
@@ -63,7 +63,7 @@ jobs:
           subnet-id: vpc-d0d14abb
           security-group-id: sg-08c81d0af78c0859f
 
-      - name: Start EC2 runner
+      - name: Start EC2 runner-3
         id: start-ec2-runner-3
         uses: machulav/ec2-github-runner@v2
         with:
@@ -74,7 +74,7 @@ jobs:
           subnet-id: vpc-d0d14abb
           security-group-id: sg-08c81d0af78c0859f
 
-      - name: Start EC2 runner
+      - name: Start EC2 runner-4
         id: start-ec2-runner-4
         uses: machulav/ec2-github-runner@v2
         with:
@@ -85,7 +85,7 @@ jobs:
           subnet-id: vpc-d0d14abb
           security-group-id: sg-08c81d0af78c0859f
 
-      - name: Start EC2 runner
+      - name: Start EC2 runner-5
         id: start-ec2-runner-5
         uses: machulav/ec2-github-runner@v2
         with:
@@ -710,46 +710,46 @@ jobs:
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
 
-      - name: Stop EC2 runner
+      - name: Stop EC2 runner 1
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id-1 }}
 
-      - name: Stop EC2 runner
+      - name: Stop EC2 runner 2
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id-2 }}
 
-      - name: Stop EC2 runner
+      - name: Stop EC2 runner 3
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id-3 }}
 
-      - name: Stop EC2 runner
+      - name: Stop EC2 runner 4
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id-4 }}
 
-      - name: Stop EC2 runner
+      - name: Stop EC2 runner 5
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id-5 }}
