@@ -18,6 +18,7 @@ jobs:
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
+        # if: ${{ runner.architecture == 'arm64' }}
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -32,6 +33,7 @@ jobs:
 
       - name: Start EC2 runner
         id: start-ec2-runner
+        # if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -43,6 +45,7 @@ jobs:
 
       - name: Start EC2 runner-1
         id: start-ec2-runner-1
+        # if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -54,6 +57,7 @@ jobs:
 
       - name: Start EC2 runner-2
         id: start-ec2-runner-2
+        # if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -65,6 +69,7 @@ jobs:
 
       - name: Start EC2 runner-3
         id: start-ec2-runner-3
+        # if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -76,6 +81,7 @@ jobs:
 
       - name: Start EC2 runner-4
         id: start-ec2-runner-4
+        # if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -87,6 +93,7 @@ jobs:
 
       - name: Start EC2 runner-5
         id: start-ec2-runner-5
+        if: ${{ runner.architecture == 'arm64' }}
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
@@ -98,8 +105,11 @@ jobs:
 
   l2geth:
     name: Publish L2Geth
-    runs-on: ARM64
     needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
 
@@ -135,7 +145,10 @@ jobs:
 
   gas-oracle:
     name: Publish Gas Oracle
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -171,7 +184,10 @@ jobs:
 
   hardhat-node:
     name: Publish Hardhat Node
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -207,7 +223,10 @@ jobs:
 
   message-relayer:
     name: Publish Message Relayer
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -229,16 +248,29 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Build and push
-        run: |
-          lscpu
-          uname -r
-          cat /etc/os-release
-          docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
-          docker push onthertech/message-relayer:arm64
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
+          push: true
+          tags: |
+            onthertech/optimism.message-relayer:test
+
+      # - name: Build and push
+      #   run: |
+      #     lscpu
+      #     uname -r
+      #     cat /etc/os-release
+      #     docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
+      #     docker push onthertech/message-relayer:arm64
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -275,7 +307,10 @@ jobs:
 
   fault-detector:
     name: Publish Fault Detector
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -312,7 +347,10 @@ jobs:
 
   drippie-mon:
     name: Publish Drippie Monitor
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -349,7 +387,10 @@ jobs:
 
   data-transport-layer:
     name: Publish Data Transport Layer
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -386,7 +427,10 @@ jobs:
 
   contracts:
     name: Publish Deployer
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -423,7 +467,10 @@ jobs:
 
   proxyd:
     name: Publish proxyd
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -464,7 +511,10 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -505,7 +555,10 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -546,7 +599,10 @@ jobs:
 
   batch-submitter-service:
     name: Publish batch-submitter-service
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -582,7 +638,10 @@ jobs:
 
   indexer:
     name: Publish indexer
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
@@ -619,7 +678,10 @@ jobs:
 
   teleportr:
     name: Publish Teleportr
-    runs-on: ARM64
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     needs: start-runners
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
