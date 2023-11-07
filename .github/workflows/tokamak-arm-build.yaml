@@ -36,16 +36,10 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          ec2-image-id: ami-01bd9dc38789ab007
-          ec2-instance-type: t4g.large
+          ec2-image-id: ami-07c0bebc688a06c38
+          ec2-instance-type: c6g.xlarge
           subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
-          pre-runner-script: |
-            sudo yum update -y && \
-            sudo yum install docker -y && \
-            sudo yum install git -y && \
-            sudo yum install libicu -y && \
-            sudo systemctl enable docker
 
       - name: Start EC2 runner-1
         id: start-ec2-runner-1
