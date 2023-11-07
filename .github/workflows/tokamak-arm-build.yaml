@@ -994,7 +994,7 @@ jobs:
         with:
           mode: stop
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          label: ${{ needs.start-runner.outputs.label-6 }}
+          label: ${{ needs.start-runners.outputs.label-6 }}
           ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-6 }}
 
       - name: Stop EC2 runner 7
@@ -1002,5 +1002,5 @@ jobs:
         with:
           mode: stop
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          label: ${{ needs.start-runner.outputs.label-7 }}
+          label: ${{ needs.start-runners.outputs.label-7 }}
           ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-7 }}
