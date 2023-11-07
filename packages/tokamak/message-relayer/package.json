@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@eth-optimism/common-ts": "0.6.6",
-    "@tokamak-network/titan-contracts": "0.0.1",
+    "@tokamak-network/titan-contracts": "0.0.3",
     "@eth-optimism/core-utils": "0.10.1",
     "@eth-optimism/ynatm": "^0.2.2",
     "@tokamak-network/titan-sdk": "0.0.6",
