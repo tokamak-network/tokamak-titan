@@ -18,6 +18,14 @@ jobs:
         start-runners-7,
       ]
     outputs:
+      label-0: ${{ needs.start-runners-0.outputs.label }}
+      label-1: ${{ needs.start-runners-1.outputs.label }}
+      label-2: ${{ needs.start-runners-2.outputs.label }}
+      label-3: ${{ needs.start-runners-3.outputs.label }}
+      label-4: ${{ needs.start-runners-4.outputs.label }}
+      label-5: ${{ needs.start-runners-5.outputs.label }}
+      label-6: ${{ needs.start-runners-6.outputs.label }}
+      label-7: ${{ needs.start-runners-7.outputs.label }}
       ec2-instance-id-0: ${{ needs.start-runners-0.outputs.ec2-instance-id }}
       ec2-instance-id-1: ${{ needs.start-runners-1.outputs.ec2-instance-id }}
       ec2-instance-id-2: ${{ needs.start-runners-2.outputs.ec2-instance-id }}
@@ -38,6 +46,15 @@ jobs:
           echo ${{ needs.start-runners-5.outputs.ec2-instance-id }}
           echo ${{ needs.start-runners-6.outputs.ec2-instance-id }}
           echo ${{ needs.start-runners-7.outputs.ec2-instance-id }}
+          echo "Runner labels:"
+          echo ${{ needs.start-runners-0.outputs.label }}
+          echo ${{ needs.start-runners-1.outputs.label }}
+          echo ${{ needs.start-runners-2.outputs.label }}
+          echo ${{ needs.start-runners-3.outputs.label }}
+          echo ${{ needs.start-runners-4.outputs.label }}
+          echo ${{ needs.start-runners-5.outputs.label }}
+          echo ${{ needs.start-runners-6.outputs.label }}
+          echo ${{ needs.start-runners-7.outputs.label }}
           echo "Finished setup arm64 runners"
 
   start-runners-0:
