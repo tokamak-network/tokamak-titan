@@ -36,7 +36,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          ec2-image-id: ami-07c0bebc688a06c38
+          ec2-image-id: ami-0d5beba51c86d8d05
           ec2-instance-type: c6g.xlarge
           subnet-id: subnet-072dee569d1bd6e7d
           security-group-id: sg-08c81d0af78c0859f
