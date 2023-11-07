@@ -1068,8 +1068,8 @@ jobs:
 
   message-relayer-image:
     name: Build nightly docker image
-    needs: message-relayer
-    runs-on:
+
+    needs:
       - l2geth
       - gas-oracle
       - hardhat-node
@@ -1085,7 +1085,7 @@ jobs:
       # - batch-submitter-service
       # - indexer
       # - teleportr
-
+    runs-on: ubuntu-latest
     steps:
       - name: Setup manifest-tool
         run: |
