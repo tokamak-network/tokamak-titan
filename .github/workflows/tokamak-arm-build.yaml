@@ -692,7 +692,7 @@ jobs:
 
       - name: Build and push
         run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./proxyd/Dockerfile -t onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }} .
+          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./proxyd/Dockerfile -t onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }} .
           docker image ls
           docker push onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
 
