@@ -604,213 +604,213 @@ jobs:
           tags: |
             onthertech/titan-fault-detector:${{ steps.runner_info.outputs.architecture }}
 
-  drippie-mon:
-    name: Publish Drippie Monitor
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        runner: [ubuntu-latest, ARM64]
-    needs: start-runners
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # drippie-mon:
+  #   name: Publish Drippie Monitor
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     matrix:
+  #       runner: [ubuntu-latest, ARM64]
+  #   needs: start-runners
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Check Runner Architecture
-        id: runner_info
-        run: |
-          ARCHITECTURE=$(uname -m)
-          if [ "$ARCHITECTURE" = "x86_64" ]; then
-            ARCHITECTURE="amd64"
-          fi
-          if [ "$ARCHITECTURE" = "aarch64" ]; then
-            ARCHITECTURE="arm64"
-          fi
-          echo "::set-output name=architecture::$ARCHITECTURE"
+  #     - name: Check Runner Architecture
+  #       id: runner_info
+  #       run: |
+  #         ARCHITECTURE=$(uname -m)
+  #         if [ "$ARCHITECTURE" = "x86_64" ]; then
+  #           ARCHITECTURE="amd64"
+  #         fi
+  #         if [ "$ARCHITECTURE" = "aarch64" ]; then
+  #           ARCHITECTURE="arm64"
+  #         fi
+  #         echo "::set-output name=architecture::$ARCHITECTURE"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: drippie-mon
-          push: true
-          tags: |
-            onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: drippie-mon
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }}
 
-  data-transport-layer:
-    name: Publish Data Transport Layer
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        runner: [ubuntu-latest, ARM64]
-    needs: start-runners
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # data-transport-layer:
+  #   name: Publish Data Transport Layer
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     matrix:
+  #       runner: [ubuntu-latest, ARM64]
+  #   needs: start-runners
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Check Runner Architecture
-        id: runner_info
-        run: |
-          ARCHITECTURE=$(uname -m)
-          if [ "$ARCHITECTURE" = "x86_64" ]; then
-            ARCHITECTURE="amd64"
-          fi
-          if [ "$ARCHITECTURE" = "aarch64" ]; then
-            ARCHITECTURE="arm64"
-          fi
-          echo "::set-output name=architecture::$ARCHITECTURE"
+  #     - name: Check Runner Architecture
+  #       id: runner_info
+  #       run: |
+  #         ARCHITECTURE=$(uname -m)
+  #         if [ "$ARCHITECTURE" = "x86_64" ]; then
+  #           ARCHITECTURE="amd64"
+  #         fi
+  #         if [ "$ARCHITECTURE" = "aarch64" ]; then
+  #           ARCHITECTURE="arm64"
+  #         fi
+  #         echo "::set-output name=architecture::$ARCHITECTURE"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: data-transport-layer
-          push: true
-          tags: |
-            onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: data-transport-layer
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }}
 
-  contracts:
-    name: Publish Deployer
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        runner: [ubuntu-latest, ARM64]
-    needs: start-runners
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # contracts:
+  #   name: Publish Deployer
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     matrix:
+  #       runner: [ubuntu-latest, ARM64]
+  #   needs: start-runners
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Check Runner Architecture
-        id: runner_info
-        run: |
-          ARCHITECTURE=$(uname -m)
-          if [ "$ARCHITECTURE" = "x86_64" ]; then
-            ARCHITECTURE="amd64"
-          fi
-          if [ "$ARCHITECTURE" = "aarch64" ]; then
-            ARCHITECTURE="arm64"
-          fi
-          echo "::set-output name=architecture::$ARCHITECTURE"
+  #     - name: Check Runner Architecture
+  #       id: runner_info
+  #       run: |
+  #         ARCHITECTURE=$(uname -m)
+  #         if [ "$ARCHITECTURE" = "x86_64" ]; then
+  #           ARCHITECTURE="amd64"
+  #         fi
+  #         if [ "$ARCHITECTURE" = "aarch64" ]; then
+  #           ARCHITECTURE="arm64"
+  #         fi
+  #         echo "::set-output name=architecture::$ARCHITECTURE"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-deployer
-          push: true
-          tags: |
-            onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./ops/docker/Dockerfile.packages
+  #         target: titan-deployer
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }}
 
-  proxyd:
-    name: Publish proxyd
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        runner: [ubuntu-latest, ARM64]
-    needs: start-runners
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
+  # proxyd:
+  #   name: Publish proxyd
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     matrix:
+  #       runner: [ubuntu-latest, ARM64]
+  #   needs: start-runners
+  #   outputs:
+  #     newVersion: ${{ steps.extractver.outputs.VERSION }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Get version
-        id: extractver
-        run: |
-          echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+  #     - name: Get version
+  #       id: extractver
+  #       run: |
+  #         echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
+  #         echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
+  #         echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
 
-      - name: Check Runner Architecture
-        id: runner_info
-        run: |
-          ARCHITECTURE=$(uname -m)
-          if [ "$ARCHITECTURE" = "x86_64" ]; then
-            ARCHITECTURE="amd64"
-          fi
-          if [ "$ARCHITECTURE" = "aarch64" ]; then
-            ARCHITECTURE="arm64"
-          fi
-          echo "::set-output name=architecture::$ARCHITECTURE"
+  #     - name: Check Runner Architecture
+  #       id: runner_info
+  #       run: |
+  #         ARCHITECTURE=$(uname -m)
+  #         if [ "$ARCHITECTURE" = "x86_64" ]; then
+  #           ARCHITECTURE="amd64"
+  #         fi
+  #         if [ "$ARCHITECTURE" = "aarch64" ]; then
+  #           ARCHITECTURE="arm64"
+  #         fi
+  #         echo "::set-output name=architecture::$ARCHITECTURE"
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./proxyd/Dockerfile
-          push: true
-          tags: |
-            onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v2
+  #       with:
+  #         context: .
+  #         file: ./proxyd/Dockerfile
+  #         push: true
+  #         tags: |
+  #           onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
+  #         build-args: |
+  #           GITDATE=${{ steps.extractver.outputs.GITDATE }}
+  #           GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+  #           GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   # op-exporter:
   #   name: Publish op-exporter
@@ -1088,10 +1088,10 @@ jobs:
       - message-relayer
       - titan-message-relayer
       - fault-detector
-      - drippie-mon
-      - data-transport-layer
-      - contracts
-      - proxyd
+      # - drippie-mon
+      # - data-transport-layer
+      # - contracts
+      # - proxyd
       # - op-exporter
       # - l2geth-exporter
       # - batch-submitter-service
@@ -1131,17 +1131,17 @@ jobs:
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:test-${{ needs.message-relayer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:test
 
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test-${{ needs.message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test
 
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test-${{ needs.message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test
 
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test-${{ needs.message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test
 
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test-${{ needs.message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test
 
           # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:test-${{ needs.message-relayer.outputs.newVersion}}
           # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:test
@@ -1168,10 +1168,10 @@ jobs:
       - message-relayer
       - titan-message-relayer
       - fault-detector
-      - drippie-mon
-      - data-transport-layer
-      - contracts
-      - proxyd
+      # - drippie-mon
+      # - data-transport-layer
+      # - contracts
+      # - proxyd
       # - op-exporter
       # - l2geth-exporter
       # - batch-submitter-service
