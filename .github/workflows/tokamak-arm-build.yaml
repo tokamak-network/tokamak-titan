@@ -26,6 +26,9 @@ jobs:
       label-5: ${{ needs.start-runners-5.outputs.label }}
       label-6: ${{ needs.start-runners-6.outputs.label }}
       label-7: ${{ needs.start-runners-7.outputs.label }}
+      label-8: ${{ needs.start-runners-8.outputs.label }}
+      label-9: ${{ needs.start-runners-9.outputs.label }}
+      label-10: ${{ needs.start-runners-10.outputs.label }}
       ec2-instance-id-0: ${{ needs.start-runners-0.outputs.ec2-instance-id }}
       ec2-instance-id-1: ${{ needs.start-runners-1.outputs.ec2-instance-id }}
       ec2-instance-id-2: ${{ needs.start-runners-2.outputs.ec2-instance-id }}
@@ -34,6 +37,9 @@ jobs:
       ec2-instance-id-5: ${{ needs.start-runners-5.outputs.ec2-instance-id }}
       ec2-instance-id-6: ${{ needs.start-runners-6.outputs.ec2-instance-id }}
       ec2-instance-id-7: ${{ needs.start-runners-7.outputs.ec2-instance-id }}
+      ec2-instance-id-8: ${{ needs.start-runners-8.outputs.ec2-instance-id }}
+      ec2-instance-id-9: ${{ needs.start-runners-9.outputs.ec2-instance-id }}
+      ec2-instance-id-10: ${{ needs.start-runners-10.outputs.ec2-instance-id }}
     steps:
       - name: Runners status
         run: |
@@ -241,6 +247,84 @@ jobs:
 
   start-runners-7:
     name: Start EC2 Runner 7
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-013cf87174bb21c25
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runners-8:
+    name: Start EC2 Runner 8
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-013cf87174bb21c25
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runners-9:
+    name: Start EC2 Runner 9
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-013cf87174bb21c25
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runners-10:
+    name: Start EC2 Runner 10
     runs-on: ubuntu-latest
     outputs:
       label: ${{ steps.start-ec2-runner.outputs.label }}
@@ -1112,3 +1196,27 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           label: ${{ needs.start-runners.outputs.label-7 }}
           ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-7 }}
+
+      - name: Stop EC2 runner 8
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-8 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-8 }}
+
+      - name: Stop EC2 runner 9
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-9 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-9 }}
+
+      - name: Stop EC2 runner 10
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-10 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-10 }}
