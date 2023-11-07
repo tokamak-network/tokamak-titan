@@ -924,20 +924,6 @@ jobs:
           echo "::set-output name=architecture::$ARCHITECTURE"
 
       - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./teleportr/Dockerfile
-          platform: linux/${{ steps.runner_info.outputs.architecture }}
-          push: true
-          tags: |
-            onthertech/titan-teleportr::${{ steps.runner_info.outputs.architecture }}
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
-
-      - name: Build and push
         run: |
           docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./teleportr/Dockerfile -t onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }} .
           docker image ls
