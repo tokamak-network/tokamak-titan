@@ -9,13 +9,13 @@ jobs:
     outputs:
       label: ${{ steps.start-ec2-runner.outputs.label }}
       ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
-      ec2-instance-id-1: ${{ steps.start-ec2-runner-1.outputs.ec2-instance-id }}
-      ec2-instance-id-2: ${{ steps.start-ec2-runner-2.outputs.ec2-instance-id }}
-      ec2-instance-id-3: ${{ steps.start-ec2-runner-3.outputs.ec2-instance-id }}
-      ec2-instance-id-4: ${{ steps.start-ec2-runner-4.outputs.ec2-instance-id }}
-      ec2-instance-id-5: ${{ steps.start-ec2-runner-5.outputs.ec2-instance-id }}
-      ec2-instance-id-6: ${{ steps.start-ec2-runner-6.outputs.ec2-instance-id }}
-      ec2-instance-id-7: ${{ steps.start-ec2-runner-7.outputs.ec2-instance-id }}
+      # ec2-instance-id-1: ${{ steps.start-ec2-runner-1.outputs.ec2-instance-id }}
+      # ec2-instance-id-2: ${{ steps.start-ec2-runner-2.outputs.ec2-instance-id }}
+      # ec2-instance-id-3: ${{ steps.start-ec2-runner-3.outputs.ec2-instance-id }}
+      # ec2-instance-id-4: ${{ steps.start-ec2-runner-4.outputs.ec2-instance-id }}
+      # ec2-instance-id-5: ${{ steps.start-ec2-runner-5.outputs.ec2-instance-id }}
+      # ec2-instance-id-6: ${{ steps.start-ec2-runner-6.outputs.ec2-instance-id }}
+      # ec2-instance-id-7: ${{ steps.start-ec2-runner-7.outputs.ec2-instance-id }}
 
     steps:
       - name: Configure AWS credentials
@@ -268,7 +268,7 @@ jobs:
           # platforms: linux/arm64, linux/amd64
           push: true
           tags: |
-            onthertech/optimism.message-relayer:${{ runner.architecture }}
+            onthertech/optimism.message-relayer:test
 
       # - name: Build and push
       #   run: |
