@@ -38,8 +38,8 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-0d5beba51c86d8d05
           ec2-instance-type: c6g.xlarge
-          subnet-id: subnet-072dee569d1bd6e7d
-          security-group-id: sg-08c81d0af78c0859f
+          subnet-id: subnet-2767ac78
+          security-group-id: sg-06100dacc178de7b6
 
       - name: Start EC2 runner-1
         id: start-ec2-runner-1
