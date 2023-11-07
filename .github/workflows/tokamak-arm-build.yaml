@@ -1068,50 +1068,80 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
+          echo "Building onthertech/titan-l2geth:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:test-${{ needs.l2geth.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-gas-oracle:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:test-${{ needs.gas-oracle.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-hardhat:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:test-${{ needs.hardhat-node.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-message-relayer:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test-${{ needs.message-relayer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-message-relayer:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:test-${{ needs.titan-message-relayer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-fault-detector:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:test-${{ needs.fault-detector.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-drippie-mon:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test-${{ needs.drippie-mon.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-data-transport-layer:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test-${{ needs.data-transport-layer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-deployer:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test-${{ needs.contracts.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-proxyd:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test-${{ needs.proxyd.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-op-exporter:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:test-${{ needs.op-exporter.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:test
+          echo "Finished!"
 
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exportertest-${{ needs.l2geth-exporter.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exportertest
+          echo "Building onthertech/titan-l2geth-exporter:test"
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exporter:test-${{ needs.l2geth-exporter.outputs.newVersion}}
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exporter:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-batch-submitter-service:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-batch-submitter-service:ARCH --target onthertech/titan-batch-submitter-service:test-${{ needs.batch-submitter-service.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-batch-submitter-service:ARCH --target onthertech/titan-batch-submitter-service:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-indexer:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-indexer:ARCH --target onthertech/titan-indexer:test-${{ needs.indexer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-indexer:ARCH --target onthertech/titan-indexer:test
+          echo "Finished!"
 
+          echo "Building onthertech/titan-teleportr:test"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:test-${{ needs.teleportr.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:test
+          echo "Finished!"
 
   stop-runner:
     name: Stop self-hosted EC2 runners
