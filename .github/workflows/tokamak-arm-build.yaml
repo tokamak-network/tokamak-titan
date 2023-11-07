@@ -305,7 +305,7 @@ jobs:
 
       - name: Build and push
         run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth/Dockerfile -t onthertech/titan-l2geth:amd64 .
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth/Dockerfile -t onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }} .
           docker image ls
           docker push onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
 
