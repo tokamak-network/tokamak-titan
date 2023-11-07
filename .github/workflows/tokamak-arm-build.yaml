@@ -303,18 +303,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Publish L2Geth
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./l2geth/Dockerfile
-          platform: linux/${{ steps.runner_info.outputs.architecture }}
-          push: true
-          tags: |
-            onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
+      - name: Build and push
+        run: |
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth/Dockerfile -t onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }} .
+          docker image ls
+          docker push onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
 
   gas-oracle:
     name: Publish Gas Oracle
@@ -354,18 +347,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Publish Gas Oracle
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./gas-oracle/Dockerfile
-          platform: linux/${{ steps.runner_info.outputs.architecture }}
-          push: true
-          tags: |
-            onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }}
+      - name: Build and push
+        run: |
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./gas-oracle/Dockerfile -t onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }} .
+          docker image ls
+          docker push onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }}
 
   hardhat-node:
     name: Publish Hardhat Node
@@ -405,18 +391,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Publish Hardhat Node
-        uses: docker/build-push-action@v2
-        with:
-          context: ./ops/docker/hardhat
-          file: ./ops/docker/hardhat/Dockerfile
-          platform: linux/${{ steps.runner_info.outputs.architecture }}
-          push: true
-          tags: |
-            onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
+      - name: Build and push
+        run: |
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./ops/docker/hardhat/Dockerfile -t onthertech/ttitan-hardhat:${{ steps.runner_info.outputs.architecture }} ./ops/docker/hardhat
+          docker image ls
+          docker push onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
 
   message-relayer:
     name: Publish Message Relayer
@@ -452,22 +431,11 @@ jobs:
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
       - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
-          platform: linux/${{ steps.runner_info.outputs.architecture }}
-          push: true
-          tags: |
-            onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
+        run: |
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target message-relayer -f ./ops/docker/Dockerfile.packages -t onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }} .
+          docker image ls
+          docker push onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
@@ -520,6 +488,12 @@ jobs:
           push: true
           tags: |
             onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
+
+      - name: Build and push
+        run: |
+          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target titan-message-relayer -f ./ops/docker/Dockerfile.packages -t onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }} .
+          docker image ls
+          docker push onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   fault-detector:
     name: Publish Fault Detector
