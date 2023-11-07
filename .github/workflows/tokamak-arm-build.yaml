@@ -1026,7 +1026,7 @@ jobs:
           docker push onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }}
 
   multi-arch-image:
-    name: Build multi-arch image
+    name: Build multi-arch images
     needs:
       - l2geth
       - gas-oracle
@@ -1105,7 +1105,7 @@ jobs:
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:test
 
   stop-runner:
-    name: Stop self-hosted EC2 runner
+    name: Stop self-hosted EC2 runners
     needs:
       - start-runners
       - l2geth
