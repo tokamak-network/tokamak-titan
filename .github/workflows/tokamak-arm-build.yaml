@@ -16,6 +16,9 @@ jobs:
         start-runners-5,
         start-runners-6,
         start-runners-7,
+        start-runners-8,
+        start-runners-9,
+        start-runners-10,
       ]
     outputs:
       label-0: ${{ needs.start-runners-0.outputs.label }}
@@ -64,9 +67,9 @@ jobs:
           echo ${{ needs.start-runners-5.outputs.label }}
           echo ${{ needs.start-runners-6.outputs.label }}
           echo ${{ needs.start-runners-7.outputs.label }}
-          echo ${{ needs.start-runners-8.outputs.ec2-instance-id }}
-          echo ${{ needs.start-runners-9.outputs.ec2-instance-id }}
-          echo ${{ needs.start-runners-10.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runners-8.outputs.label }}
+          echo ${{ needs.start-runners-9.outputs.label }}
+          echo ${{ needs.start-runners-10.outputs.label }}
           echo "Finished setup arm64 runners"
 
   start-runners-0:
