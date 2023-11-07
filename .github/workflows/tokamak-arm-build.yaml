@@ -296,8 +296,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64/v8 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test-${{ needs.message-relayer.outputs.newVersion}}
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64/v8 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test
 
   # titan-message-relayer:
   #   name: Publish Titan Message Relayer
