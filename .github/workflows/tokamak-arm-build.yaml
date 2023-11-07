@@ -271,18 +271,33 @@ jobs:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: message-relayer
-          # platforms: linux/arm64, linux/amd64
           push: true
           tags: |
             onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
-      # - name: Build and push
-      #   run: |
-      #     lscpu
-      #     uname -r
-      #     cat /etc/os-release
-      #     docker build --build-arg TARGETARCH=arm64 --build-arg TARGETOS=linux -t onthertech/message-relayer:arm64 -f ./ops/docker/Dockerfile.packages --target message-relayer .
-      #     docker push onthertech/message-relayer:arm64
+  message-relayer-image:
+    name: Build nightly docker image
+    needs: message-relayer
+    runs-on: ubuntu-latest
+    outputs:
+      newVersion: ${{ needs.message-relayer.outputs.newVersion }}
+    steps:
+      - name: Setup manifest-tool
+        run: |
+          wget https://github.com/estesp/manifest-tool/releases/download/v1.0.3/manifest-tool-linux-amd64
+          chmod +x manifest-tool-linux-amd64
+          sudo mv manifest-tool-linux-amd64 /usr/local/bin/manifest-tool
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Build and Push Docker Image
+        run: |
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test-${{ needs.message-relayer.outputs.newVersion}}
+          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:test
 
   # titan-message-relayer:
   #   name: Publish Titan Message Relayer
@@ -773,8 +788,8 @@ jobs:
         with:
           mode: stop
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          label: ${{ needs.start-runner.outputs.label }}
-          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
+          label: ${{ needs.start-runners.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id }}
 
       # - name: Stop EC2 runner 1
       #   uses: machulav/ec2-github-runner@v2
