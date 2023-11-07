@@ -1,6 +1,6 @@
 {
   "name": "@tokamak-network/titan-contracts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "L1 and L2 smart contracts for Titan",
   "main": "dist/index",
   "types": "dist/index",
