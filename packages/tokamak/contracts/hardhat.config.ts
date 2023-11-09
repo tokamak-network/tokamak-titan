@@ -20,25 +20,6 @@ import './tasks'
 // Load environment variables from .env
 dotenv.config()
 
-const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require("hardhat/builtin-tasks/task-names");
-const path = require("path");
-
-subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {
-  if (args.solcVersion === "0.5.17") {
-    const compilerPath = path.join(__dirname, "soljson-v0.5.17+commit.d19bba13.js");
-    console.log("Use customize solc")
-    return {
-      compilerPath,
-      isSolcJs: true,
-      version: args.solcVersion,
-      longVersion: "0.5.17+commit.d19bba13"
-    }
-  }
-
-  // we just use the default subtask if the version is not 0.8.5
-  return runSuper();
-})
-
 const enableGasReport = !!process.env.ENABLE_GAS_REPORT
 const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32)
 // this is to avoid hardhat error
