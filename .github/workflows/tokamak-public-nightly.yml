@@ -3,7 +3,7 @@ name: Tokamak Optimism Publish (Nightly Version)
 on:
   push:
     branches:
-      - 'main'
+      - '*'
 
 jobs:
   start-runners:
