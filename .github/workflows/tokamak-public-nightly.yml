@@ -98,7 +98,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-1:
@@ -124,7 +124,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-2:
@@ -150,7 +150,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-3:
@@ -176,7 +176,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-4:
@@ -202,7 +202,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-5:
@@ -228,7 +228,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-6:
@@ -254,7 +254,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-7:
@@ -280,7 +280,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-8:
@@ -306,7 +306,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-9:
@@ -332,7 +332,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   start-runner-10:
@@ -358,7 +358,7 @@ jobs:
           github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
           ec2-image-id: ami-01bd9dc38789ab007
           ec2-instance-type: t4g.2xlarge
-          subnet-id: subnet-013cf87174bb21c25
+          subnet-id: subnet-4aa53021
           security-group-id: sg-03165a21a3ba6e8b3
 
   l2geth:
@@ -1403,7 +1403,7 @@ jobs:
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly
           echo "Finished!"
 
-          echo "Building onthertech/titan-message-relayer:nightly"
+          echo "Building onthertech/optimism.message-relayer:nightly"
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
           manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly
