@@ -517,14 +517,14 @@ jobs:
       #     docker image ls
       #     docker push onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
 
-      - name: Publish Hardhat Node
-        uses: docker/build-push-action@v2
-        with:
-          context: ./ops/docker/hardhat
-          file: ./ops/docker/hardhat/Dockerfile
-          push: true
-          tags: |
-            onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
+      # - name: Publish Hardhat Node
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: ./ops/docker/hardhat
+      #     file: ./ops/docker/hardhat/Dockerfile
+      #     push: true
+      #     tags: |
+      #       onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
 
   message-relayer:
     name: Publish Message Relayer
@@ -571,15 +571,15 @@ jobs:
       #     docker image ls
       #     docker push onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
-          push: true
-          tags: |
-            onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
+      # - name: Build and push
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: .
+      #     file: ./ops/docker/Dockerfile.packages
+      #     target: message-relayer
+      #     push: true
+      #     tags: |
+      #       onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
@@ -626,15 +626,15 @@ jobs:
       #     docker image ls
       #     docker push onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-message-relayer
-          push: true
-          tags: |
-            onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
+      # - name: Build and push
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: .
+      #     file: ./ops/docker/Dockerfile.packages
+      #     target: titan-message-relayer
+      #     push: true
+      #     tags: |
+      #       onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   # fault-detector:
   #   name: Publish Fault Detector
