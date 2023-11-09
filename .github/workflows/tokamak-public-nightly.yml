@@ -1375,35 +1375,31 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          echo "Building onthertech/titan-l2geth:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly
+          echo "Building onthertech/titan-l2geth:test"
+          docker manifest create onthertech/titan-l2geth:test onthertech/titan-l2geth:amd64 onthertech/titan-l2geth:arm64
           echo "Finished!"
 
           echo "Building onthertech/titan-gas-oracle:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly
+          docker manifest create onthertech/titan-gas-oracle:test onthertech/titan-gas-oracle:amd64 onthertech/titan-gas-oracle:arm64
           echo "Finished!"
 
-          echo "Building onthertech/titan-hardhat:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly
-          echo "Finished!"
+          # echo "Building onthertech/titan-hardhat:nightly"
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.gitSHA}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly
+          # echo "Finished!"
 
-          echo "Building onthertech/optimism.message-relayer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly
-          echo "Finished!"
+          # echo "Building onthertech/optimism.message-relayer:nightly"
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly
+          # echo "Finished!"
 
-          echo "Building onthertech/titan-message-relayer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly
-          echo "Finished!"
+          # echo "Building onthertech/titan-message-relayer:nightly"
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.gitSHA}}
+          # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly
+          # echo "Finished!"
 
           # echo "Building onthertech/titan-fault-detector:nightly"
           # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.newVersion}}
@@ -1596,63 +1592,63 @@ jobs:
           label: ${{ needs.start-runners.outputs.label-10 }}
           ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-10 }}
 
-  update-kustomize:
-    name: Update image version in kustomize manifest file
-    needs:
-      - multi-arch-image
-    runs-on: ubuntu-latest
+  # update-kustomize:
+  #   name: Update image version in kustomize manifest file
+  #   needs:
+  #     - multi-arch-image
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v1
+  #   steps:
+  #     - name: Setup Kustomize
+  #       uses: imranismail/setup-kustomize@v1
 
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          repository: tokamak-network/tokamak-titan-infra
-          ref: main
-          token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          path: tokamak-titan-infra
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: tokamak-network/tokamak-titan-infra
+  #         ref: main
+  #         token: ${{ secrets.BOT_ACCESS_TOKEN }}
+  #         path: tokamak-titan-infra
 
-      - name: Update l2geth Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
+  #     - name: Update l2geth Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
 
-      - name: Update titan-message-relayer Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
+  #     - name: Update titan-message-relayer Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
 
-      - name: Update data-transport-layer Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
+  #     - name: Update data-transport-layer Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
 
-      - name: Update batch-submitter-service Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
+  #     - name: Update batch-submitter-service Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
 
-      - name: Update proxyd Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
+  #     - name: Update proxyd Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
 
-      - name: Update gas-oracle Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
+  #     - name: Update gas-oracle Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
 
-      - name: Show updated Kubernetes resources
-        run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-          cat kustomization.yaml
+  #     - name: Show updated Kubernetes resources
+  #       run: |
+  #         cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+  #         cat kustomization.yaml
 
-      - name: Commit and push changes
-        uses: EndBug/add-and-commit@v9
-        with:
-          default_author: github_actions
-          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          message: '[AUTO] Update tokamak-optimism images tag for nightly'
-          cwd: 'tokamak-titan-infra/'
+  #     - name: Commit and push changes
+  #       uses: EndBug/add-and-commit@v9
+  #       with:
+  #         default_author: github_actions
+  #         github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+  #         message: '[AUTO] Update tokamak-optimism images tag for nightly'
+  #         cwd: 'tokamak-titan-infra/'
