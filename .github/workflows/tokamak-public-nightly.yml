@@ -381,7 +381,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -393,32 +392,24 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth/Dockerfile -t onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v1
-
-      # - name: Publish L2Geth
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./l2geth/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-l2geth:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-l2geth:nightly
-      #       onthertech/titan-l2geth:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Publish L2Geth
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./l2geth/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
 
   gas-oracle:
     name: Publish Gas Oracle
@@ -440,7 +431,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -452,29 +442,24 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./gas-oracle/Dockerfile -t onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Publish Gas Oracle
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./gas-oracle/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-gas-oracle:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-gas-oracle:nightly
-      #       onthertech/titan-gas-oracle:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Publish Gas Oracle
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./gas-oracle/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }}
 
   hardhat-node:
     name: Publish Hardhat Node
@@ -496,7 +481,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -508,29 +492,24 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./ops/docker/hardhat/Dockerfile -t onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }} ./ops/docker/hardhat
-          docker image ls
-          docker push onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Publish Hardhat Node
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: ./ops/docker/hardhat
-      #     file: ./ops/docker/hardhat/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-hardhat:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-hardhat:nightly
-      #       onthertech/titan-hardhat:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Publish Hardhat Node
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ops/docker/hardhat
+          file: ./ops/docker/hardhat/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
 
   message-relayer:
     name: Publish Message Relayer
@@ -552,7 +531,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -564,30 +542,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target message-relayer -f ./ops/docker/Dockerfile.packages -t onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: message-relayer
-      #     push: true
-      #     tags: |
-      #       onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/optimism.message-relayer:nightly
-      #       onthertech/optimism.message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: message-relayer
+          push: true
+          provenance: false
+          tags: |
+            onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
@@ -609,7 +582,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -621,30 +593,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target titan-message-relayer -f ./ops/docker/Dockerfile.packages -t onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: titan-message-relayer
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-message-relayer:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-message-relayer:nightly
-      #       onthertech/titan-message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: titan-message-relayer
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   fault-detector:
     name: Publish Fault Detector
@@ -666,7 +633,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -678,30 +644,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target fault-detector -f ./ops/docker/Dockerfile.packages -t onthertech/titan-fault-detector:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-fault-detector:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: fault-detector
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-fault-detector:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-fault-detector:nightly
-      #       onthertech/titan-fault-detector:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: fault-detector
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-fault-detector:${{ steps.runner_info.outputs.architecture }}
 
   drippie-mon:
     name: Publish Drippie Monitor
@@ -723,7 +684,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -735,30 +695,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target drippie-mon -f ./ops/docker/Dockerfile.packages -t onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: drippie-mon
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-drippie-mon:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-drippie-mon:nightly
-      #       onthertech/titan-drippie-mon:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: drippie-mon
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }}
 
   data-transport-layer:
     name: Publish Data Transport Layer
@@ -780,7 +735,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -792,30 +746,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target data-transport-layer -f ./ops/docker/Dockerfile.packages -t onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: data-transport-layer
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-data-transport-layer:nightly
-      #       onthertech/titan-data-transport-layer:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: data-transport-layer
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }}
 
   contracts:
     name: Publish Deployer
@@ -837,7 +786,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -849,30 +797,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target titan-deployer -f ./ops/docker/Dockerfile.packages -t onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: titan-deployer
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-deployer:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-deployer:nightly
-      #       onthertech/titan-deployer:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: titan-deployer
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }}
 
   integration_tests:
     name: Publish Integration tests
@@ -894,7 +837,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -906,30 +848,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target integration-tests -f ./ops/docker/Dockerfile.packages -t onthertech/titan-integration-tests:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-integration-tests:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: integration-tests
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-integration-tests:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-integration-tests:nightly
-      #       onthertech/titan-integration-tests:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: integration-tests
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-integration-tests:${{ steps.runner_info.outputs.architecture }}
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
@@ -951,7 +888,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -963,30 +899,25 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux --target replica-healthcheck -f ./ops/docker/Dockerfile.packages -t onthertech/titan-replica-healthcheck:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-replica-healthcheck:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./ops/docker/Dockerfile.packages
-      #     target: replica-healthcheck
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-replica-healthcheck:nightly
-      #       onthertech/titan-replica-healthcheck:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/docker/Dockerfile.packages
+          target: replica-healthcheck
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-replica-healthcheck:${{ steps.runner_info.outputs.architecture }}
 
   proxyd:
     name: Publish proxyd
@@ -1009,7 +940,6 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1021,33 +951,28 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./proxyd/Dockerfile -t onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./proxyd/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-proxyd:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-proxyd:nightly
-      #       onthertech/titan-proxyd:nightly-${{ steps.extractver.outputs.VERSION }}
-      #     build-args: |
-      #       GITDATE=${{ steps.extractver.outputs.GITDATE }}
-      #       GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-      #       GITVERSION=${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./proxyd/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   op-exporter:
     name: Publish op-exporter
@@ -1070,7 +995,6 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1082,33 +1006,28 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./op-exporter/Dockerfile -t onthertech/titan-op-exporter:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-op-exporter:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./op-exporter/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-op-exporter:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-op-exporter:nightly
-      #       onthertech/titan-op-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
-      #     build-args: |
-      #       GITDATE=${{ steps.extractver.outputs.GITDATE }}
-      #       GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-      #       GITVERSION=${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./op-exporter/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-op-exporter:${{ steps.runner_info.outputs.architecture }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   l2geth-exporter:
     name: Publish l2geth-exporter
@@ -1137,7 +1056,6 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1149,27 +1067,22 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth-exporter/Dockerfile -t onthertech/titan-l2geth-exporter:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-l2geth-exporter:${{ steps.runner_info.outputs.architecture }}
-
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./l2geth-exporter/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-l2geth-exporter:nightly
-      #       onthertech/titan-l2geth-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
-      #     build-args: |
-      #       GITDATE=${{ steps.extractver.outputs.GITDATE }}
-      #       GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-      #       GITVERSION=${{ steps.extractver.outputs.VERSION }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./l2geth-exporter/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-l2geth-exporter:${{ steps.runner_info.outputs.architecture }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   batch-submitter-service:
     name: Publish batch-submitter-service
@@ -1191,7 +1104,6 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1203,29 +1115,24 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        run: |
-          docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./batch-submitter/Dockerfile -t onthertech/titan-batch-submitter-service:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-batch-submitter-service:${{ steps.runner_info.outputs.architecture }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./batch-submitter/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-batch-submitter-service:nightly
-      #       onthertech/titan-batch-submitter-service:nightly-${{ steps.extractver.outputs.VERSION }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./batch-submitter/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-batch-submitter-service:${{ steps.runner_info.outputs.architecture }}
 
   indexer:
     name: Publish indexer
@@ -1254,7 +1161,6 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1266,27 +1172,22 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./indexer/Dockerfile -t onthertech/titan-indexer:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-indexer:${{ steps.runner_info.outputs.architecture }}
-
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./indexer/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-indexer:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-indexer:nightly
-      #       onthertech/titan-indexer:nightly-${{ steps.extractver.outputs.VERSION }}
-      #     build-args: |
-      #       GITDATE=${{ steps.extractver.outputs.GITDATE }}
-      #       GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-      #       GITVERSION=${{ steps.extractver.outputs.VERSION }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./indexer/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-indexer:${{ steps.runner_info.outputs.architecture }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   teleportr:
     name: Publish Teleportr
@@ -1315,7 +1216,6 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
       - name: Check Runner Architecture
         id: runner_info
         run: |
@@ -1327,27 +1227,22 @@ jobs:
             ARCHITECTURE="arm64"
           fi
           echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        run: |
-          docker build --build-arg GITVERSION=${{ steps.extractver.outputs.VERSION }} --build-arg GITCOMMIT=${{ steps.extractver.outputs.GITSHA }} --build-arg GITDATE=${{ steps.extractver.outputs.GITDATE }} --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./teleportr/Dockerfile -t onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }} .
-          docker image ls
-          docker push onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }}
-
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     file: ./teleportr/Dockerfile
-      #     push: true
-      #     tags: |
-      #       onthertech/titan-teleportr:${{ steps.extractver.outputs.GITSHA }}
-      #       onthertech/titan-teleportr:nightly
-      #       onthertech/titan-teleportr:nightly-${{ steps.extractver.outputs.VERSION }}
-      #     build-args: |
-      #       GITDATE=${{ steps.extractver.outputs.GITDATE }}
-      #       GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-      #       GITVERSION=${{ steps.extractver.outputs.VERSION }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./teleportr/Dockerfile
+          push: true
+          provenance: false
+          tags: |
+            onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   multi-arch-image:
     name: Build multi-arch images
@@ -1360,9 +1255,9 @@ jobs:
       - fault-detector
       - drippie-mon
       - data-transport-layer
+      - contracts
       - integration_tests
       - replica-healthcheck
-      - contracts
       - proxyd
       - op-exporter
       - l2geth-exporter
@@ -1371,121 +1266,130 @@ jobs:
       - teleportr
     runs-on: ubuntu-latest
     steps:
-      - name: Setup manifest-tool
-        run: |
-          wget https://github.com/estesp/manifest-tool/releases/download/v1.0.3/manifest-tool-linux-amd64
-          chmod +x manifest-tool-linux-amd64
-          sudo mv manifest-tool-linux-amd64 /usr/local/bin/manifest-tool
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and Push Docker Image
-        run: |
-          echo "Building onthertech/titan-l2geth:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth:ARCH --target onthertech/titan-l2geth:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/l2geth images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-l2geth:nightly, onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion}}, onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.gitSHA}}
+          images: onthertech/titan-l2geth:amd64,onthertech/titan-l2geth:arm64
+          push: true
 
-          echo "Building onthertech/titan-gas-oracle:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-gas-oracle:ARCH --target onthertech/titan-gas-oracle:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-gas-oracle images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-gas-oracle:nightly, onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion}}, onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.gitSHA}}
+          images: onthertech/titan-gas-oracle:amd64,onthertech/titan-gas-oracle:arm64
+          push: true
 
-          echo "Building onthertech/titan-hardhat:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-hardhat images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-hardhat:nightly, onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}, onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.gitSHA}}
+          images: onthertech/titan-hardhat:amd64,onthertech/titan-hardhat:arm64
+          push: true
 
-          echo "Building onthertech/optimism.message-relayer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/optimism.message-relayer:ARCH --target onthertech/optimism.message-relayer:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/optimism.message-relayer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/optimism.message-relayer:nightly, onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}, onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
+          images: onthertech/optimism.message-relayer:amd64, onthertech/optimism.message-relayer:arm64
+          push: true
 
-          echo "Building onthertech/titan-message-relayer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-message-relayer:ARCH --target onthertech/titan-message-relayer:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-message-relayer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-message-relayer:nightly, onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion}}, onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.gitSHA}}
+          images: onthertech/titan-message-relayer:amd64, onthertech/titan-message-relayer:arm64
+          push: true
 
-          echo "Building onthertech/titan-fault-detector:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-fault-detector:ARCH --target onthertech/titan-fault-detector:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-fault-detector images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-fault-detector:nightly, onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.newVersion}}, onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.gitSHA}}
+          images: onthertech/titan-fault-detector:amd64, onthertech/titan-fault-detector:arm64
+          push: true
 
-          echo "Building onthertech/titan-drippie-mon:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-drippie-mon:ARCH --target onthertech/titan-drippie-mon:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-drippie-mon images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-drippie-mon:nightly, onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.newVersion}}, onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.gitSHA}}
+          images: onthertech/titan-drippie-mon:amd64, onthertech/titan-drippie-mon:arm64
+          push: true
 
-          echo "Building onthertech/titan-data-transport-layer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-data-transport-layer:ARCH --target onthertech/titan-data-transport-layer:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-data-transport-layer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-data-transport-layer:nightly, onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion}}, onthertech/titan-data-transport-layer-${{ needs.data-transport-layer.outputs.gitSHA}}
+          images: onthertech/titan-data-transport-layer:amd64, onthertech/titan-data-transport-layer:arm64
+          push: true
 
-          echo "Building onthertech/titan-deployer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-deployer:ARCH --target onthertech/titan-deployer:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-deployer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-deployer:nightly, onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.newVersion}}, onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.gitSHA}}
+          images: onthertech/titan-deployer:amd64, onthertech/titan-deployer:arm64
+          push: true
 
-          echo "Building onthertech/titan-integration-tests:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-integration-tests:ARCH --target onthertech/titan-integration-tests:nightly-${{ needs.integration-tests.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-integration-tests:ARCH --target onthertech/titan-integration-tests:nightly-${{ needs.integration-tests.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-integration-tests:ARCH --target onthertech/titan-integration-tests:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-integration-tests images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-integration-tests:nightly, onthertech/titan-integration-tests:nightly-${{ needs.integration_tests.outputs.newVersion}}, onthertech/titan-integration-tests:nightly-${{ needs.integration_tests.outputs.gitSHA}}
+          images: onthertech/titan-integration-tests:amd64, onthertech/titan-integration-tests:arm64
+          push: true
 
-          echo "Building onthertech/titan-replica-healthcheck:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-replica-healthcheck:ARCH --target onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-replica-healthcheck:ARCH --target onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-replica-healthcheck:ARCH --target onthertech/titan-replica-healthcheck:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-replica-healthcheck images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-replica-healthcheck:nightly, onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.newVersion}}, onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.gitSHA}}
+          images: onthertech/titan-replica-healthcheck:amd64, onthertech/titan-replica-healthcheck:arm64
+          push: true
 
-          echo "Building onthertech/titan-proxyd:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-proxyd:ARCH --target onthertech/titan-proxyd:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-proxyd images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-proxyd:nightly, onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion}}, onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.gitSHA}}
+          images: onthertech/titan-proxyd:amd64, onthertech/titan-proxyd:arm64
+          push: true
 
-          echo "Building onthertech/titan-op-exporter:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-op-exporter:ARCH --target onthertech/titan-op-exporter:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-op-exporter images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-op-exporter:nightly, onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.newVersion}}, onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.gitSHA}}
+          images: onthertech/titan-op-exporter:amd64, onthertech/titan-op-exporter:arm64
+          push: true
 
-          echo "Building onthertech/titan-l2geth-exporter:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-l2geth-exporter:ARCH --target onthertech/titan-l2geth-exporter:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-l2geth-exporter images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-l2geth-exporter:nightly, onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.newVersion}}, onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.gitSHA}}
+          images: onthertech/titan-l2geth-exporter:amd64, onthertech/titan-l2geth-exporter:arm64
+          push: true
 
-          echo "Building onthertech/titan-batch-submitter-service:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-batch-submitter-service:ARCH --target onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-batch-submitter-service:ARCH --target onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-batch-submitter-service:ARCH --target onthertech/titan-batch-submitter-service:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-batch-submitter-service images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-batch-submitter-service:nightly, onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion}}, onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.gitSHA}}
+          images: onthertech/titan-batch-submitter-service:amd64, onthertech/titan-batch-submitter-service:arm64
+          push: true
 
-          echo "Building onthertech/titan-indexer:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-indexer:ARCH --target onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-indexer:ARCH --target onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-indexer:ARCH --target onthertech/titan-indexer:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-indexer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-indexer:nightly, onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.newVersion}}, onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.gitSHA}}
+          images: onthertech/titan-indexer:amd64, onthertech/titan-indexer:arm64
+          push: true
 
-          echo "Building onthertech/titan-teleportr:nightly"
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.newVersion}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.gitSHA}}
-          manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-teleportr:ARCH --target onthertech/titan-teleportr:nightly
-          echo "Finished!"
+      - name: Create and push manifest onthertech/titan-teleportr images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-teleportr:nightly, onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.newVersion}}, onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.gitSHA}}
+          images: onthertech/titan-teleportr:amd64, onthertech/titan-teleportr:arm64
+          push: true
 
   stop-runner:
     name: Stop self-hosted EC2 runners
