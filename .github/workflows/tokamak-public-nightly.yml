@@ -395,7 +395,7 @@ jobs:
           echo "::set-output name=architecture::$ARCHITECTURE"
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
@@ -405,6 +405,9 @@ jobs:
       #     docker build --build-arg TARGETARCH=${{ steps.runner_info.outputs.architecture }} --build-arg TARGETOS=linux -f ./l2geth/Dockerfile -t onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }} .
       #     docker image ls
       #     docker push onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Publish L2Geth
         uses: docker/build-push-action@v5
@@ -1370,6 +1373,7 @@ jobs:
           inputs: onthertech/titan-l2geth:test
           images: onthertech/titan-l2geth:amd64,onthertech/titan-l2geth:arm64
           push: true
+          amend: true
 
       - name: Build and Push Docker Image
         run: |
