@@ -1514,6 +1514,12 @@ jobs:
     name: Update image version in kustomize manifest file
     needs:
       - multi-arch-image
+      - l2geth
+      - titan-message-relayer
+      - data-transport-layer
+      - batch-submitter-service
+      - proxyd
+      - gas-oracle
     runs-on: ubuntu-latest
 
     steps:
