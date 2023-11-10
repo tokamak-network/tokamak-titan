@@ -6,11 +6,371 @@ on:
       - 'main'
 
 jobs:
-  l2geth:
-    name: Publish L2Geth
+  start-runners:
+    name: Checking EC runners info
+    runs-on: ubuntu-latest
+    needs:
+      [
+        start-runner-0,
+        start-runner-1,
+        start-runner-2,
+        start-runner-3,
+        start-runner-4,
+        start-runner-5,
+        start-runner-6,
+        start-runner-7,
+        start-runner-8,
+        start-runner-9,
+        start-runner-10,
+      ]
+    outputs:
+      label-0: ${{ needs.start-runner-0.outputs.label }}
+      label-1: ${{ needs.start-runner-1.outputs.label }}
+      label-2: ${{ needs.start-runner-2.outputs.label }}
+      label-3: ${{ needs.start-runner-3.outputs.label }}
+      label-4: ${{ needs.start-runner-4.outputs.label }}
+      label-5: ${{ needs.start-runner-5.outputs.label }}
+      label-6: ${{ needs.start-runner-6.outputs.label }}
+      label-7: ${{ needs.start-runner-7.outputs.label }}
+      label-8: ${{ needs.start-runner-8.outputs.label }}
+      label-9: ${{ needs.start-runner-9.outputs.label }}
+      label-10: ${{ needs.start-runner-10.outputs.label }}
+      ec2-instance-id-0: ${{ needs.start-runner-0.outputs.ec2-instance-id }}
+      ec2-instance-id-1: ${{ needs.start-runner-1.outputs.ec2-instance-id }}
+      ec2-instance-id-2: ${{ needs.start-runner-2.outputs.ec2-instance-id }}
+      ec2-instance-id-3: ${{ needs.start-runner-3.outputs.ec2-instance-id }}
+      ec2-instance-id-4: ${{ needs.start-runner-4.outputs.ec2-instance-id }}
+      ec2-instance-id-5: ${{ needs.start-runner-5.outputs.ec2-instance-id }}
+      ec2-instance-id-6: ${{ needs.start-runner-6.outputs.ec2-instance-id }}
+      ec2-instance-id-7: ${{ needs.start-runner-7.outputs.ec2-instance-id }}
+      ec2-instance-id-8: ${{ needs.start-runner-8.outputs.ec2-instance-id }}
+      ec2-instance-id-9: ${{ needs.start-runner-9.outputs.ec2-instance-id }}
+      ec2-instance-id-10: ${{ needs.start-runner-10.outputs.ec2-instance-id }}
+    steps:
+      - name: Runners status
+        run: |
+          echo "EC2 instances id:"
+          echo ${{ needs.start-runner-0.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-1.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-2.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-3.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-4.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-5.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-6.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-7.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-8.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-9.outputs.ec2-instance-id }}
+          echo ${{ needs.start-runner-10.outputs.ec2-instance-id }}
+          echo "Runner labels:"
+          echo ${{ needs.start-runner-0.outputs.label }}
+          echo ${{ needs.start-runner-1.outputs.label }}
+          echo ${{ needs.start-runner-2.outputs.label }}
+          echo ${{ needs.start-runner-3.outputs.label }}
+          echo ${{ needs.start-runner-4.outputs.label }}
+          echo ${{ needs.start-runner-5.outputs.label }}
+          echo ${{ needs.start-runner-6.outputs.label }}
+          echo ${{ needs.start-runner-7.outputs.label }}
+          echo ${{ needs.start-runner-8.outputs.label }}
+          echo ${{ needs.start-runner-9.outputs.label }}
+          echo ${{ needs.start-runner-10.outputs.label }}
+          echo "Finished setup arm64 runners"
+
+  start-runner-0:
+    name: Start EC2 Runner 0
     runs-on: ubuntu-latest
     outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-1:
+    name: Start EC2 Runner 1
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-2:
+    name: Start EC2 Runner 2
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-3:
+    name: Start EC2 Runner 3
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-4:
+    name: Start EC2 Runner 4
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-5:
+    name: Start EC2 Runner 5
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-6:
+    name: Start EC2 Runner 6
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-7:
+    name: Start EC2 Runner 7
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-8:
+    name: Start EC2 Runner 8
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-9:
+    name: Start EC2 Runner 9
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  start-runner-10:
+    name: Start EC2 Runner 10
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          ec2-image-id: ami-01bd9dc38789ab007
+          ec2-instance-type: t4g.2xlarge
+          subnet-id: subnet-4aa53021
+          security-group-id: sg-03165a21a3ba6e8b3
+
+  l2geth:
+    name: Publish L2Geth
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
+    outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
@@ -21,7 +381,17 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -29,24 +399,28 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Publish L2Geth
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./l2geth/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-l2geth:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-l2geth:nightly
-            onthertech/titan-l2geth:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
 
   gas-oracle:
     name: Publish Gas Oracle
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
@@ -57,7 +431,17 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -65,24 +449,28 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Publish Gas Oracle
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./gas-oracle/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-gas-oracle:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-gas-oracle:nightly
-            onthertech/titan-gas-oracle:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-gas-oracle:${{ steps.runner_info.outputs.architecture }}
 
   hardhat-node:
     name: Publish Hardhat Node
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
@@ -93,7 +481,17 @@ jobs:
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -101,333 +499,440 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Publish Hardhat Node
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: ./ops/docker/hardhat
           file: ./ops/docker/hardhat/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-hardhat:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-hardhat:nightly
-            onthertech/titan-hardhat:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-hardhat:${{ steps.runner_info.outputs.architecture }}
 
   message-relayer:
     name: Publish Message Relayer
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: message-relayer
           push: true
+          provenance: false
           tags: |
-            onthertech/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/optimism.message-relayer:nightly
-            onthertech/optimism.message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/optimism.message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   titan-message-relayer:
     name: Publish Titan Message Relayer
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: titan-message-relayer
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-message-relayer:nightly
-            onthertech/titan-message-relayer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-message-relayer:${{ steps.runner_info.outputs.architecture }}
 
   fault-detector:
     name: Publish Fault Detector
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: fault-detector
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-fault-detector:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-fault-detector:nightly
-            onthertech/titan-fault-detector:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-fault-detector:${{ steps.runner_info.outputs.architecture }}
 
   drippie-mon:
     name: Publish Drippie Monitor
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: drippie-mon
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-drippie-mon:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-drippie-mon:nightly
-            onthertech/titan-drippie-mon:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-drippie-mon:${{ steps.runner_info.outputs.architecture }}
 
   data-transport-layer:
     name: Publish Data Transport Layer
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: data-transport-layer
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-data-transport-layer:nightly
-            onthertech/titan-data-transport-layer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-data-transport-layer:${{ steps.runner_info.outputs.architecture }}
 
   contracts:
     name: Publish Deployer
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: titan-deployer
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-deployer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-deployer:nightly
-            onthertech/titan-deployer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-deployer:${{ steps.runner_info.outputs.architecture }}
 
   integration_tests:
     name: Publish Integration tests
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: integration-tests
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-integration-tests:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-integration-tests:nightly
-            onthertech/titan-integration-tests:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-integration-tests:${{ steps.runner_info.outputs.architecture }}
 
   replica-healthcheck:
     name: Publish Replica Healthcheck
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: replica-healthcheck
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-replica-healthcheck:nightly
-            onthertech/titan-replica-healthcheck:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-replica-healthcheck:${{ steps.runner_info.outputs.architecture }}
 
   proxyd:
     name: Publish proxyd
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Get version
         id: extractver
@@ -435,17 +940,35 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./proxyd/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-proxyd:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-proxyd:nightly
-            onthertech/titan-proxyd:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-proxyd:${{ steps.runner_info.outputs.architecture }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -453,22 +976,18 @@ jobs:
 
   op-exporter:
     name: Publish op-exporter
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Get version
         id: extractver
@@ -476,17 +995,35 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./op-exporter/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-op-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-op-exporter:nightly
-            onthertech/titan-op-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-op-exporter:${{ steps.runner_info.outputs.architecture }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -494,16 +1031,18 @@ jobs:
 
   l2geth-exporter:
     name: Publish l2geth-exporter
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -517,17 +1056,29 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./l2geth-exporter/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-l2geth-exporter:nightly
-            onthertech/titan-l2geth-exporter:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-l2geth-exporter:${{ steps.runner_info.outputs.architecture }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -535,52 +1086,68 @@ jobs:
 
   batch-submitter-service:
     name: Publish batch-submitter-service
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Get version
         id: extractver
         run: |
           echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./batch-submitter/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-batch-submitter-service:nightly
-            onthertech/titan-batch-submitter-service:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-batch-submitter-service:${{ steps.runner_info.outputs.architecture }}
 
   indexer:
     name: Publish indexer
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -594,17 +1161,29 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./indexer/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-indexer:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-indexer:nightly
-            onthertech/titan-indexer:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-indexer:${{ steps.runner_info.outputs.architecture }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -612,16 +1191,18 @@ jobs:
 
   teleportr:
     name: Publish Teleportr
-    runs-on: ubuntu-latest
+    needs: start-runners
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ARM64]
     outputs:
       newVersion: ${{ steps.extractver.outputs.VERSION }}
+      gitSHA: ${{ steps.extractver.outputs.GITSHA }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -635,31 +1216,304 @@ jobs:
           echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
           echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
           echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+      - name: Check Runner Architecture
+        id: runner_info
+        run: |
+          ARCHITECTURE=$(uname -m)
+          if [ "$ARCHITECTURE" = "x86_64" ]; then
+            ARCHITECTURE="amd64"
+          fi
+          if [ "$ARCHITECTURE" = "aarch64" ]; then
+            ARCHITECTURE="arm64"
+          fi
+          echo "::set-output name=architecture::$ARCHITECTURE"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./teleportr/Dockerfile
           push: true
+          provenance: false
           tags: |
-            onthertech/titan-teleportr:${{ steps.extractver.outputs.GITSHA }}
-            onthertech/titan-teleportr:nightly
-            onthertech/titan-teleportr:nightly-${{ steps.extractver.outputs.VERSION }}
+            onthertech/titan-teleportr:${{ steps.runner_info.outputs.architecture }}
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
             GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
+  multi-arch-image:
+    name: Build multi-arch images
+    needs:
+      - l2geth
+      - gas-oracle
+      - hardhat-node
+      - message-relayer
+      - titan-message-relayer
+      - fault-detector
+      - drippie-mon
+      - data-transport-layer
+      - contracts
+      - integration_tests
+      - replica-healthcheck
+      - proxyd
+      - op-exporter
+      - l2geth-exporter
+      - batch-submitter-service
+      - indexer
+      - teleportr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
+
+      - name: Create and push manifest onthertech/l2geth images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-l2geth:nightly, onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion}}, onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.gitSHA}}
+          images: onthertech/titan-l2geth:amd64,onthertech/titan-l2geth:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-gas-oracle images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-gas-oracle:nightly, onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion}}, onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.gitSHA}}
+          images: onthertech/titan-gas-oracle:amd64,onthertech/titan-gas-oracle:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-hardhat images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-hardhat:nightly, onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}, onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.gitSHA}}
+          images: onthertech/titan-hardhat:amd64,onthertech/titan-hardhat:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/optimism.message-relayer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/optimism.message-relayer:nightly, onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.newVersion}}, onthertech/optimism.message-relayer:nightly-${{ needs.message-relayer.outputs.gitSHA}}
+          images: onthertech/optimism.message-relayer:amd64, onthertech/optimism.message-relayer:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-message-relayer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-message-relayer:nightly, onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion}}, onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.gitSHA}}
+          images: onthertech/titan-message-relayer:amd64, onthertech/titan-message-relayer:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-fault-detector images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-fault-detector:nightly, onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.newVersion}}, onthertech/titan-fault-detector:nightly-${{ needs.fault-detector.outputs.gitSHA}}
+          images: onthertech/titan-fault-detector:amd64, onthertech/titan-fault-detector:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-drippie-mon images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-drippie-mon:nightly, onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.newVersion}}, onthertech/titan-drippie-mon:nightly-${{ needs.drippie-mon.outputs.gitSHA}}
+          images: onthertech/titan-drippie-mon:amd64, onthertech/titan-drippie-mon:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-data-transport-layer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-data-transport-layer:nightly, onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion}}, onthertech/titan-data-transport-layer-${{ needs.data-transport-layer.outputs.gitSHA}}
+          images: onthertech/titan-data-transport-layer:amd64, onthertech/titan-data-transport-layer:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-deployer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-deployer:nightly, onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.newVersion}}, onthertech/titan-deployer:nightly-${{ needs.contracts.outputs.gitSHA}}
+          images: onthertech/titan-deployer:amd64, onthertech/titan-deployer:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-integration-tests images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-integration-tests:nightly, onthertech/titan-integration-tests:nightly-${{ needs.integration_tests.outputs.newVersion}}, onthertech/titan-integration-tests:nightly-${{ needs.integration_tests.outputs.gitSHA}}
+          images: onthertech/titan-integration-tests:amd64, onthertech/titan-integration-tests:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-replica-healthcheck images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-replica-healthcheck:nightly, onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.newVersion}}, onthertech/titan-replica-healthcheck:nightly-${{ needs.replica-healthcheck.outputs.gitSHA}}
+          images: onthertech/titan-replica-healthcheck:amd64, onthertech/titan-replica-healthcheck:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-proxyd images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-proxyd:nightly, onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion}}, onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.gitSHA}}
+          images: onthertech/titan-proxyd:amd64, onthertech/titan-proxyd:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-op-exporter images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-op-exporter:nightly, onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.newVersion}}, onthertech/titan-op-exporter:nightly-${{ needs.op-exporter.outputs.gitSHA}}
+          images: onthertech/titan-op-exporter:amd64, onthertech/titan-op-exporter:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-l2geth-exporter images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-l2geth-exporter:nightly, onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.newVersion}}, onthertech/titan-l2geth-exporter:nightly-${{ needs.l2geth-exporter.outputs.gitSHA}}
+          images: onthertech/titan-l2geth-exporter:amd64, onthertech/titan-l2geth-exporter:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-batch-submitter-service images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-batch-submitter-service:nightly, onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion}}, onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.gitSHA}}
+          images: onthertech/titan-batch-submitter-service:amd64, onthertech/titan-batch-submitter-service:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-indexer images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-indexer:nightly, onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.newVersion}}, onthertech/titan-indexer:nightly-${{ needs.indexer.outputs.gitSHA}}
+          images: onthertech/titan-indexer:amd64, onthertech/titan-indexer:arm64
+          push: true
+
+      - name: Create and push manifest onthertech/titan-teleportr images
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: onthertech/titan-teleportr:nightly, onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.newVersion}}, onthertech/titan-teleportr:nightly-${{ needs.teleportr.outputs.gitSHA}}
+          images: onthertech/titan-teleportr:amd64, onthertech/titan-teleportr:arm64
+          push: true
+
+  stop-runner:
+    name: Stop self-hosted EC2 runners
+    needs:
+      - start-runners
+      - l2geth
+      - gas-oracle
+      - hardhat-node
+      - message-relayer
+      - titan-message-relayer
+      - fault-detector
+      - drippie-mon
+      - data-transport-layer
+      - contracts
+      - integration_tests
+      - replica-healthcheck
+      - proxyd
+      - op-exporter
+      - l2geth-exporter
+      - batch-submitter-service
+      - indexer
+      - teleportr
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Stop EC2 runner 0
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-0 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-0 }}
+
+      - name: Stop EC2 runner 1
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-1 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-1 }}
+
+      - name: Stop EC2 runner 2
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-2 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-2 }}
+
+      - name: Stop EC2 runner 3
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-3 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-3 }}
+
+      - name: Stop EC2 runner 4
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-4 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-4 }}
+
+      - name: Stop EC2 runner 5
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-5 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-5 }}
+
+      - name: Stop EC2 runner 6
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-6 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-6 }}
+
+      - name: Stop EC2 runner 7
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-7 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-7 }}
+
+      - name: Stop EC2 runner 8
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-8 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-8 }}
+
+      - name: Stop EC2 runner 9
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-9 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-9 }}
+
+      - name: Stop EC2 runner 10
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          label: ${{ needs.start-runners.outputs.label-10 }}
+          ec2-instance-id: ${{ needs.start-runners.outputs.ec2-instance-id-10 }}
+
   update-kustomize:
     name: Update image version in kustomize manifest file
     needs:
-      - l2geth
-      - titan-message-relayer
-      - data-transport-layer
-      - batch-submitter-service
-      - proxyd
-      - gas-oracle
+      - multi-arch-image
     runs-on: ubuntu-latest
 
     steps:
@@ -676,38 +1530,38 @@ jobs:
 
       - name: Update l2geth Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-l2geth:nightly-${{ needs.l2geth.outputs.newVersion }}
 
       - name: Update titan-message-relayer Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-message-relayer:nightly-${{ needs.titan-message-relayer.outputs.newVersion }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-data-transport-layer:nightly-${{ needs.data-transport-layer.outputs.newVersion }}
 
       - name: Update batch-submitter-service Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-batch-submitter-service:nightly-${{ needs.batch-submitter-service.outputs.newVersion }}
 
       - name: Update proxyd Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-proxyd:nightly-${{ needs.proxyd.outputs.newVersion }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          kustomize edit set image onthertech/titan-gas-oracle:nightly-${{ needs.gas-oracle.outputs.newVersion }}
 
       - name: Show updated Kubernetes resources
         run: |
-            cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
-            cat kustomization.yaml
+          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/goerli-nightly
+          cat kustomization.yaml
 
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
