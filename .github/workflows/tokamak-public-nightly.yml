@@ -414,6 +414,7 @@ jobs:
         with:
           context: .
           file: ./l2geth/Dockerfile
+          provenance: false
           push: true
           tags: |
             onthertech/titan-l2geth:${{ steps.runner_info.outputs.architecture }}
