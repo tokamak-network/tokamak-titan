@@ -1374,17 +1374,16 @@ jobs:
           inputs: onthertech/titan-l2geth:test
           images: onthertech/titan-l2geth:amd64,onthertech/titan-l2geth:arm64
           push: true
-          amend: true
 
       - name: Build and Push Docker Image
         run: |
-          echo "Building onthertech/titan-l2geth:test"
-          docker manifest create onthertech/titan-l2geth:test onthertech/titan-l2geth:amd64 onthertech/titan-l2geth:arm64
-          echo "Finished!"
+          # echo "Building onthertech/titan-l2geth:test"
+          # docker manifest create onthertech/titan-l2geth:test onthertech/titan-l2geth:amd64 onthertech/titan-l2geth:arm64
+          # echo "Finished!"
 
-          echo "Building onthertech/titan-gas-oracle:nightly"
-          docker manifest create onthertech/titan-gas-oracle:test onthertech/titan-gas-oracle:amd64 onthertech/titan-gas-oracle:arm64
-          echo "Finished!"
+          # echo "Building onthertech/titan-gas-oracle:nightly"
+          # docker manifest create onthertech/titan-gas-oracle:test onthertech/titan-gas-oracle:amd64 onthertech/titan-gas-oracle:arm64
+          # echo "Finished!"
 
           # echo "Building onthertech/titan-hardhat:nightly"
           # manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template onthertech/titan-hardhat:ARCH --target onthertech/titan-hardhat:nightly-${{ needs.hardhat-node.outputs.newVersion}}
