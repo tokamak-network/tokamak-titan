@@ -7,16 +7,16 @@ import { Lib_PredeployAddresses } from "../../libraries/constants/Lib_PredeployA
 /* Contract Imports */
 import { L2StandardBridge } from "../messaging/L2StandardBridge.sol";
 import { L2StandardERC20 } from "../../standards/L2StandardERC20.sol";
-import { OVM_GasPriceOracle } from "./OVM_GasPriceOracle.sol";
+import { OVM_GasPriceOracle } from "../predeploys/OVM_GasPriceOracle.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /* Contract Imports */
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @title Ton_GasPriceOracle
+ * @title Ton_FeeVault
  */
-contract Ton_GasPriceOracle {
+contract Ton_FeeVault {
     // TODO: define value of the constants
     using SafeERC20 for IERC20;
 

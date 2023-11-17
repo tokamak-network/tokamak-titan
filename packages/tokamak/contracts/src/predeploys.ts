@@ -23,6 +23,11 @@ export const predeploys = {
 
   // We're also putting WETH9 at the old OVM_ETH address.
   WETH9: '0x4200000000000000000000000000000000000006',
+
+  // L2 Ton Token Address (only hardhat)
+  L2StandardERC20: '0x4200000000000000000000000000000000000023',
+  // Fee vault for Ton (only hardhat)
+  Ton_FeeVault: '0x4200000000000000000000000000000000000024',
 }
 
 export const futurePredeploys = {

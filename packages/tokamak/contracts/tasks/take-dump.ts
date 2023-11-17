@@ -27,6 +27,7 @@ task('take-dump').setAction(async ({}, hre) => {
   // been compiled, but compiling the contracts will import the config file which, as a result,
   // will import this file.
   const { getContractArtifact } = require('../src/contract-artifacts')
+  const L1TonToken = await hre.deployments.get('L1TonToken')
 
   /* eslint-enable @typescript-eslint/no-var-requires */
 
@@ -87,6 +88,22 @@ task('take-dump').setAction(async ({}, hre) => {
       name: 'Wrapped Ether',
       symbol: 'WETH',
       decimals: 18,
+    },
+    L2StandardERC20: {
+      _name: 'Ton Test Token',
+      _symbol: 'TON',
+      l1Token: L1TonToken.address,
+      l2Bridge: predeploys.L2StandardBridge,
+    },
+    Ton_FeeVault: {
+      _owner: hre.deployConfig.ovmGasPriceOracleOwner,
+      feeWallet: hre.deployConfig.ovmFeeWalletAddress,
+      l2TonAddress: predeploys.L2StandardERC20,
+      minPriceRatio: 500,
+      maxPriceRatio: 5000,
+      priceRatio: 2000,
+      gasPriceOracleAddress: predeploys.OVM_GasPriceOracle,
+      marketPriceRatio: 2000,
     },
   }
 
