@@ -1,16 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
 get_abs_filename() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
-MYPATH="$(cd "$(dirname "$0")"; pwd -P)"
+MYPATH="$(
+  cd "$(dirname "$0")"
+  pwd -P
+)"
 ENVFILE=$(get_abs_filename $MYPATH/../.env)
 [ -e $ENVFILE ] && export $(cat .env | sed 's/#.*//g' | xargs)
 
 if [ -z "$CONTRACTS_TARGET_NETWORK" ]; then
-    echo "Must specify \$CONTRACTS_TARGET_NETWORK."
-    exit 1
+  echo "Must specify \$CONTRACTS_TARGET_NETWORK."
+  exit 1
 fi
 
 OUTPUT=$(get_abs_filename $MYPATH/../genesis/$CONTRACTS_TARGET_NETWORK)
