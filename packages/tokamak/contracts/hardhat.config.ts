@@ -30,7 +30,9 @@ const config: HardhatUserConfig = {
     hardhat: {
       live: false,
       saveDeployments: false,
-      tags: ['local'],
+    },
+    local: {
+      url: process.env.CONTRACTS_RPC_URL || '',
     },
     'hardhat-remote': {
       chainId: 31337,
@@ -47,6 +49,14 @@ const config: HardhatUserConfig = {
     titan: {
       chainId: 55004,
       url: 'https://rpc.titan.tokamak.network',
+    },
+    'titan-goerli-nightly': {
+      url: process.env.CONTRACTS_RPC_URL || '',
+      forking: {
+        url: process.env.CONTRACTS_RPC_URL,
+        blockNumber: 14
+      },
+      accounts: [privateKey]
     },
   },
   mocha: {
