@@ -14,9 +14,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @title Ton_FeeVault
+ * @title TON_FeeVault
  */
-contract Ton_FeeVault {
+contract TON_FeeVault {
     // TODO: define value of the constants
     using SafeERC20 for IERC20;
 
