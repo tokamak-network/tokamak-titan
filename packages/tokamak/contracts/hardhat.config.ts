@@ -23,8 +23,6 @@ import './tasks'
 // Load environment variables from .env
 dotenv.config()
 
-
-
 subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {
   if (args.solcVersion === '0.5.17') {
     const compilerPath = path.join(
