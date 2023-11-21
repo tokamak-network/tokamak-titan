@@ -1,6 +1,6 @@
 {
   "name": "@tokamak-network/titan-sdk",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "[Tokamak-Titan] Tools for working with Titan",
   "main": "dist/index",
   "types": "dist/index",
@@ -49,7 +49,7 @@
     "mocha": "^10.0.0"
   },
   "dependencies": {
-    "@tokamak-network/titan-contracts": "0.0.4",
+    "@tokamak-network/titan-contracts": "0.0.5",
     "@eth-optimism/core-utils": "0.10.1",
     "@eth-optimism/contracts-bedrock": "0.8.0",
     "lodash": "^4.17.21",
