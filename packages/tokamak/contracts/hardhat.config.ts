@@ -1,6 +1,7 @@
 import path from 'path'
 
 import { HardhatUserConfig } from 'hardhat/types'
+import { subtask } from 'hardhat/config'
 import 'solidity-coverage'
 import * as dotenv from 'dotenv'
 import { ethers } from 'ethers'
