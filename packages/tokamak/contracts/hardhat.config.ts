@@ -1,4 +1,8 @@
+import path from 'path'
+
 import { HardhatUserConfig } from 'hardhat/types'
+import { subtask } from 'hardhat/config'
+import { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } from 'hardhat/builtin-tasks/task-names'
 import 'solidity-coverage'
 import * as dotenv from 'dotenv'
 import { ethers } from 'ethers'
@@ -20,24 +24,34 @@ import './tasks'
 // Load environment variables from .env
 dotenv.config()
 
-const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require("hardhat/builtin-tasks/task-names");
-const path = require("path");
-
-subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {
-  if (args.solcVersion === "0.5.17") {
-    const compilerPath = path.join(__dirname, "soljson-v0.5.17+commit.d19bba13.js");
-    console.log("Use customize solc")
-    return {
-      compilerPath,
-      isSolcJs: true,
-      version: args.solcVersion,
-      longVersion: "0.5.17+commit.d19bba13"
+subtask(
+  TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD,
+  async (
+    args: {
+      quiet: boolean
+      solcVersion: string
+    },
+    hre,
+    runSuper
+  ) => {
+    if (args.solcVersion === '0.5.17') {
+      const compilerPath = path.join(
+        __dirname,
+        'soljson-v0.5.17+commit.d19bba13.js'
+      )
+      console.log('Use customize solc')
+      return {
+        compilerPath,
+        isSolcJs: true,
+        version: args.solcVersion,
+        longVersion: '0.5.17+commit.d19bba13',
+      }
     }
-  }
 
-  // we just use the default subtask if the version is not 0.8.5
-  return runSuper();
-})
+    // we just use the default subtask if the version is not 0.8.5
+    return runSuper()
+  }
+)
 
 const enableGasReport = !!process.env.ENABLE_GAS_REPORT
 const privateKey = process.env.PRIVATE_KEY || '0x' + '11'.repeat(32)
@@ -66,6 +80,12 @@ const config: HardhatUserConfig = {
     titan: {
       chainId: 55004,
       url: 'https://rpc.titan.tokamak.network',
+    },
+    holesky: {
+      chainId: 17000,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
     },
   },
   mocha: {
@@ -119,8 +139,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY,
-      goerli: process.env.ETHERSCAN_API_KEY,
+      mainnet: process.env.ETHERSCAN_API_KEY || '',
+      goerli: process.env.ETHERSCAN_API_KEY || '',
+      holesky: process.env.ETHERSCAN_API_KEY || '',
       titan: 'verify',
     },
     customChains: [
@@ -130,6 +151,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://explorer.titan.tokamak.network/api',
           browserURL: 'https://explorer.titan.tokamak.network',
+        },
+      },
+      {
+        network: 'holesky',
+        chainId: 17000,
+        urls: {
+          apiURL: 'https://api-holesky.etherscan.io/api',
+          browserURL: 'https://holesky.etherscan.io',
         },
       },
     ],
@@ -248,7 +277,8 @@ const config: HardhatUserConfig = {
 if (
   process.env.CONTRACTS_TARGET_NETWORK &&
   process.env.CONTRACTS_DEPLOYER_KEY &&
-  process.env.CONTRACTS_RPC_URL
+  process.env.CONTRACTS_RPC_URL &&
+  config.networks
 ) {
   config.networks[process.env.CONTRACTS_TARGET_NETWORK] = {
     accounts: [process.env.CONTRACTS_DEPLOYER_KEY],

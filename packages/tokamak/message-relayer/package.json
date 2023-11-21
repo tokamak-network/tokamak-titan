@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@tokamak-network/titan-message-relayer",
-  "version": "0.5.14",
+  "version": "0.5.15",
   "description": "[Optimism] Service for automatically relaying L2 to L1 transactions",
   "main": "dist/index",
   "types": "dist/index",
@@ -32,10 +32,10 @@
   },
   "dependencies": {
     "@eth-optimism/common-ts": "0.6.6",
-    "@tokamak-network/titan-contracts": "0.0.4",
+    "@tokamak-network/titan-contracts": "0.0.5",
     "@eth-optimism/core-utils": "0.10.1",
     "@eth-optimism/ynatm": "^0.2.2",
-    "@tokamak-network/titan-sdk": "0.0.7",
+    "@tokamak-network/titan-sdk": "0.0.8",
     "ethers": "^5.7.0"
   },
   "devDependencies": {
