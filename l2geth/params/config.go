@@ -238,6 +238,17 @@ var (
 
 	// OpKovanSDUpdateForkNum is the height at which the SD update fork activates on Kovan.
 	OpKovanSDUpdateForkNum = big.NewInt(1094820)
+
+	// TODO: update to holesky
+	// chain id of Titan Network
+	titanMainnetChainID       = big.NewInt(55004)
+	titanGoerliChainID        = big.NewInt(5050)
+	titanGoerliNightlyChainID = big.NewInt(5051)
+
+	// [TBU] the block height at whitch the FeeToken update fork activates on Titan Network
+	titanMainnetFeeTokenUpdateForkNum       = big.NetInt(3000)
+	titanGoerliFeeTokenUpdateForkNum        = big.NetInt(30000)
+	titanGoerliNightlyFeeTokenUpdateForkNum = big.NetInt(3000)
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -433,6 +444,23 @@ func (c *ChainConfig) IsSDUpdate(num *big.Int) bool {
 	}
 	if c.ChainID.Cmp(OpKovanChainID) == 0 {
 		return isForked(OpKovanSDUpdateForkNum, num)
+	}
+	return true
+}
+
+// To check whether Fee Token Update or not
+func (c *ChainConfig) IsFeeTokenUpdate(num *big.Int) bool {
+	if c.ChainID == nil {
+		return true
+	}
+	if c.ChainID.Cmp(titanMainnetChainID) == 0 {
+		return isForked(titanMainnetFeeTokenUpdateForkNum, num)
+	}
+	if c.ChainID.Cmp(titanGoerliChainID) == 0 {
+		return isForked(titanGoerliFeeTokenUpdateForkNum, num)
+	}
+	if c.ChainID.Cmp(titanGoerliChainID) == 0 {
+		return isForked(titanGoerliNightlyFeeTokenUpdateForkNum, num)
 	}
 	return true
 }
