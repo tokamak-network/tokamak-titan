@@ -8,7 +8,13 @@ import (
 )
 
 // UsingOVM is used to enable or disable functionality necessary for the OVM.
-var UsingOVM bool
+var (
+	UsingOVM bool
+	// TonFeeVault is ton fee vault
+	TonFeeVault common.Address
+	// L2TonToken is ton token address
+	L2TonToken common.Address
+)
 
 var (
 	// L2GasPriceSlot refers to the storage slot that the L2 gas price is stored
@@ -38,4 +44,6 @@ var (
 
 func init() {
 	UsingOVM = os.Getenv("USING_OVM") == "true"
+	TonFeeVault = common.HexToAddress(os.Getenv("TON_FEE_VAULT_ADDRESS"))
+	L2TonToken = common.HexToAddress(os.Getenv("L2_TON_TOKEN_ADDRESS"))
 }
