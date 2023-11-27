@@ -470,7 +470,7 @@ func (c *ChainConfig) IsSDUpdate(num *big.Int) bool {
 // To check whether Fee Token Update or not
 func (c *ChainConfig) IsFeeTokenUpdate(num *big.Int) bool {
 	if c.ChainID == nil {
-		return true
+		return false
 	}
 	if c.ChainID.Cmp(titanMainnetChainID) == 0 {
 		return isForked(titanMainnetFeeTokenUpdateForkNum, num)
@@ -481,7 +481,7 @@ func (c *ChainConfig) IsFeeTokenUpdate(num *big.Int) bool {
 	if c.ChainID.Cmp(titanGoerliNightlyChainID) == 0 {
 		return isForked(titanGoerliNightlyFeeTokenUpdateForkNum, num)
 	}
-	return true
+	return false
 }
 
 // CheckCompatible checks whether scheduled fork transitions have been imported
