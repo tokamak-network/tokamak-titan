@@ -88,7 +88,7 @@ func TestNewStateTransactionForTon(t *testing.T) {
 	statedb.AddTonBalance(msg.From(), addTonBalance)
 
 	// TEST 2: Only l2 fee
-	// expected result: txn is succeed. And L2 fee is transfered to TonFeeVault
+	// expected result: txn is succeed. And L2 fee is transferred to TonFeeVault
 	_, gasUsed, _, err := st.TransitionDb()
 	if err != nil {
 		t.Fatalf("failed to execute transaction: %v", err)
@@ -109,7 +109,7 @@ func TestNewStateTransactionForTon(t *testing.T) {
 	}
 
 	// TEST 3: Add l1 security fee
-	// expected result: txn is succeed. And the sender pay txn fee as TON (L1 + L2) and the payed fee is transfered to TonFeeVault
+	// expected result: txn is succeed. And the sender pay txn fee as TON (L1 + L2) and the payed fee is transferred to TonFeeVault
 	preUserTonBalance := statedb.GetTonBalance(msg.From())
 	preVaultBalance := statedb.GetTonBalance(rcfg.TonFeeVault)
 	ETHFeeVaultBalanceBefore := statedb.GetBalance(evm.Coinbase)
