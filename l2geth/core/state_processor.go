@@ -17,6 +17,8 @@
 package core
 
 import (
+	"math/big"
+
 	"github.com/ethereum-optimism/optimism/l2geth/common"
 	"github.com/ethereum-optimism/optimism/l2geth/consensus"
 	"github.com/ethereum-optimism/optimism/l2geth/consensus/misc"
@@ -102,9 +104,16 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Compute the fee related information that is to be included
 	// on the receipt. This must happen before the state transition
 	// to ensure that the correct information is used.
+	var (
+		l1TonFee *big.Int
+	)
+	tonPriceRatio := statedb.GetTonPriceRatio()
 	l1Fee, l1GasPrice, l1GasUsed, scalar, err := fees.DeriveL1GasInfo(msg, statedb)
 	if err != nil {
 		return nil, err
+	}
+	if config.IsFeeTokenUpdate(header.Number) {
+		l1TonFee = new(big.Int).Mul(tonPriceRatio, l1Fee)
 	}
 
 	// Apply the transaction to the current state (included in the env)
@@ -113,6 +122,11 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		return nil, err
 	}
 
+	// Calculate the L2 Ton fee
+	l2TonFee := new(big.Int)
+	// L2 Ton fee = gasUsed * msg.GasPrice() * tonPriceRatio
+	l2TonFee = new(big.Int).Mul(big.NewInt(int64(gas)), new(big.Int).Mul(msg.GasPrice(), tonPriceRatio))
+
 	// Update the state with pending changes
 	var root []byte
 	if config.IsByzantium(header.Number) {
@@ -120,6 +134,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	} else {
 		root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
 	}
+	// The total amount of gas used when this transaction was executed in the block.
 	*usedGas += gas
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
@@ -128,6 +143,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.L1GasPrice = l1GasPrice
 	receipt.L1GasUsed = l1GasUsed
 	receipt.L1Fee = l1Fee
+	receipt.L1TonFee = l1TonFee
 	receipt.FeeScalar = scalar
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = gas
@@ -152,6 +168,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.BlockHash = statedb.BlockHash()
 	receipt.BlockNumber = header.Number
 	receipt.TransactionIndex = uint(statedb.TxIndex())
+	receipt.L2TonFee = l2TonFee
 
 	return receipt, err
 }

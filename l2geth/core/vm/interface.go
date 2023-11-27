@@ -31,6 +31,12 @@ type StateDB interface {
 	AddBalance(common.Address, *big.Int)
 	GetBalance(common.Address) *big.Int
 
+	// Token Fee
+	SubTonBalance(common.Address, *big.Int)
+	AddTonBalance(common.Address, *big.Int)
+	GetTonBalance(common.Address) *big.Int
+	GetTonPriceRatio() *big.Int
+
 	GetNonce(common.Address) uint64
 	SetNonce(common.Address, uint64)
 

@@ -73,7 +73,9 @@ type Receipt struct {
 	L1GasPrice *big.Int   `json:"l1GasPrice" gencodec:"required"`
 	L1GasUsed  *big.Int   `json:"l1GasUsed" gencodec:"required"`
 	L1Fee      *big.Int   `json:"l1Fee" gencodec:"required"`
+	L1TonFee   *big.Int   `json:"l1TonFee" gencodec:"required"`
 	FeeScalar  *big.Float `json:"l1FeeScalar" gencodec:"required"`
+	L2TonFee   *big.Int   `json:"l2TonFee"`
 }
 
 type receiptMarshaling struct {

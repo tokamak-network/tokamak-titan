@@ -210,6 +210,25 @@ var (
 		Threshold: 2,
 	}
 
+	// (for test) TitanNightlyChainConfig contains the chain parameters to run a node on the titan-goerli-nightly test network.
+	TitanNightlyChainConfig = &ChainConfig{
+		ChainID:             big.NewInt(5051),
+		HomesteadBlock:      big.NewInt(0),
+		DAOForkBlock:        nil,
+		DAOForkSupport:      true,
+		EIP150Block:         big.NewInt(0),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0),
+		ByzantiumBlock:      big.NewInt(0),
+		ConstantinopleBlock: big.NewInt(0),
+		PetersburgBlock:     big.NewInt(0),
+		IstanbulBlock:       big.NewInt(1561651),
+		Clique: &CliqueConfig{
+			Period: 15,
+			Epoch:  30000,
+		},
+	}
+
 	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Ethash consensus.
 	//
@@ -238,6 +257,17 @@ var (
 
 	// OpKovanSDUpdateForkNum is the height at which the SD update fork activates on Kovan.
 	OpKovanSDUpdateForkNum = big.NewInt(1094820)
+
+	// TODO: update to holesky
+	// chain id of Titan Network
+	titanMainnetChainID       = big.NewInt(55004)
+	titanGoerliChainID        = big.NewInt(5050)
+	titanGoerliNightlyChainID = big.NewInt(5051)
+
+	// [TBU] the block height at whitch the FeeToken update fork activates on Titan Network
+	titanMainnetFeeTokenUpdateForkNum       = big.NewInt(3000)
+	titanGoerliFeeTokenUpdateForkNum        = big.NewInt(30000)
+	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(3000)
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -435,6 +465,23 @@ func (c *ChainConfig) IsSDUpdate(num *big.Int) bool {
 		return isForked(OpKovanSDUpdateForkNum, num)
 	}
 	return true
+}
+
+// To check whether Fee Token Update or not
+func (c *ChainConfig) IsFeeTokenUpdate(num *big.Int) bool {
+	if c.ChainID == nil {
+		return false
+	}
+	if c.ChainID.Cmp(titanMainnetChainID) == 0 {
+		return isForked(titanMainnetFeeTokenUpdateForkNum, num)
+	}
+	if c.ChainID.Cmp(titanGoerliChainID) == 0 {
+		return isForked(titanGoerliFeeTokenUpdateForkNum, num)
+	}
+	if c.ChainID.Cmp(titanGoerliNightlyChainID) == 0 {
+		return isForked(titanGoerliNightlyFeeTokenUpdateForkNum, num)
+	}
+	return false
 }
 
 // CheckCompatible checks whether scheduled fork transitions have been imported
