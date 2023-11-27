@@ -88,7 +88,7 @@ func TestNewStateTransactionForEth(t *testing.T) {
 	statedb.AddBalance(msg.From(), addEthBalance)
 
 	// TEST 2: Only l2 fee
-	// expected result: txn is succeed. And L2 fee is transferred to SequencerFeeVault (evm.Coinbase)
+	// expected result: txn is successful. L2 fee is transferred to SequencerFeeVault (evm.Coinbase)
 	_, gasUsed, _, err := st.TransitionDb()
 	if err != nil {
 		t.Fatalf("failed to execute transaction: %v", err)
@@ -109,7 +109,7 @@ func TestNewStateTransactionForEth(t *testing.T) {
 	}
 
 	// TEST 3: Add l1 security fee
-	// expected result: the sender pay txn fee (L1 + L2) as ETH and the payed fee is transferred to SequencerFeeVault
+	// expected result: the txn is successful. the sender pay txn fee (L1 + L2) as ETH and the paid fee is transferred to SequencerFeeVault
 	preUserEthBalance := statedb.GetBalance(msg.From())
 	preVaultBalance := statedb.GetBalance(evm.Coinbase)
 
