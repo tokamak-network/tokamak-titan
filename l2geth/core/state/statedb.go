@@ -60,7 +60,19 @@ func (n *proofList) Delete(key []byte) error {
 	panic("not supported")
 }
 
+// before applying fee token
 func GetOVMBalanceKey(addr common.Address) common.Hash {
+	position := common.Big0
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
+	hasher.Write(common.LeftPadBytes(position.Bytes(), 32))
+	digest := hasher.Sum(nil)
+	return common.BytesToHash(digest)
+}
+
+// after applying fee token
+func GetTonBalanceKey(addr common.Address) common.Hash {
+	// slot 0
 	position := common.Big0
 	hasher := sha3.NewLegacyKeccak256()
 	hasher.Write(common.LeftPadBytes(addr.Bytes(), 32))
@@ -256,6 +268,13 @@ func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 	}
 }
 
+// Get balance from the L2 Ton contract
+func (s *StateDB) GetTonBalance(addr common.Address) *big.Int {
+	key := GetTonBalanceKey(addr)
+	bal := s.GetState(rcfg.L2TonToken, key)
+	return bal.Big()
+}
+
 func (s *StateDB) GetNonce(addr common.Address) uint64 {
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
@@ -263,6 +282,13 @@ func (s *StateDB) GetNonce(addr common.Address) uint64 {
 	}
 
 	return 0
+}
+
+func (s *StateDB) GetTonPriceRatio() *big.Int {
+	// 5th slot of TonFeeVault
+	keyPriceRatio := common.BigToHash(big.NewInt(5))
+	value := s.GetState(rcfg.TonFeeVault, keyPriceRatio)
+	return value.Big()
 }
 
 // TxIndex returns the current transaction index set by Prepare.
@@ -408,6 +434,23 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 			stateObject.SubBalance(amount)
 		}
 	}
+}
+
+func (s *StateDB) AddTonBalance(addr common.Address, amount *big.Int) {
+	// Get balance from TON contract
+	key := GetTonBalanceKey(addr)
+	value := s.GetState(rcfg.L2TonToken, key)
+	bal := value.Big()
+	bal = bal.Add(bal, amount)
+	s.SetState(rcfg.L2TonToken, key, common.BigToHash(bal))
+}
+
+func (s *StateDB) SubTonBalance(addr common.Address, amount *big.Int) {
+	key := GetTonBalanceKey(addr)
+	value := s.GetState(rcfg.L2TonToken, key)
+	bal := value.Big()
+	bal = bal.Sub(bal, amount)
+	s.SetState(rcfg.L2TonToken, key, common.BigToHash(bal))
 }
 
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
@@ -580,8 +623,8 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 // CreateAccount is called during the EVM CREATE operation. The situation might arise that
 // a contract does the following:
 //
-//   1. sends funds to sha(account ++ (nonce + 1))
-//   2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
+//  1. sends funds to sha(account ++ (nonce + 1))
+//  2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
 //
 // Carrying over the balance ensures that Ether doesn't disappear.
 func (s *StateDB) CreateAccount(addr common.Address) {

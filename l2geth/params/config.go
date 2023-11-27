@@ -246,9 +246,9 @@ var (
 	titanGoerliNightlyChainID = big.NewInt(5051)
 
 	// [TBU] the block height at whitch the FeeToken update fork activates on Titan Network
-	titanMainnetFeeTokenUpdateForkNum       = big.NetInt(3000)
-	titanGoerliFeeTokenUpdateForkNum        = big.NetInt(30000)
-	titanGoerliNightlyFeeTokenUpdateForkNum = big.NetInt(3000)
+	titanMainnetFeeTokenUpdateForkNum       = big.NewInt(3000)
+	titanGoerliFeeTokenUpdateForkNum        = big.NewInt(30000)
+	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(3000)
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -459,7 +459,7 @@ func (c *ChainConfig) IsFeeTokenUpdate(num *big.Int) bool {
 	if c.ChainID.Cmp(titanGoerliChainID) == 0 {
 		return isForked(titanGoerliFeeTokenUpdateForkNum, num)
 	}
-	if c.ChainID.Cmp(titanGoerliChainID) == 0 {
+	if c.ChainID.Cmp(titanGoerliNightlyChainID) == 0 {
 		return isForked(titanGoerliNightlyFeeTokenUpdateForkNum, num)
 	}
 	return true
