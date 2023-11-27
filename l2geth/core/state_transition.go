@@ -213,7 +213,7 @@ func (st *StateTransition) buyGas() error {
 	if rcfg.UsingOVM {
 		// Only charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			if st.isFeeTokenUpdate == true {
+			if st.isFeeTokenUpdate {
 				mgval = mgval.Add(mgval, st.l1TonFee)
 			} else {
 				mgval = mgval.Add(mgval, st.l1Fee)
@@ -229,19 +229,24 @@ func (st *StateTransition) buyGas() error {
 			if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
 				return errInsufficientTonBalanceForGas
 			}
-			st.state.SubTonBalance(st.msg.From(), tonval)
 			// fee token is ETH
 		} else {
 			if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
 				return errInsufficientBalanceForGas
 			}
-			st.state.SubBalance(st.msg.From(), mgval)
 		}
 	}
 	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
+	// change state after checking gas limit is available
+	if st.isFeeTokenUpdate {
+		st.state.SubTonBalance(st.msg.From(), tonval)
+	} else {
+		st.state.SubBalance(st.msg.From(), mgval)
+	}
+
 	st.gas += st.msg.Gas()
 	st.initialGas = st.msg.Gas()
 	return nil
