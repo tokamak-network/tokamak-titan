@@ -322,16 +322,6 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	// refund remaining gas to from account
 	st.refundGas()
 
-	ethval := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.msg.GasPrice())
-	// TON is used to pay for the gas fee
-	// add L2 fee amount to OvmTonGasPricOracle (TON fee vault)
-	if st.isFeeTokenUpdate {
-		tonval := new(big.Int).Mul(ethval, st.tonPriceRatio)
-		st.state.AddTonBalance(rcfg.TonFeeVault, tonval)
-	} else {
-		st.state.AddBalance(evm.Coinbase, ethval)
-	}
-
 	l2Fee := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
 	tonL2Fee := new(big.Int).Mul(l2Fee, st.tonPriceRatio)
 
@@ -339,7 +329,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		var totalFee *big.Int
 		if st.isFeeTokenUpdate {
 			totalFee = new(big.Int).Add(st.l1TonFee, tonL2Fee)
-			st.state.AddTonBalance(evm.Coinbase, totalFee)
+			st.state.AddTonBalance(rcfg.TonFeeVault, totalFee)
 		} else {
 			totalFee = new(big.Int).Add(st.l1Fee, l2Fee)
 			st.state.AddBalance(evm.Coinbase, totalFee)
@@ -348,7 +338,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		var fee *big.Int
 		if st.isFeeTokenUpdate {
 			fee = tonL2Fee
-			st.state.AddTonBalance(evm.Coinbase, fee)
+			st.state.AddTonBalance(rcfg.TonFeeVault, fee)
 		} else {
 			fee = l2Fee
 			st.state.AddBalance(evm.Coinbase, fee)

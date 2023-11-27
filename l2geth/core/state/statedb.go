@@ -496,6 +496,12 @@ func (s *StateDB) SetStorage(addr common.Address, storage map[common.Hash]common
 	}
 }
 
+// for test
+func (s *StateDB) SetTonPriceRatio(priceRation *big.Int) {
+	keyPriceRatio := common.BigToHash(big.NewInt(5))
+	s.SetState(rcfg.TonFeeVault, keyPriceRatio, common.BigToHash(priceRation))
+}
+
 // Suicide marks the given account as suicided.
 // This clears the account balance.
 //
