@@ -3,7 +3,7 @@ name: Tokamak Optimism Publish (Nightly Version)
 on:
   push:
     branches:
-      - 'main'
+      - 'feature/native-token'
 
 jobs:
   l2geth:
