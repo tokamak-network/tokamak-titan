@@ -51,11 +51,8 @@ const config: HardhatUserConfig = {
       url: 'https://rpc.titan.tokamak.network',
     },
     'titan-goerli-nightly': {
-      url: process.env.CONTRACTS_RPC_URL || '',
-      forking: {
-        url: process.env.CONTRACTS_RPC_URL,
-        blockNumber: 14
-      },
+      url: process.env.CONTRACTS_RPC_URL,
+      chainId: 5051,
       accounts: [privateKey]
     },
   },
@@ -113,6 +110,8 @@ const config: HardhatUserConfig = {
       mainnet: process.env.ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
       titan: 'verify',
+      'titan-goerli-nightly': 'verify'
+
     },
     customChains: [
       {
@@ -123,6 +122,14 @@ const config: HardhatUserConfig = {
           browserURL: 'https://explorer.titan.tokamak.network',
         },
       },
+      {
+        network: 'titan-goerli-nightly',
+        chainId: 5051,
+        urls: {
+          apiURL: "https://explorer.titan-goerli-nightly.tokamak.network/api",
+          browserURL: "https://explorer.titan-goerli-nightly.tokamak.network/"
+        }
+      }
     ],
   },
   dodoc: {
