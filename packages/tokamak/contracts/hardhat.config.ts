@@ -51,7 +51,7 @@ const config: HardhatUserConfig = {
       url: 'https://rpc.titan.tokamak.network',
     },
     'titan-goerli-nightly': {
-      url: process.env.CONTRACTS_RPC_URL,
+      url: 'https://rpc.titan-goerli-nightly.tokamak.network',
       chainId: 5051,
       accounts: [privateKey]
     },
