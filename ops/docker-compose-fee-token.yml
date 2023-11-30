@@ -1,0 +1,50 @@
+version: '3.4'
+
+x-system-addr-env: &system-addr-env
+  # private key: a6aecc98b63bafb0de3b29ae9964b14acb4086057808be29f90150214ebd4a0f
+  # OK to publish this since it will only ever be used in itests
+  SYSTEM_ADDRESS_0_DEPLOYER: '0xa961b0d6dce82db098cf70a42a14add3ee3db2d5'
+
+  # private key: 3b8d2345102cce2443acb240db6e87c8edd4bb3f821b17fab8ea2c9da08ea132
+  # OK to publish this since it will only ever be used in itests
+  SYSTEM_ADDRESS_1_DEPLOYER: '0xdfc82d475833a50de90c642770f34a9db7deb725'
+
+services:
+
+  l2geth:
+    build:
+      context: ..
+      dockerfile: ./l2geth/Dockerfile
+    image: onthertech/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
+    # override with the geth script and the env vars required for it
+    entrypoint: sh ./geth.sh
+    env_file:
+      - ./envs/geth-goerli-nightly.env
+    environment:
+      <<: *system-addr-env
+      ETH1_HTTP: https://goerli.rpc.tokamak.network
+      ROLLUP_TIMESTAMP_REFRESH: 1s
+      ROLLUP_STATE_DUMP_PATH: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-state-dump.20221011.json
+      # connecting to the DTL
+      ROLLUP_CLIENT_HTTP: http://k8s-default-datatran-e8fd837f99-348dab9dc7d91f1d.elb.ap-northeast-2.amazonaws.com:7878/
+      ETH1_CTC_DEPLOYMENT_HEIGHT: 8
+      RETRIES: 60
+      # no need to keep this secret, only used internally to sign blocks
+      BLOCK_SIGNER_KEY: 'b47acfe25087c4c4ed566b759756bc7206a515fce67cdfcdc50bf8989708d983'
+      BLOCK_SIGNER_ADDRESS: '0xa159967552001d881F01Da6E6E2e4754968e5905'
+
+      ROLLUP_ENFORCE_FEES: ${ROLLUP_ENFORCE_FEES:-false}
+      ROLLUP_FEE_THRESHOLD_DOWN: 0.9
+      ROLLUP_FEE_THRESHOLD_UP: 1.1
+      # fee token
+      L2_TON_TOKEN_ADDRESS: "0x7c6b91D9Be155A6Db01f749217d76fF02A7227F2"
+      TON_FEE_VAULT_ADDRESS: "0x5eD0929cB0635c0f7c665c74D8D3990Cd07c55AF"
+
+    ports:
+      - ${L2GETH_HTTP_PORT:-8545}:8545
+      - ${L2GETH_WS_PORT:-8546}:8546
+
+networks:
+  default:
+    driver: bridge
+    name: l2
