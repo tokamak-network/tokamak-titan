@@ -89,7 +89,7 @@ Get L1 Ton fee for fee estimation
 function initialize(address payable _feeWallet, address _l2TonAddress) external nonpayable
 ```
 
-Initialize feeWallet and l2TonAddress.
+Initialize feeWallet and l2TonAddress. TODO: will apply proxy contract
 
 
 
@@ -201,28 +201,6 @@ function priceRatio() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined
-
-### tonFeeTokenUsers
-
-```solidity
-function tonFeeTokenUsers(address) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined
 
 ### transferOwnership
 
