@@ -18,6 +18,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 
@@ -159,6 +160,10 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 			l1TonFee = new(big.Int).Mul(l1Fee, tonPriceRatio)
 		}
 	}
+	fmt.Println("[Debug] isFeeTokenUpdate: ", isFeeTokenUpdate)
+	fmt.Println("[Debug] tonPriceRatio", tonPriceRatio)
+	fmt.Println("[Debug] l1Fee: ", l1Fee)
+	fmt.Println("[Debug] l1TonFee: ", l1TonFee)
 
 	return &StateTransition{
 		gp:       gp,
@@ -213,29 +218,29 @@ func (st *StateTransition) buyGas() error {
 	if rcfg.UsingOVM {
 		// Only charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			if st.isFeeTokenUpdate {
-				mgval = mgval.Add(mgval, st.l1TonFee)
-			} else {
-				mgval = mgval.Add(mgval, st.l1Fee)
-			}
-			if st.msg.CheckNonce() {
-				log.Debug("Total fee", "total-fee", mgval)
-			}
+			mgval = mgval.Add(mgval, st.l1Fee)
 		}
-		tonval = new(big.Int).Mul(mgval, st.tonPriceRatio)
-		// fee token is TON
-		if st.isFeeTokenUpdate {
-			// TON balance check
-			if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
-				return errInsufficientTonBalanceForGas
-			}
-			// fee token is ETH
-		} else {
-			if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
-				return errInsufficientBalanceForGas
-			}
+		if st.msg.CheckNonce() {
+			log.Debug("Total fee (ETH)", "total-fee-eth", mgval)
 		}
 	}
+	// fee token is TON
+	if st.isFeeTokenUpdate {
+		tonval = new(big.Int).Mul(mgval, st.tonPriceRatio)
+		fmt.Println("[Debug] from's ton balance: ", st.state.GetTonBalance(st.msg.From()))
+		fmt.Println("[Debug] tonval: ", tonval)
+		log.Debug("Total fee (TON)", "total-fee-ton", tonval)
+		// TON balance check
+		if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
+			return errInsufficientTonBalanceForGas
+		}
+		// fee token is ETH
+	} else {
+		if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
+			return errInsufficientBalanceForGas
+		}
+	}
+
 	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
@@ -350,6 +355,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 	}
 
+	fmt.Println("[Debug] st.gasUsed: ", st.gasUsed())
+	fmt.Println("[Debug] st.gasPrice: ", st.gasPrice)
+	fmt.Println("[Debug] l2Fee: ", l2Fee)
+	fmt.Println("[Debug] tonl2Fee: ", tonL2Fee)
+
 	return ret, st.gasUsed(), vmerr != nil, err
 }
 
@@ -366,7 +376,7 @@ func (st *StateTransition) refundGas() {
 	tonremaining := new(big.Int).Mul(remaining, st.tonPriceRatio)
 
 	// refund remaining fee to sender's balance
-	if st.isFeeTokenUpdate == true {
+	if st.isFeeTokenUpdate {
 		st.state.AddTonBalance(st.msg.From(), tonremaining)
 	} else {
 		st.state.AddBalance(st.msg.From(), remaining)
