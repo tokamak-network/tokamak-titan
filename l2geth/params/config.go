@@ -267,7 +267,7 @@ var (
 	// [TBU] the block height at whitch the FeeToken update fork activates on Titan Network
 	titanMainnetFeeTokenUpdateForkNum       = big.NewInt(3000)
 	titanGoerliFeeTokenUpdateForkNum        = big.NewInt(30000)
-	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(3000)
+	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(1829)
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
