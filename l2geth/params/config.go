@@ -258,7 +258,7 @@ var (
 	// OpKovanSDUpdateForkNum is the height at which the SD update fork activates on Kovan.
 	OpKovanSDUpdateForkNum = big.NewInt(1094820)
 
-	// TODO: update to holesky
+	// TODO: add chain id of sepolia testnet
 	// chain id of Titan Network
 	titanMainnetChainID       = big.NewInt(55004)
 	titanGoerliChainID        = big.NewInt(5050)
@@ -267,7 +267,7 @@ var (
 	// [TBU] the block height at whitch the FeeToken update fork activates on Titan Network
 	titanMainnetFeeTokenUpdateForkNum       = big.NewInt(3000)
 	titanGoerliFeeTokenUpdateForkNum        = big.NewInt(30000)
-	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(1829)
+	titanGoerliNightlyFeeTokenUpdateForkNum = big.NewInt(1833)
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
