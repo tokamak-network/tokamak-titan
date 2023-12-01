@@ -99,11 +99,11 @@ task('take-dump').setAction(async ({}, hre) => {
       _owner: hre.deployConfig.ovmGasPriceOracleOwner,
       feeWallet: hre.deployConfig.ovmFeeWalletAddress,
       l2TonAddress: predeploys.L2StandardERC20,
-      minPriceRatio: 500,
-      maxPriceRatio: 5000,
-      priceRatio: 2000,
+      minPriceRatio: 300,
+      maxPriceRatio: 1500,
+      priceRatio: 800,
       gasPriceOracleAddress: predeploys.OVM_GasPriceOracle,
-      marketPriceRatio: 2000,
+      marketPriceRatio: 800,
     },
   }
 
