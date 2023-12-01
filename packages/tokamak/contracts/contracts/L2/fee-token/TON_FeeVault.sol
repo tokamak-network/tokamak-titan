@@ -54,9 +54,6 @@ contract TON_FeeVault {
     // Gas price oracle address (OVM_GasPriceOracle)
     address public gasPriceOracleAddress = 0x420000000000000000000000000000000000000F;
 
-    // Record the wallet address that wants to use ton as fee token
-    mapping(address => bool) public tonFeeTokenUsers;
-
     // Price ratio without discount
     uint256 public marketPriceRatio;
 
@@ -118,6 +115,7 @@ contract TON_FeeVault {
 
     /**
      * Initialize feeWallet and l2TonAddress.
+     * TODO: will apply proxy contract
      */
     function initialize(address payable _feeWallet, address _l2TonAddress)
         public
@@ -130,10 +128,10 @@ contract TON_FeeVault {
         // Initialize the parameters
         _owner = msg.sender;
         gasPriceOracleAddress = 0x420000000000000000000000000000000000000F;
-        maxPriceRatio = 5000;
-        priceRatio = 2000;
-        minPriceRatio = 500;
-        marketPriceRatio = 2000;
+        maxPriceRatio = 1500;
+        priceRatio = 800;
+        minPriceRatio = 300;
+        marketPriceRatio = 800;
     }
 
     /**

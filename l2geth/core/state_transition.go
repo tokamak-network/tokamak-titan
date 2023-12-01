@@ -69,10 +69,6 @@ type StateTransition struct {
 	l1Fee *big.Int
 	// Fee token hard fork
 	isFeeTokenUpdate bool
-	// L1 fee converted to TON
-	l1TonFee *big.Int
-	// Fee ratio between TON and ETH
-	tonPriceRatio *big.Int
 }
 
 // Message represents a message sent to a contract.
@@ -143,8 +139,8 @@ func IntrinsicGas(data []byte, contractCreation, isHomestead bool, isEIP2028 boo
 // NewStateTransition initialises and returns a new state transition object.
 func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition {
 	l1Fee := new(big.Int)
-	l1TonFee := new(big.Int)
 	tonPriceRatio := new(big.Int)
+	gasPrice := msg.GasPrice()
 	// The fee token update
 	isFeeTokenUpdate := evm.ChainConfig().IsFeeTokenUpdate(evm.BlockNumber)
 	if rcfg.UsingOVM {
@@ -156,7 +152,8 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 		}
 		if isFeeTokenUpdate {
 			tonPriceRatio = evm.StateDB.GetTonPriceRatio()
-			l1TonFee = new(big.Int).Mul(l1Fee, tonPriceRatio)
+			l1Fee = new(big.Int).Mul(l1Fee, tonPriceRatio)
+			gasPrice = new(big.Int).Mul(gasPrice, tonPriceRatio)
 		}
 	}
 
@@ -164,16 +161,13 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 		gp:       gp,
 		evm:      evm,
 		msg:      msg,
-		gasPrice: msg.GasPrice(),
+		gasPrice: gasPrice,
 		value:    msg.Value(),
 		data:     msg.Data(),
 		state:    evm.StateDB,
 		l1Fee:    l1Fee,
-		l1TonFee: l1TonFee,
 		// Fee token update
 		isFeeTokenUpdate: isFeeTokenUpdate,
-		// TON price relative to ETH
-		tonPriceRatio: tonPriceRatio,
 	}
 }
 
@@ -206,49 +200,44 @@ func (st *StateTransition) useGas(amount uint64) error {
 }
 
 func (st *StateTransition) buyGas() error {
-	// max value
+	// calculate max value
+	// gasLimit * gasPrice
 	mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
-	tonval := new(big.Int)
 
 	if rcfg.UsingOVM {
 		// Only charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
-			if st.isFeeTokenUpdate {
-				mgval = mgval.Add(mgval, st.l1TonFee)
-			} else {
-				mgval = mgval.Add(mgval, st.l1Fee)
-			}
+			mgval = mgval.Add(mgval, st.l1Fee)
 			if st.msg.CheckNonce() {
-				log.Debug("Total fee", "total-fee", mgval)
+				log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
 			}
 		}
-		tonval = new(big.Int).Mul(mgval, st.tonPriceRatio)
-		// fee token is TON
-		if st.isFeeTokenUpdate {
-			// TON balance check
-			if st.state.GetTonBalance(st.msg.From()).Cmp(tonval) < 0 {
-				return errInsufficientTonBalanceForGas
-			}
-			// fee token is ETH
-		} else {
-			if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
-				return errInsufficientBalanceForGas
-			}
+	}
+	// fee token is TON
+	if st.isFeeTokenUpdate {
+		// TON balance check
+		if st.state.GetTonBalance(st.msg.From()).Cmp(mgval) < 0 {
+			return errInsufficientTonBalanceForGas
+		}
+		// fee token is ETH
+	} else {
+		if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
+			return errInsufficientBalanceForGas
 		}
 	}
 	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
+	st.gas += st.msg.Gas()
+
+	st.initialGas = st.msg.Gas()
 	// change state after checking gas limit is available
 	if st.isFeeTokenUpdate {
-		st.state.SubTonBalance(st.msg.From(), tonval)
+		st.state.SubTonBalance(st.msg.From(), mgval)
 	} else {
 		st.state.SubBalance(st.msg.From(), mgval)
 	}
-
-	st.gas += st.msg.Gas()
-	st.initialGas = st.msg.Gas()
 	return nil
 }
 
@@ -328,25 +317,19 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	st.refundGas()
 
 	l2Fee := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
-	tonL2Fee := new(big.Int).Mul(l2Fee, st.tonPriceRatio)
+	totalFee := new(big.Int).Add(st.l1Fee, l2Fee)
 
 	if rcfg.UsingOVM {
-		var totalFee *big.Int
 		if st.isFeeTokenUpdate {
-			totalFee = new(big.Int).Add(st.l1TonFee, tonL2Fee)
 			st.state.AddTonBalance(rcfg.TonFeeVault, totalFee)
 		} else {
-			totalFee = new(big.Int).Add(st.l1Fee, l2Fee)
 			st.state.AddBalance(evm.Coinbase, totalFee)
 		}
 	} else {
-		var fee *big.Int
 		if st.isFeeTokenUpdate {
-			fee = tonL2Fee
-			st.state.AddTonBalance(rcfg.TonFeeVault, fee)
+			st.state.AddTonBalance(rcfg.TonFeeVault, l2Fee)
 		} else {
-			fee = l2Fee
-			st.state.AddBalance(evm.Coinbase, fee)
+			st.state.AddBalance(evm.Coinbase, l2Fee)
 		}
 	}
 
@@ -363,11 +346,9 @@ func (st *StateTransition) refundGas() {
 
 	// Return ETH for remaining gas, exchanged at the original rate.
 	remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
-	tonremaining := new(big.Int).Mul(remaining, st.tonPriceRatio)
-
 	// refund remaining fee to sender's balance
-	if st.isFeeTokenUpdate == true {
-		st.state.AddTonBalance(st.msg.From(), tonremaining)
+	if st.isFeeTokenUpdate {
+		st.state.AddTonBalance(st.msg.From(), remaining)
 	} else {
 		st.state.AddBalance(st.msg.From(), remaining)
 	}
