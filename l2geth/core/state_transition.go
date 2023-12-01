@@ -69,8 +69,6 @@ type StateTransition struct {
 	l1Fee *big.Int
 	// Fee token hard fork
 	isFeeTokenUpdate bool
-	// Fee ratio between TON and ETH
-	tonPriceRatio *big.Int
 }
 
 // Message represents a message sent to a contract.
@@ -227,12 +225,12 @@ func (st *StateTransition) buyGas() error {
 			return errInsufficientBalanceForGas
 		}
 	}
-
 	// deduct st.msg.gasLimit in the gas pool
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
 	st.gas += st.msg.Gas()
+
 	st.initialGas = st.msg.Gas()
 	// change state after checking gas limit is available
 	if st.isFeeTokenUpdate {
@@ -348,7 +346,6 @@ func (st *StateTransition) refundGas() {
 
 	// Return ETH for remaining gas, exchanged at the original rate.
 	remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
-
 	// refund remaining fee to sender's balance
 	if st.isFeeTokenUpdate {
 		st.state.AddTonBalance(st.msg.From(), remaining)
