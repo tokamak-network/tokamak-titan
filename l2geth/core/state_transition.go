@@ -170,8 +170,6 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 		l1Fee:    l1Fee,
 		// Fee token update
 		isFeeTokenUpdate: isFeeTokenUpdate,
-		// TON price relative to ETH
-		tonPriceRatio: tonPriceRatio,
 	}
 }
 
@@ -212,9 +210,9 @@ func (st *StateTransition) buyGas() error {
 		// Only charge the L1 fee for QueueOrigin sequencer transactions
 		if st.msg.QueueOrigin() == types.QueueOriginSequencer {
 			mgval = mgval.Add(mgval, st.l1Fee)
-		}
-		if st.msg.CheckNonce() {
-			log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
+			if st.msg.CheckNonce() {
+				log.Debug("Adding L1 fee", "l1-fee", st.l1Fee)
+			}
 		}
 	}
 	// fee token is TON
@@ -234,15 +232,14 @@ func (st *StateTransition) buyGas() error {
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
 		return err
 	}
+	st.gas += st.msg.Gas()
+	st.initialGas = st.msg.Gas()
 	// change state after checking gas limit is available
 	if st.isFeeTokenUpdate {
 		st.state.SubTonBalance(st.msg.From(), mgval)
 	} else {
 		st.state.SubBalance(st.msg.From(), mgval)
 	}
-
-	st.gas += st.msg.Gas()
-	st.initialGas = st.msg.Gas()
 	return nil
 }
 
