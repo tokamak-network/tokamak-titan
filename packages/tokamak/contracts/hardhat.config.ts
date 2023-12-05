@@ -87,6 +87,12 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    sepolia: {
+      chainId: 11155111,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
   },
   mocha: {
     timeout: 50000,
@@ -141,6 +147,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY || '',
       goerli: process.env.ETHERSCAN_API_KEY || '',
+      sepolia: process.env.ETHERSCAN_API_KEY || '',
       holesky: process.env.ETHERSCAN_API_KEY || '',
       titan: 'verify',
     },
