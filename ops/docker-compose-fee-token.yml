@@ -10,6 +10,46 @@ x-system-addr-env: &system-addr-env
   SYSTEM_ADDRESS_1_DEPLOYER: '0xdfc82d475833a50de90c642770f34a9db7deb725'
 
 services:
+  # this is a helper service used because there's no official hardhat image
+  l1_chain:
+    image: onthertech/titan-hardhat:${DOCKER_TAG_HARDHAT:-latest}
+    build:
+      context: ./docker/hardhat
+      dockerfile: Dockerfile
+    env_file:
+      - ./envs/l1_chain-local.env
+    ports:
+      # expose the service to the host for integration testing
+      - ${L1CHAIN_HTTP_PORT:-9545}:8545
+    volumes:
+      - ./l1:/root/.ethereum
+  dtl:
+    depends_on:
+      - l1_chain
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./ops/docker/Dockerfile.packages
+      target: data-transport-layer
+    image: onthertech/titan-data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
+    # override with the dtl script and the env vars required for it
+    entrypoint: ./dtl.sh
+    env_file:
+      - ./envs/dtl.env
+    # set the rest of the env vars for the network whcih do not
+    # depend on the docker-compose setup
+    environment:
+      # used for setting the address manager address
+      URL: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-addresses.20230523.json
+      # connect to the 2 layers
+      DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: http://l1_chain:8545
+      DATA_TRANSPORT_LAYER__L2_RPC_ENDPOINT: http://l2geth:8545
+      DATA_TRANSPORT_LAYER__SYNC_FROM_L2: 'true'
+      DATA_TRANSPORT_LAYER__L2_CHAIN_ID: 5051
+    ports:
+      - ${DTL_PORT:-7878}:7878
+    volumes:
+      - ./db:/db
 
   l2geth:
     build:
@@ -19,14 +59,14 @@ services:
     # override with the geth script and the env vars required for it
     entrypoint: sh ./geth.sh
     env_file:
-      - ./envs/geth-goerli-nightly.env
+      - ./envs/geth-local.env
     environment:
       <<: *system-addr-env
-      ETH1_HTTP: https://goerli.rpc.tokamak.network
+      ETH1_HTTP: http://l1_chain:8545
       ROLLUP_TIMESTAMP_REFRESH: 1s
       ROLLUP_STATE_DUMP_PATH: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-state-dump.20221011.json
       # connecting to the DTL
-      ROLLUP_CLIENT_HTTP: http://k8s-default-datatran-e8fd837f99-348dab9dc7d91f1d.elb.ap-northeast-2.amazonaws.com:7878/
+      ROLLUP_CLIENT_HTTP: http://dtl:7878
       ETH1_CTC_DEPLOYMENT_HEIGHT: 8
       RETRIES: 60
       # no need to keep this secret, only used internally to sign blocks
@@ -43,6 +83,48 @@ services:
     ports:
       - ${L2GETH_HTTP_PORT:-8545}:8545
       - ${L2GETH_WS_PORT:-8546}:8546
+
+  titan-message-relayer:
+    depends_on:
+      - l1_chain
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./ops/docker/Dockerfile.packages
+      target: titan-message-relayer
+    image: onthertech/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
+    entrypoint: ./relayer.sh
+    environment:
+      URL: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-addresses.20230523.json
+      MESSAGE_RELAYER__L1_RPC_PROVIDER: http://l1_chain:8545
+      MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
+      MESSAGE_RELAYER__L1_WALLET: '0x801959bd5ad0069f75980a1af8ed925c932ad0ff7bb5c197272c2aa5b67a11fc'
+      RETRIES: 60
+      MESSAGE_RELAYER__POLLING_INTERVAL: 6000
+      MESSAGE_RELAYER__FILTER_POLLING_INTERVAL: 30000
+      MESSAGE_RELAYER__MAX_WAIT_TIME_S: 5
+      MESSAGE_RELAYER__MAX_WAIT_TX_TIME_S: 5
+      MESSAGE_RELAYER__MULTI_RELAY_LIMIT: 10
+      MESSAGE_RELAYER__FROM_L2_TRANSACTION_INDEX: 1830
+
+  batch_submitter:
+    depends_on:
+      - l1_chain
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./batch-submitter/Dockerfile
+    image: onthertech/titan-batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
+    entrypoint: ./batch-submitter.sh
+    env_file:
+      - ./envs/batch-submitter.env
+    environment:
+      L1_ETH_RPC: http://l1_chain:8545
+      L2_ETH_RPC: http://l2geth:8545
+      URL: https://tokamak-optimism-dev.s3.ap-northeast-2.amazonaws.com/goerli-nightly-addresses.20230523.json
+      BATCH_SUBMITTER_SEQUENCER_PRIVATE_KEY: '0x7b2b18cb4f3d6c1ac76cadf52bae725a687e20862e37c671598446bf8a3c9443'
+      BATCH_SUBMITTER_PROPOSER_PRIVATE_KEY: '0x1e3577a4274a38528cd2a887f89c1138dfd72db15eb32c42ccd28ed055080b32'
+      BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE: ${BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE:-zlib}
 
 networks:
   default:
