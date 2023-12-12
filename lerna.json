@@ -13,7 +13,8 @@
     "packages/sdk",
     "packages/tokamak/message-relayer",
     "packages/tokamak/sdk",
-    "packages/tokamak/contracts"
+    "packages/tokamak/contracts",
+    "packages/tokamak/fault-detector"
   ],
   "version": "independent"
 }
