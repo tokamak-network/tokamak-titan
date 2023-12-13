@@ -17,6 +17,7 @@
       "packages/tokamak/message-relayer",
       "packages/tokamak/sdk",
       "packages/tokamak/contracts",
+      "packages/tokamak/fault-detector",
       "batch-submitter",
       "bss-core",
       "gas-oracle",

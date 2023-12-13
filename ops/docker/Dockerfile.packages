@@ -6,25 +6,25 @@ FROM ethereumoptimism/foundry:latest as foundry
 FROM node:16-alpine3.14 as base
 
 RUN apk --no-cache add curl \
-    jq \
-    python3 \
-    ca-certificates \
-    git \
-    make \
-    gcc \
-    musl-dev \
-    linux-headers \
-    bash \
-    build-base \
-    gcompat
+  jq \
+  python3 \
+  ca-certificates \
+  git \
+  make \
+  gcc \
+  musl-dev \
+  linux-headers \
+  bash \
+  build-base \
+  gcompat
 
 ENV GLIBC_KEY=https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
 ENV GLIBC_KEY_FILE=/etc/apk/keys/sgerrand.rsa.pub
 ENV GLIBC_RELEASE=https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
 
 RUN wget -q -O ${GLIBC_KEY_FILE} ${GLIBC_KEY} \
-    && wget -O glibc.apk ${GLIBC_RELEASE} \
-    && apk add glibc.apk --force
+  && wget -O glibc.apk ${GLIBC_RELEASE} \
+  && apk add glibc.apk --force
 
 COPY --from=foundry /usr/local/bin/forge /usr/local/bin/forge
 COPY --from=foundry /usr/local/bin/cast /usr/local/bin/cast
@@ -68,30 +68,30 @@ WORKDIR /opt/optimism/packages/data-transport-layer
 COPY ./ops/scripts/dtl.sh ./
 CMD ["node", "dist/src/services/run.js"]
 
-
 FROM base as integration-tests
 WORKDIR /opt/optimism/integration-tests
 COPY ./ops/scripts/integration-tests.sh ./
 CMD ["yarn", "test:integration"]
-
 
 FROM base as message-relayer
 WORKDIR /opt/optimism/packages/message-relayer
 COPY ./ops/scripts/relayer.sh ./
 CMD ["npm", "run", "start"]
 
-
 FROM base as titan-message-relayer
 WORKDIR /opt/optimism/packages/tokamak/message-relayer
 COPY ./ops/scripts/relayer.sh ./ops/scripts/relayer-fast.sh ./
 CMD ["npm", "run", "start"]
-
 
 FROM base as fault-detector
 WORKDIR /opt/optimism/packages/fault-detector
 COPY ./ops/scripts/detector.sh ./
 CMD ["npm", "run", "start"]
 
+FROM base as titan-fault-detector
+WORKDIR /opt/optimism/packages/tokamak/fault-detector
+COPY ./ops/scripts/detector.sh ./
+CMD ["npm", "run", "start"]
 
 FROM base as replica-healthcheck
 WORKDIR /opt/optimism/packages/replica-healthcheck

@@ -1,0 +1,67 @@
+version: '3.4'
+
+services:
+  dtl:
+    build:
+      context: ..
+      dockerfile: ./ops/docker/Dockerfile.packages
+      target: data-transport-layer
+    image: onthertech/titan-data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
+    # override with the dtl script and the env vars required for it
+    entrypoint: ./dtl.sh
+    env_file:
+      - ./envs/dtl.env
+    # set the rest of the env vars for the network whcih do not
+    # depend on the docker-compose setup
+    environment:
+      # used for setting the address manager address
+      URL: https://tokamak-titan-contracts.s3.ap-northeast-2.amazonaws.com/mainnet-addresses.20230607.json
+      # connect to the 2 layers
+      DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: https://rpc.tokamak.network
+      DATA_TRANSPORT_LAYER__L2_RPC_ENDPOINT: https://rpc.titan.tokamak.network
+      DATA_TRANSPORT_LAYER__L1_START_HEIGHT: 17426414
+      DATA_TRANSPORT_LAYER__L2_CHAIN_ID: 55004
+    ports:
+      - ${DTL_PORT:-7878}:7878
+    volumes:
+      - ./dtl_data:/db
+
+  fault_detector:
+    deploy:
+      replicas: 1
+    build:
+      context: ..
+      dockerfile: ./ops/docker/Dockerfile.packages
+      target: titan-fault-detector
+    image: onthertech/titan-fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
+    entrypoint: ./detector.sh
+    environment:
+      FAULT_DETECTOR__L1_RPC_PROVIDER: https://rpc.tokamak.network
+      FAULT_DETECTOR__L2_RPC_PROVIDER: http://verifier:8545
+      FAULT_DETECTOR__START_BATCH_INDEX: 0
+      RETRIES: 60
+
+  verifier:
+    deploy:
+      replicas: 1
+    build:
+      context: ..
+      dockerfile: ./l2geth/Dockerfile
+    image: onthertech/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
+    entrypoint: sh ./geth.sh
+    env_file:
+      - ./envs/geth.env
+    environment:
+      ETH1_HTTP: https://rpc.tokamak.network
+      SEQUENCER_CLIENT_HTTP: https://rpc.titan.tokamak.network
+      ROLLUP_STATE_DUMP_PATH: https://tokamak-titan-contracts.s3.ap-northeast-2.amazonaws.com/mainnet-state-dump.20230607.json
+      ROLLUP_CLIENT_HTTP: http://dtl:7878
+      ROLLUP_BACKEND: 'l1'
+      ETH1_CTC_DEPLOYMENT_HEIGHT: 17426432
+      RETRIES: 60
+      ROLLUP_VERIFIER_ENABLE: 'true'
+      BLOCK_SIGNER_KEY: ${BLOCK_SIGNER_KEY}
+      BLOCK_SIGNER_ADDRESS: ${BLOCK_SIGNER_ADDRESS}
+    ports:
+      - ${VERIFIER_HTTP_PORT:-8547}:8545
+      - ${VERIFIER_WS_PORT:-8548}:8546
