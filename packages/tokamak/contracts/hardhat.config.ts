@@ -93,6 +93,12 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    'titond-demo': {
+      chainId: 11155111,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
   },
   mocha: {
     timeout: 50000,
