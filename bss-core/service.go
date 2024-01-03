@@ -228,6 +228,7 @@ func (s *Service) eventLoop() {
 					time.Millisecond
 				s.metrics.BatchConfirmationTimeMs().Set(float64(batchConfirmationTime))
 				s.metrics.SubmissionGasUsedWei().Set(float64(receipt.GasUsed))
+				s.metrics.BlockNumber().Set(float64(end.Int64()))
 			}
 
 			if err != nil {

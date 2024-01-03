@@ -35,4 +35,7 @@ type Metrics interface {
 	// BatchConfirmationTimeMs tracks the duration it takes to confirm a batch
 	// transaction.
 	BatchConfirmationTimeMs() prometheus.Gauge
+
+	// BlockNumber tracks the block number it is submitted to the L1 contract.
+	BlockNumber() prometheus.Gauge
 }

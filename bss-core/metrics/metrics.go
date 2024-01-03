@@ -43,6 +43,9 @@ type Base struct {
 	// batchConfirmationTimeMs tracks the duration it takes to confirm a batch
 	// transaction.
 	batchConfirmationTimeMs prometheus.Gauge
+
+	// blockNumber tracks the block number it is submitted to the L1 contract.
+	blockNumber prometheus.Gauge
 }
 
 func NewBase(serviceName, subServiceName string) *Base {
@@ -94,6 +97,11 @@ func NewBase(serviceName, subServiceName string) *Base {
 		batchConfirmationTimeMs: promauto.NewGauge(prometheus.GaugeOpts{
 			Name:      "batch_confirmation_time_ms",
 			Help:      "Time to confirm batch transactions",
+			Subsystem: subsystem,
+		}),
+		blockNumber: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "block_number",
+			Help:      "Block number that is submitted to the L1 contract",
 			Subsystem: subsystem,
 		}),
 	}
@@ -150,6 +158,11 @@ func (b *Base) BatchTxBuildTimeMs() prometheus.Gauge {
 // transaction.
 func (b *Base) BatchConfirmationTimeMs() prometheus.Gauge {
 	return b.batchConfirmationTimeMs
+}
+
+// BlockNumber tracks the block number it is submitted to the L1 contract.
+func (b *Base) BlockNumber() prometheus.Gauge {
+	return b.blockNumber
 }
 
 // MakeSubsystemName builds the subsystem name for a group of metrics, which
