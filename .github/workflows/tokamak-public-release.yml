@@ -275,7 +275,7 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: tokamak-fault-detector
+          target: titan-fault-detector
           push: true
           tags: |
             onthertech/titan-fault-detector:${{ steps.extractver.outputs.RELEASE }}
