@@ -12,7 +12,7 @@ x-system-addr-env: &system-addr-env
 services:
   # this is a helper service used because there's no official hardhat image
   l1_chain:
-    image: onthertech/titan-hardhat:${DOCKER_TAG_HARDHAT:-latest}
+    image: tokamaknetwork/titan-hardhat:${DOCKER_TAG_HARDHAT:-latest}
     build:
       context: ./docker/hardhat
       dockerfile: Dockerfile
@@ -29,7 +29,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: titan-deployer
-    image: onthertech/titan-deployer:${DOCKER_TAG_DEPLOYER:-latest}
+    image: tokamaknetwork/titan-deployer:${DOCKER_TAG_DEPLOYER:-latest}
     entrypoint: ./deployer.sh
     environment:
       # Env vars for the deployment script.
@@ -49,7 +49,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: data-transport-layer
-    image: onthertech/titan-data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
+    image: tokamaknetwork/titan-data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
     # override with the dtl script and the env vars required for it
     entrypoint: ./dtl.sh
     env_file:
@@ -74,7 +74,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: onthertech/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: tokamaknetwork/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
     # override with the geth script and the env vars required for it
     entrypoint: sh ./geth.sh
     env_file:
@@ -107,7 +107,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: titan-message-relayer
-    image: onthertech/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
+    image: tokamaknetwork/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
     entrypoint: ./relayer.sh
     environment:
       URL: http://titan-deployer:8081/addresses.json
@@ -131,7 +131,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: titan-message-relayer
-    image: onthertech/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
+    image: tokamaknetwork/titan-message-relayer:${DOCKER_TAG_MESSAGE_RELAYER_FAST:-latest}
     entrypoint: ./relayer-fast.sh
     environment:
       URL: http://titan-deployer:8081/addresses.json
@@ -157,7 +157,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: fault-detector
-    image: onthertech/titan-fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
+    image: tokamaknetwork/titan-fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
     entrypoint: ./detector.sh
     environment:
       FAULT_DETECTOR__L1_RPC_PROVIDER: http://l1_chain:8545
@@ -175,7 +175,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: onthertech/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: tokamaknetwork/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
     entrypoint: sh ./geth.sh
     env_file:
       - ./envs/geth.env
@@ -202,7 +202,7 @@ services:
     build:
       context: ..
       dockerfile: ./l2geth/Dockerfile
-    image: onthertech/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
+    image: tokamaknetwork/titan-l2geth:${DOCKER_TAG_L2GETH:-latest}
     entrypoint: sh ./geth.sh
     env_file:
       - ./envs/geth.env
@@ -230,7 +230,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: replica-healthcheck
-    image: onthertech/titan-replica-healthcheck:${DOCKER_TAG_REPLICA_HEALTHCHECK:-latest}
+    image: tokamaknetwork/titan-replica-healthcheck:${DOCKER_TAG_REPLICA_HEALTHCHECK:-latest}
     environment:
       HEALTHCHECK__REFERENCE_RPC_PROVIDER: http://l2geth:8545
       HEALTHCHECK__TARGET_RPC_PROVIDER: http://replica:8545
@@ -244,7 +244,7 @@ services:
       context: ..
       dockerfile: ./ops/docker/Dockerfile.packages
       target: integration-tests
-    image: onthertech/titan-integration-tests:${DOCKER_TAG_INTEGRATION_TESTS:-latest}
+    image: tokamaknetwork/titan-integration-tests:${DOCKER_TAG_INTEGRATION_TESTS:-latest}
     entrypoint: ./integration-tests.sh
     environment:
       L1_URL: http://l1_chain:8545
@@ -269,7 +269,7 @@ services:
     build:
       context: ..
       dockerfile: ./gas-oracle/Dockerfile
-    image: onthertech/titan-gas-oracle:${DOCKER_TAG_GAS_ORACLE:-latest}
+    image: tokamaknetwork/titan-gas-oracle:${DOCKER_TAG_GAS_ORACLE:-latest}
     environment:
       GAS_PRICE_ORACLE_ETHEREUM_HTTP_URL: http://l1_chain:8545
       GAS_PRICE_ORACLE_LAYER_TWO_HTTP_URL: http://l2geth:8545
@@ -284,7 +284,7 @@ services:
     build:
       context: ..
       dockerfile: ./batch-submitter/Dockerfile
-    image: onthertech/titan-batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
+    image: tokamaknetwork/titan-batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
     entrypoint: ./batch-submitter.sh
     env_file:
       - ./envs/batch-submitter.env
