@@ -163,7 +163,7 @@ jobs:
         id: extractver
         run: |
           echo "RELEASE"=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
-          echo "VERSION=$(jq -r .version ./packages/deployer/package.json)" >> $GITHUB_OUTPUT
+          echo "VERSION=$(jq -r .version ./packages/tokamak/contracts/package.json)" >> $GITHUB_OUTPUT
           echo "GITDATE=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
           echo "GITSHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
@@ -181,7 +181,7 @@ jobs:
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: deployer
+          target: titan-deployer
           push: true
           provenance: false
           tags: |
