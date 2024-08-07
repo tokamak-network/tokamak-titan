@@ -6,734 +6,188 @@ on:
       - 'release-*'
 
 jobs:
-  l2geth:
-    name: Publish L2Geth
+  go-packages:
+    name: Publish Go Packages
+    strategy:
+      matrix:
+        package:
+          [
+            l2geth,
+            batch-submitter,
+            proxyd,
+            gas-oracle,
+            indexer,
+            op-exporter,
+            l2geth-exporter,
+            teleportr,
+          ]
     runs-on: ubuntu-latest
     outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
       newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Get versions
+      - name: Get version
         id: extractver
         run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./l2geth/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "RELEASE"=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
+          echo "VERSION=$(jq -r .version ./${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
+          echo "GITDATE=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
+          echo "GITSHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
-      - name: Publish L2Geth
-        uses: docker/build-push-action@v2
+      - name: Publish Docker
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./l2geth/Dockerfile
+          file: ./${{ matrix.package }}/Dockerfile
           push: true
+          provenance: false
           tags: |
-            tokamaknetwork/titan-l2geth:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-l2geth:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-l2geth:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-l2geth:latest
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.RELEASE }}
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.VERSION }}
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.GITSHA }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
-  gas-oracle:
-    name: Publish Gas Oracle
+  titan-packages:
+    name: Publish Titan Packages
+    strategy:
+      matrix:
+        package: [message-relayer, fault-detector]
     runs-on: ubuntu-latest
     outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
       newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Get versions
+      - name: Get version
         id: extractver
         run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./gas-oracle/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "RELEASE"=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
+          echo "VERSION=$(jq -r .version ./packages/tokamak/${{ matrix.package }}/package.json)" >> $GITHUB_OUTPUT
+          echo "GITDATE=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
+          echo "GITSHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
-      - name: Publish Gas Oracle
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./gas-oracle/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-gas-oracle:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-gas-oracle:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-gas-oracle:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-gas-oracle:latest
-
-  hardhat-node:
-    name: Publish Hardhat Node
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./ops/docker/hardhat/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Publish Hardhat Node
-        uses: docker/build-push-action@v2
-        with:
-          context: ./ops/docker/hardhat
-          file: ./ops/docker/hardhat/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-hardhat:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-hardhat:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-hardhat:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-hardhat:latest
-
-  message-relayer:
-    name: Publish Message Relayer
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/message-relayer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
+      - name: Publish Titan Packages
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: message-relayer
+          target: titan-${{ matrix.package }}
           push: true
+          provenance: false
           tags: |
-            tokamaknetwork/optimism.message-relayer:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/optimism.message-relayer:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/optimism.message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/optimism.message-relayer:latest
-
-  titan-message-relayer:
-    name: Publish Tokamak Message Relayer
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/message-relayer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-message-relayer
-          push: true
-          tags: |
-            tokamaknetwork/titan-message-relayer:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-message-relayer:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-message-relayer:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-message-relayer:latest
-
-  fault-detector:
-    name: Publish Fault Detector
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/fault-detector/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: fault-detector
-          push: true
-          tags: |
-            tokamaknetwork/optimism.fault-detector:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/optimism.fault-detector:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/optimism.fault-detector:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/optimism.fault-detector:latest
-
-  titan-fault-detector:
-    name: Publish Titan Fault Detector
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/fault-detector/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: titan-fault-detector
-          push: true
-          tags: |
-            tokamaknetwork/titan-fault-detector:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-fault-detector:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-fault-detector:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-fault-detector:latest
-
-  drippie-mon:
-    name: Publish Drippie Monitor
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/drippie-mon/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: drippie-mon
-          push: true
-          tags: |
-            tokamaknetwork/titan-drippie-mon:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-drippie-mon:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-drippie-mon:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-drippie-mon:latest
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.RELEASE }}
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.VERSION }}
+            tokamaknetwork/titan-${{ matrix.package }}:${{ steps.extractver.outputs.GITSHA }}
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
   data-transport-layer:
     name: Publish Data Transport Layer
     runs-on: ubuntu-latest
     outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
       newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
+      - name: Get version
         id: extractver
         run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/data-transport-layer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "RELEASE"=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
+          echo "VERSION=$(jq -r .version ./packages/data-transport-layer/package.json)" >> $GITHUB_OUTPUT
+          echo "GITDATE=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
+          echo "GITSHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Publish Data Transport Layer
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
           target: data-transport-layer
           push: true
+          provenance: false
           tags: |
             tokamaknetwork/titan-data-transport-layer:${{ steps.extractver.outputs.RELEASE }}
             tokamaknetwork/titan-data-transport-layer:${{ steps.extractver.outputs.VERSION }}
             tokamaknetwork/titan-data-transport-layer:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-data-transport-layer:latest
+          build-args: |
+            GITDATE=${{ steps.extractver.outputs.GITDATE }}
+            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
+            GITVERSION=${{ steps.extractver.outputs.VERSION }}
 
-  contracts:
+  deployer:
     name: Publish Deployer
     runs-on: ubuntu-latest
     outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
       newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
+      - name: Get version
         id: extractver
         run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/tokamak/contracts/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "RELEASE"=${GITHUB_REF#refs/*/} >> $GITHUB_OUTPUT
+          echo "VERSION=$(jq -r .version ./packages/deployer/package.json)" >> $GITHUB_OUTPUT
+          echo "GITDATE=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
+          echo "GITSHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Publish Deployer
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./ops/docker/Dockerfile.packages
-          target: titan-deployer
+          target: deployer
           push: true
+          provenance: false
           tags: |
             tokamaknetwork/titan-deployer:${{ steps.extractver.outputs.RELEASE }}
             tokamaknetwork/titan-deployer:${{ steps.extractver.outputs.VERSION }}
             tokamaknetwork/titan-deployer:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-deployer:latest
-
-  integration_tests:
-    name: Publish Integration tests
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./integration-tests/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: integration-tests
-          push: true
-          tags: |
-            tokamaknetwork/titan-integration-tests:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-integration-tests:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-integration-tests:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-integration-tests:latest
-
-  replica-healthcheck:
-    name: Publish Replica Healthcheck
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./packages/replica-healthcheck/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./ops/docker/Dockerfile.packages
-          target: replica-healthcheck
-          push: true
-          tags: |
-            tokamaknetwork/titan-replica-healthcheck:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-replica-healthcheck:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-replica-healthcheck:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-replica-healthcheck:latest
-
-  proxyd:
-    name: Publish proxyd
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./proxyd/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./proxyd/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-proxyd:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-proxyd:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-proxyd:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-proxyd:latest
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
-
-  op-exporter:
-    name: Publish op-exporter
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./op-exporter/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./op-exporter/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-op-exporter:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-op-exporter:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-op-exporter:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-op-exporter:latest
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
-
-  l2geth-exporter:
-    name: Publish l2geth-exporter
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./l2geth-exporter/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./l2geth-exporter/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-l2geth-exporter:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-l2geth-exporter:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-l2geth-exporter:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-l2geth-exporter:latest
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
-
-  batch-submitter-service:
-    name: Publish batch-submitter-service
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./batch-submitter/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./batch-submitter/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-batch-submitter-service:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-batch-submitter-service:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-batch-submitter-service:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-batch-submitter-service:latest
-
-  indexer:
-    name: Publish indexer
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./indexer/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./indexer/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-indexer:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-indexer:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-indexer:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-indexer:latest
-          build-args: |
-            GITDATE=${{ steps.extractver.outputs.GITDATE }}
-            GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
-            GITVERSION=${{ steps.extractver.outputs.VERSION }}
-
-  teleportr:
-    name: Publish Teleportr
-    runs-on: ubuntu-latest
-    outputs:
-      newVersion: ${{ steps.extractver.outputs.VERSION }}
-      newRelease: ${{ steps.extractver.outputs.RELEASE }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN_SECRET }}
-
-      - name: Get versions
-        id: extractver
-        run: |
-          echo ::set-output name=RELEASE::"${GITHUB_REF#refs/*/}"
-          echo ::set-output name=VERSION::$(jq -r .version ./teleportr/package.json)
-          echo ::set-output name=GITSHA::$(echo ${GITHUB_SHA} | cut -c1-8)
-          echo ::set-output name=GITDATE::"$(date +%d-%m-%Y)"
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./teleportr/Dockerfile
-          push: true
-          tags: |
-            tokamaknetwork/titan-teleportr:${{ steps.extractver.outputs.RELEASE }}
-            tokamaknetwork/titan-teleportr:${{ steps.extractver.outputs.VERSION }}
-            tokamaknetwork/titan-teleportr:${{ steps.extractver.outputs.GITSHA }}
-            tokamaknetwork/titan-teleportr:latest
           build-args: |
             GITDATE=${{ steps.extractver.outputs.GITDATE }}
             GITCOMMIT=${{ steps.extractver.outputs.GITSHA }}
@@ -742,59 +196,57 @@ jobs:
   update-kustomize:
     name: Update image version in kustomize manifest file
     needs:
-      - l2geth
-      - titan-message-relayer
+      - go-packages
+      - titan-packages
       - data-transport-layer
-      - batch-submitter-service
-      - proxyd
-      - gas-oracle
+      - deployer
     runs-on: ubuntu-latest
 
     steps:
       - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v1
+        uses: imranismail/setup-kustomize@v2
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          repository: tokamak-network/tokamak-titan-infra
+          repository: tokamak-network/tokamak-infra
           ref: main
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          path: tokamak-titan-infra
+          path: tokamak-infra
 
       - name: Update l2geth Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
-          kustomize edit set image tokamaknetwork/titan-l2geth:${{ needs.l2geth.outputs.newRelease }}
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          kustomize edit set image tokamaknetwork/titan-l2geth:${{ needs.go-packages.outputs.newRelease }}
 
       - name: Update titan-message-relayer Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
-          kustomize edit set image tokamaknetwork/titan-message-relayer:${{ needs.titan-message-relayer.outputs.newRelease }}
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          kustomize edit set image tokamaknetwork/titan-message-relayer:${{ needs.titan-packages.outputs.newRelease }}
 
       - name: Update data-transport-layer Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
           kustomize edit set image tokamaknetwork/titan-data-transport-layer:${{ needs.data-transport-layer.outputs.newRelease }}
 
-      - name: Update batch-submitter-service Kubernetes resources
+      - name: Update batch-submitter Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
-          kustomize edit set image tokamaknetwork/titan-batch-submitter-service:${{ needs.batch-submitter-service.outputs.newRelease }}
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          kustomize edit set image tokamaknetwork/titan-batch-submitter:${{ needs.go-packages.outputs.newRelease }}
 
       - name: Update proxyd Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
-          kustomize edit set image tokamaknetwork/titan-proxyd:${{ needs.proxyd.outputs.newRelease }}
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          kustomize edit set image tokamaknetwork/titan-proxyd:${{ needs.go-packages.outputs.newRelease }}
 
       - name: Update gas-oracle Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
-          kustomize edit set image tokamaknetwork/titan-gas-oracle:${{ needs.gas-oracle.outputs.newRelease }}
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          kustomize edit set image tokamaknetwork/titan-gas-oracle:${{ needs.go-packages.outputs.newRelease }}
 
       - name: Show updated Kubernetes resources
         run: |
-          cd tokamak-titan-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
+          cd tokamak-infra/tokamak-optimism/kustomize/overlays/aws/mainnet
           cat kustomization.yaml
 
       - name: Commit and push changes
@@ -802,5 +254,5 @@ jobs:
         with:
           default_author: github_actions
           github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
-          message: '[AUTO] Update tokamak-optimism images tag to ${{ needs.l2geth.outputs.newRelease }} for release'
-          cwd: 'tokamak-titan-infra/'
+          message: '[AUTO] Update tokamak-optimism images tag to ${{ needs.go-packages.outputs.newRelease }} for release'
+          cwd: 'tokamak-infra/'
