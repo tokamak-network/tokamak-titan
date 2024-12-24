@@ -48,6 +48,4 @@ exec geth \
   --password ./password \
   --allow-insecure-unlock \
   --unlock $BLOCK_SIGNER_ADDRESS \
-  --mine \
-  --miner.etherbase $BLOCK_SIGNER_ADDRESS \
   "$@"
